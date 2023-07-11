@@ -14,4 +14,5 @@ pip install fhir-utils
 git clone https://github.com/prefeitura-rio/fhir-utils
 cd fhir-utils
 poetry install
+pre-commit install
 ```
