@@ -30,15 +30,30 @@ class HealthcareApi:
                                                                                            body = body)
 
         request.headers["content-type"] = self.header
+        
         response = request.execute()
-
         print(f"Updated {resource} resource with ID {resource_id}:\n {json.dumps(response, indent=2)}")
 
         return response
 
     
-    def read(self):
-        return None
+    def read(self, resource: str, resource_id: str):
+        fhir_resource_path = f"{self.fhir_store_name}/fhir/{resource}/{resource_id}"
+
+        request = self.client.projects().locations().datasets().fhirStores().fhir().read(name = fhir_resource_path)
+
+        response = request.execute()
+        print(f"Got contents of {resource} resource with ID {resource_id}:\n", json.dumps(response, indent=2),)
+
+        return response
+
     
-    def delete(self):
-        return None
+    def delete(self, resource: str, resource_id: str):
+        fhir_resource_path = f"{self.fhir_store_name}/fhir/{resource}/{resource_id}"
+
+        request = self.client.projects().locations().datasets().fhirStores().fhir().delete(name = fhir_resource_path)
+
+        response = request.execute()
+        print(f"Deleted {resource} resource with ID {resource_id}.")
+
+        return response
