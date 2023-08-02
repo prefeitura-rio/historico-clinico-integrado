@@ -12,6 +12,8 @@ keywords = ["fhir", "utilities", "data", "health", "government"]
 [tool.poetry.dependencies]
 python = "^3.10"
 loguru = ">=0.6"
+xmltodict = "^0.13.0"
+google-api-python-client = "^2.95.0"
 
 [tool.poetry.scripts]
 docs = "scripts.docs:main"
