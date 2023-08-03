@@ -49,13 +49,29 @@ class HealthcareApi:
 
         return_payload = response.json()
 
-        # remove xml from json payload
-
         print(f"Got contents of {resource} resource with ID {resource_id}:\n")
 
         return {'response': response, 'payload': return_payload}
 
     
+    def read_lastupdated(self, dataset_id: str, fhir_store_id: str, resource: str, since: dict) -> dict:
+        '''  
+        since: '2023-08-01T03:00:00.000Z'
+        '''
+
+        resource_path = f"{self.url}/datasets/{dataset_id}/fhirStores/{fhir_store_id}/fhir/{resource}"
+        resource_path += f"?_lastUpdated=gt{since}"
+        
+        response = self.session.get(resource_path, headers=self.header)
+        response.raise_for_status()
+
+        return_payload = response.json()
+
+        print(f"Got {return_payload['total']} entries from {resource}")
+
+        return {'response': response, 'payload': return_payload}
+
+
     def delete(self, dataset_id: str, fhir_store_id: str, resource: str, resource_id: str) -> None:
   
         resource_path = f"{self.url}/datasets/{dataset_id}/fhirStores/{fhir_store_id}/fhir/{resource}/{resource_id}"
@@ -66,3 +82,4 @@ class HealthcareApi:
         print(f"Deleted {resource} resource with ID {resource_id}.")
 
         return {'response': response}
+    
