@@ -13,7 +13,7 @@ class HealthcareApi:
 
 
     def create(self, dataset_id: str, fhir_store_id: str, resource: str, payload: dict) -> None:
-
+        """Create a new resource in the FHIR store"""
         resource_path = f"{self.url}/datasets/{dataset_id}/fhirStores/{fhir_store_id}/fhir/{resource}"
 
         response = self.session.post(resource_path, headers=self.header, json=payload)
@@ -27,7 +27,7 @@ class HealthcareApi:
 
 
     def update(self, dataset_id: str, fhir_store_id: str, resource: str, resource_id: str, payload: dict) -> dict:
-
+        """Update an existing resource in the FHIR store"""
         resource_path = f"{self.url}/datasets/{dataset_id}/fhirStores/{fhir_store_id}/fhir/{resource}/{resource_id}"
 
         response = self.session.put(resource_path, headers=self.header, json=payload)
@@ -41,7 +41,7 @@ class HealthcareApi:
 
     
     def read(self, dataset_id: str, fhir_store_id: str, resource: str, resource_id: str) -> dict:
-
+        """Read the contents of a specific resource in the FHIR store"""
         resource_path = f"{self.url}/datasets/{dataset_id}/fhirStores/{fhir_store_id}/fhir/{resource}/{resource_id}"
         
         response = self.session.get(resource_path, headers=self.header)
@@ -55,10 +55,7 @@ class HealthcareApi:
 
     
     def read_lastupdated(self, dataset_id: str, fhir_store_id: str, resource: str, since: dict) -> dict:
-        '''  
-        since: '2023-08-01T03:00:00.000Z'
-        '''
-
+        """Read the entries from a resource in the FHIR store that were last updated after a specific date and time (format: '2023-08-01T03:00:00.000Z')"""
         resource_path = f"{self.url}/datasets/{dataset_id}/fhirStores/{fhir_store_id}/fhir/{resource}"
         resource_path += f"?_lastUpdated=gt{since}"
         
@@ -73,7 +70,7 @@ class HealthcareApi:
 
 
     def delete(self, dataset_id: str, fhir_store_id: str, resource: str, resource_id: str) -> None:
-  
+        """Delete a resource from the FHIR store"""
         resource_path = f"{self.url}/datasets/{dataset_id}/fhirStores/{fhir_store_id}/fhir/{resource}/{resource_id}"
         
         response = self.session.delete(resource_path, headers=self.header)
