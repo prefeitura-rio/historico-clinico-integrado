@@ -33,11 +33,7 @@ class HealthcareApi:
 
         response = self.session.post(resource_path, headers=self.header, json=payload)
 
-        return_payload = response.json()
-
-        print(f"Created Patient resource with ID {return_payload['id']}")
-
-        return {"response": response.status_code, "payload": return_payload}
+        return {"status_code": response.status_code, "body": response.json()}
 
     def update(
             self,
@@ -52,11 +48,7 @@ class HealthcareApi:
 
         response = self.session.put(resource_path, headers=self.header, json=payload)
 
-        return_payload = response.json()
-
-        print(f"Updated {resource} resource with ID {resource_id}")
-
-        return {"response": response.status_code, "payload": return_payload}
+        return {"status_code": response.status_code, "body": response.json()}
 
     def update_conditional(
             self,
@@ -94,9 +86,7 @@ class HealthcareApi:
 
         response = self.session.put(resource_path, headers=self.header, json=payload)
 
-        return_payload = response.json()
-
-        return {"response": response.status_code, "payload": return_payload}
+        return {"status_code": response.status_code, "body": response.json()}
 
     def read(
             self,
@@ -110,11 +100,7 @@ class HealthcareApi:
 
         response = self.session.get(resource_path, headers=self.header)
 
-        return_payload = response.json()
-
-        print(f"Got contents of {resource} resource with ID {resource_id}:\n")
-
-        return {"response": response.status_code, "payload": return_payload}
+        return {"status_code": response.status_code, "body": response.json()}
 
     def read_conditional(
             self,
@@ -132,11 +118,7 @@ class HealthcareApi:
 
         response = self.session.get(resource_path, headers=self.header)
 
-        return_payload = response.json()
-
-        print(f"Got {return_payload['total']} entries from {resource}")
-
-        return {"response": response.status_code, "payload": return_payload}
+        return {"status_code": response.status_code, "body": response.json()}
 
     def delete(
             self,
@@ -145,14 +127,18 @@ class HealthcareApi:
             resource: str,
             resource_id: str
             ) -> dict:
-        """Delete a resource from the FHIR store"""
+        """
+        Delete a resource from the FHIR store
+
+        Response code:
+            200 Success
+                If the resource was deleted or not found
+        """
         resource_path = f"{self.url}/datasets/{dataset_id}/fhirStores/{fhir_store_id}/fhir/{resource}/{resource_id}"
 
         response = self.session.delete(resource_path, headers=self.header)
 
-        print(f"Deleted {resource} resource with ID {resource_id}.")
-
-        return {"response": response.status_code}
+        return {"status_code": response.status_code, "body": response.json()}
 
 
 class FastCRUD(HealthcareApi):
@@ -191,6 +177,4 @@ class FastCRUD(HealthcareApi):
             ) -> dict:
         """Update the entries from Patient resource in the FHIR store based on tax id (CPF)"""
         parameter = f"identifier=https://rnds-fhir.saude.gov.br/NamingSystem/cpf|{cpf}"
-        return self.update_conditional(
-            dataset_id, fhir_store_id, "Patient", parameter, payload
-        )
+        return self.update_conditional(dataset_id, fhir_store_id, "Patient", parameter, payload)
