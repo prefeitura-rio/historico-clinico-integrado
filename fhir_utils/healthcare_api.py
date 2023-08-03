@@ -29,7 +29,7 @@ class HealthcareApi:
 
         print(f"Created Patient resource with ID {return_payload['id']}")
 
-        return {'response': response, 'payload': return_payload}
+        return {'response': response.status_code, 'payload': return_payload}
 
 
     def update(self, dataset_id: str, fhir_store_id: str, resource: str, resource_id: str, payload: dict) -> dict:
@@ -43,7 +43,7 @@ class HealthcareApi:
 
         print(f"Updated {resource} resource with ID {resource_id}")    
 
-        return {'response': response, 'payload': return_payload}
+        return {'response': response.status_code, 'payload': return_payload}
 
     
     def read(self, dataset_id: str, fhir_store_id: str, resource: str, resource_id: str) -> dict:
@@ -57,7 +57,7 @@ class HealthcareApi:
 
         print(f"Got contents of {resource} resource with ID {resource_id}:\n")
 
-        return {'response': response, 'payload': return_payload}
+        return {'response': response.status_code, 'payload': return_payload}
 
     
     def read_lastupdated(self, dataset_id: str, fhir_store_id: str, resource: str, since: dict) -> dict:
@@ -72,7 +72,7 @@ class HealthcareApi:
 
         print(f"Got {return_payload['total']} entries from {resource}")
 
-        return {'response': response, 'payload': return_payload}
+        return {'response': response.status_code, 'payload': return_payload}
 
 
     def delete(self, dataset_id: str, fhir_store_id: str, resource: str, resource_id: str) -> None:
@@ -84,5 +84,5 @@ class HealthcareApi:
 
         print(f"Deleted {resource} resource with ID {resource_id}.")
 
-        return {'response': response}
+        return {'response': response.status_code}
     
