@@ -3,6 +3,12 @@ from google.oauth2 import service_account
 import os
 
 class HealthcareApi:
+    """
+    This class provides methods for interacting with the Google Healthcare API.
+    Based on examples from:
+        https://github.com/GoogleCloudPlatform/python-docs-samples/tree/3aa00a7549571b3a6ce8333d857226011e74a9be/healthcare/api-client/v1/fhir
+        https://github.com/GoogleCloudPlatform/python-docs-samples/tree/3aa00a7549571b3a6ce8333d857226011e74a9be/healthcare/api-client/v1beta1/fhir
+    """
     def __init__(self, project_id, location):
         self.credentials = service_account.Credentials.from_service_account_file(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
         self.scoped_credentials = self.credentials.with_scopes(["https://www.googleapis.com/auth/cloud-platform"])
