@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import xmltodict
 
@@ -25,8 +26,8 @@ def xml_to_dict(xml_file_path):
     except Exception as e:
         print(f"Error: Unable to parse XML file. Reason: {str(e)}")
         return None
- 
-    
+
+
 def save_to_json(dict, json_path,):
     with open(json_path, "w") as file:
         json.dump(dict, file)
