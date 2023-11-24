@@ -70,24 +70,18 @@ class Individual(Model):
     # address: contained in address_individual_periods.
     birth_city = fields.ForeignKeyField("models.City", related_name="birth_individuals", null=True)
     # birth_country: contained in birth_city.
-    birth_date = fields.DateField(null=True)
+    birth_date = fields.DateField()
     cpf = fields.CharField(max_length=11, unique=True)
     cns = fields.CharField(max_length=16, unique=True, null=True)
     data_source = fields.ForeignKeyField("models.DataSource", related_name="individuals")
     deceased = fields.BooleanField(null=True)
     ethnicity = fields.ForeignKeyField("models.Ethnicity", related_name="individuals", null=True)
-    father_name = fields.CharField(
-        max_length=512, null=True
-    )  # TODO. Review: can this be another Individual?
+    father_name = fields.CharField(max_length=512, null=True)
     gender = fields.ForeignKeyField("models.Gender", related_name="individuals", null=True)
-    mother_name = fields.CharField(
-        max_length=512, null=True
-    )  # TODO. Review: can this be another Individual?
+    mother_name = fields.CharField(max_length=512, null=True)
     name = fields.CharField(max_length=512)
-    nationality = (
-        None  # TODO. Review: isn't this the same as birth_country? or at least inferred from it?
-    )
-    naturalization = None  # TODO. Review: is this going to be added to the model?
+    nationality = fields.ForeignKeyField("models.Country", related_name="individuals", null=True)
+    naturalization = fields.CharField(max_length=512, null=True)  # TODO (future): review.
     protected_person = fields.BooleanField(null=True)
     race = fields.ForeignKeyField("models.Race", related_name="individuals", null=True)
     # telecom: contained in telecom_individual_periods.
@@ -110,7 +104,7 @@ class Telecom(Model):
     system = fields.ForeignKeyField("models.TelecomSystem", related_name="telecoms", null=True)
     use = fields.ForeignKeyField("models.TelecomUse", related_name="telecoms", null=True)
     value = fields.CharField(max_length=512)
-    rank = None  # TODO. Review: wtf is this?
+    rank = fields.IntField(null=True)
 
 
 class TelecomIndividualPeriod(Model):
