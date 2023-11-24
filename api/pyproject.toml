@@ -1,0 +1,62 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = "API for FHIR Utils"
+authors = ["Escritório de Dados <escritoriodedados@gmail.com>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+homepage = "https://github.com/prefeitura-rio/fhir-utils"
+repository = "https://github.com/prefeitura-rio/fhir-utils"
+keywords = ["fhir", "utilities", "data", "health", "government"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.1"
+tortoise-orm = { extras = ["asyncpg"], version = "^0.20.0" }
+uvicorn = { extras = ["standard"], version = "^0.24.0.post1" }
+loguru = "^0.7.2"
+aerich = "^0.7.2"
+aioredis = "^2.0.1"
+python-jose = { extras = ["cryptography"], version = "^3.3.0" }
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.11.0"
+flake8 = "^6.1.0"
+pre-commit = "^3.5.0"
+pytest-asyncio = "^0.21.1"
+taskipy = "^1.12.2"
+isort = "^5.12.0"
+pytest-cov = "^4.1.0"
+pytest-ordering = "^0.6"
+
+[tool.aerich]
+tortoise_orm = "app.db.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+include = "\\.pyi?$"
+
+[tool.isort]
+profile = "black"
+
+[tool.coverage.run]
+omit = ["app/config/*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+norecursedirs = ["dist", "build", ".tox", ".eggs", "scripts"]
+addopts = ["--doctest-modules", "--cov=app", "-ra", "-v"]
+
+[tool.taskipy.tasks]
+lint = "black . && isort . && flake8 ."
+serve = "uvicorn app.main:app --reload --port 8001"
+test = "pytest"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
