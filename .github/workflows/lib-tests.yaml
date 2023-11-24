@@ -1,11 +1,14 @@
-name: CI - Lint
+name: CI - Tests
 
 on:
   push:
+    paths:
+      - ".github/workflows/lib-*"
+      - "lib/**/*"
 
 jobs:
-  lint:
-    name: ${{ matrix.os }}${{ matrix.arch }} - Python ${{ matrix.python-version }} - lint
+  tests:
+    name: ${{ matrix.os }}${{ matrix.arch }} - Python ${{ matrix.python-version }} - tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -24,12 +27,15 @@ jobs:
 
       - name: Set up Poetry and upgrade pip
         run: |
+          cd lib/
           pip install -U pip poetry
 
       - name: Install this package
         run: |
+          cd lib/
           poetry install
 
       - name: Run tests
         run: |
-          poetry run lint
+          cd lib/
+          poetry run test

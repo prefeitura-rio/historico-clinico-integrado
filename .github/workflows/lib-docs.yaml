@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/lib-*"
+      - "lib/**/*"
 
 jobs:
   docs:
@@ -24,14 +27,16 @@ jobs:
 
       - name: Install package and doc dependencies
         run: |
+          cd lib/
           poetry install
 
       - name: Generate docs
         run: |
+          cd lib/
           poetry run docs
 
       - name: Deploy docs
         uses: JamesIves/github-pages-deploy-action@v4.2.3
         with:
           branch: gh-pages
-          folder: docs/fhir_utils
+          folder: lib/docs/fhir_utils
