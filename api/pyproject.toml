@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "api"
+name = "app"
 version = "0.1.0"
 description = "API for FHIR Utils"
 authors = ["Escritório de Dados <escritoriodedados@gmail.com>"]
@@ -11,13 +11,17 @@ keywords = ["fhir", "utilities", "data", "health", "government"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.104.1"
-tortoise-orm = { extras = ["asyncpg"], version = "^0.20.0" }
-uvicorn = { extras = ["standard"], version = "^0.24.0.post1" }
-loguru = "^0.7.2"
 aerich = "^0.7.2"
 aioredis = "^2.0.1"
+bcrypt = "<4.1"
+fastapi = "^0.104.1"
+loguru = "^0.7.2"
+passlib = { extras = ["bcrypt"], version = "^1.7.4" }
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
+python-multipart = "^0.0.6"
+sentry-sdk = { version = "^1.37.1", extras = ["fastapi"] }
+tortoise-orm = { extras = ["asyncpg"], version = "^0.20.0" }
+uvicorn = { extras = ["standard"], version = "^0.24.0.post1" }
 
 
 [tool.poetry.group.dev.dependencies]
