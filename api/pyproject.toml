@@ -57,6 +57,7 @@ norecursedirs = ["dist", "build", ".tox", ".eggs", "scripts"]
 addopts = ["--doctest-modules", "--cov=app", "-ra", "-v"]
 
 [tool.taskipy.tasks]
+create_user = "python scripts/create_user.py"
 lint = "black . && isort . && flake8 ."
 serve = "uvicorn app.main:app --reload --port 8001"
 test = "pytest"
