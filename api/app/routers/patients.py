@@ -36,7 +36,7 @@ async def create_patient(
     current_user: Annotated[User, Depends(get_current_active_user)],
     patient_input: PatientModel,
 ) -> PatientModel:
-    
+
     user_data_source = await current_user.data_source
     if not user_data_source:
         raise HTTPException(
