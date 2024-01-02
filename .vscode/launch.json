@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: FastAPI",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "python": "${workspaceFolder}/api/.venv/bin/python",
+            "args": [
+                "api.app.main:app",
+                "--reload",
+                "--host", "localhost",
+                "--port", "8001"
+            ],
+            "jinja": true,
+            "justMyCode": true,
+            "env": {
+                "ENVIRONMENT": "dev"
+            }
+        }
+    ]
+}
