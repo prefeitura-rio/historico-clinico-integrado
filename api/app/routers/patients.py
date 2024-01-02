@@ -36,11 +36,13 @@ async def create_patient(
     current_user: Annotated[User, Depends(get_current_active_user)],
     patient_input: PatientModel,
 ) -> PatientModel:
-    if not current_user.data_source:
+    
+    user_data_source = await current_user.data_source
+    if not user_data_source:
         raise HTTPException(
             status_code=400,
-            detail="User does not have a data source associated with it.",
+            detail=f"User does not have a data source associated with it",
         )
-    patient_input.data_source_name = current_user.data_source.name
+    patient_input.data_source_name = user_data_source.name
     patient = await PatientRecord.create_from_pydantic_model(patient_input)
     return await patient.to_pydantic_model()
