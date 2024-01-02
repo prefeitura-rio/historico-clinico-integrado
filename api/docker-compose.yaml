@@ -8,7 +8,8 @@ services:
       - postgres-data:/var/lib/postgresql/data
     security_opt:
       - no-new-privileges:true
-
+    ports:
+      - "5432:5432"
   api:
     build: .
     depends_on:
@@ -19,7 +20,7 @@ services:
       ALLOWED_METHODS: "*"
       ALLOWED_ORIGINS: "*"
       DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
-      ENVIRONMENT: prod
+      ENVIRONMENT: dev
     ports:
       - "8000:80"
     entrypoint: ["/app/compose-entrypoint.sh"]
