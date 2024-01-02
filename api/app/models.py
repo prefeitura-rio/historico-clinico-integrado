@@ -148,7 +148,7 @@ class PatientRecord(Model):
                 address_obj: Address = await Address.create_from_pydantic_model(address)
                 addresses.append(address_obj)
         # Parse the telecom.
-        raw_telecoms = patient_data.pop("telecom")
+        raw_telecoms = patient.telecom
         telecoms: list[Telecom] = []
         if raw_telecoms:
             for telecom in raw_telecoms:
