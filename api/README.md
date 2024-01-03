@@ -1,13 +1,14 @@
 # FHIR
 
-## Setup
+## Preparação de Ambiente
 
+- Rode `pre-commit install`
 - Garanta instalação de Docker e Docker Compose
 - Configure em `docker-compose.yaml` a variável `ENVIRONMENT` para `dev` ou `prod`
    - `dev`: Ambiente de Desenvolvimento
    - `prod`: Ambiente de Produção
 - Rode `docker compose up --build` na raiz do projeto
-- Os serviços estão definidos em:
+- Os serviços estão disponíveis em:
 
 |Serviço|URL|Porta|Usuário|Senha|
 |--|--|--|--|--|
@@ -15,8 +16,10 @@
 |API (Fast API) | localhost|8000|-|-|
 
 ## Dados Iniciais
-- Rode `python scripts/create_user.py --username pedro --password senha`
-
+- Dois scripts que populam o banco com dados iniciais:
+  - Crie um usuário próprio: `python scripts/create_user.py --username <USUARIO> --password <SENHA>`
+  - Crie dados iniciais: `python scripts/database_initial_data.py`
+- **Atenção**: Caso precise limpar todos os dados do banco: `python scripts/database_cleanup.py`
 
 ## Debugging
 - Para fazer o debugging da API você vai rodá-la fora do container docker. Dessa forma a configuração é simples.
@@ -32,7 +35,6 @@
 
 ### Uso
 - **Inicie a depuração**: o VSCode detecta automaticamente o arquivo que configura a depuração. Basta dar "play" na aba de depuração
-    
 
 ## Payloads para Testes
 
@@ -62,6 +64,7 @@
     	"line": "AV SQN BLOCO M 604 APARTAMENTO ASA NORTE",
     	"city": "Rio de Janeiro",
     	"state": "Rio de Janeiro",
+		"country": "Brasil",
     	"postal_code": "70752130",
     	"period": {
     		"start": "2020-10-01 00:00:00",
@@ -70,6 +73,7 @@
     	}],
    "birth_city": "Rio de Janeiro",
 	"birth_country": "Brasil",
+	"birth_state": "Rio de Janeiro",
 	"birth_date": "1999-12-20 00:00:00",
 	"deceased": false,
 	"gender": "male",
