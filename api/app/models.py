@@ -207,8 +207,8 @@ class PatientRecord(Model):
                     await AddressPatientPeriod.create(
                         address=address,
                         patient=patient_record,
-                        period_start=raw_address["period"]["start"],
-                        period_end=raw_address["period"]["end"],
+                        period_start=raw_address.period.start,
+                        period_end=raw_address.period.end,
                     )
         except Exception as exc:
             await patient_record.delete()
@@ -243,8 +243,15 @@ class PatientRecord(Model):
         # Dump the patient.
         active = self.active
         birth_city = self.birth_city.name if self.birth_city else None
-        birth_state = self.birth_city.state.name if self.birth_city else None
-        birth_country = self.birth_city.state.country.name if self.birth_city else None
+
+        if self.birth_city.state:
+            state = await self.birth_city.state
+            birth_state = state.name
+
+            if state.country:
+                country = await state.country
+                birth_country = country.name
+
         birth_date = self.birth_date
         cpf = self.patient.cpf
         # Iterate over the patient's CNSs. If there is a main CNS, use it. Otherwise, use the first
