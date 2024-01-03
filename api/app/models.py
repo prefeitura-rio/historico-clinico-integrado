@@ -27,10 +27,10 @@ class Address(Model):
         # Parse the foreign keys.
         # - use.
         if address_data["use"]:
-            address_data["use"] = await AddressUse.get_or_none(name=address_data.pop("use"))
+            address_data["use"] = await AddressUse.get_or_none(slug=address_data.pop("use"))
         # - type.
         if address_data["type"]:
-            address_data["type"] = await AddressType.get_or_none(name=address_data.pop("type"))
+            address_data["type"] = await AddressType.get_or_none(slug=address_data.pop("type"))
         # - city.
         address_data["city"] = await City.get_or_none(
             name=address_data.pop("city"),
@@ -137,10 +137,12 @@ class PatientRecord(Model):
         patient_data = patient.model_dump()
         # Check if the patient already exists using the CPF
         patient_cpf = patient_data.pop("cpf")
+
         patient_obj: Patient = await Patient.get_or_none(cpf=patient_cpf)
         if not patient_obj:
             patient_obj = await Patient.create(cpf=patient_cpf)
         patient_data["patient"] = patient_obj
+
         # Start by parsing the address.
         raw_addresses = patient.address
         addresses: list[Address] = []
@@ -200,15 +202,36 @@ class PatientRecord(Model):
             patient_data["race"] = await Race.get_or_none(name=patient_data.pop("race"))
         # Create the patient.
         patient_record = await PatientRecord.create(**patient_data)
+
+        patient_cns_value = patient_data.pop("cns")
+        patient_cns : Cns = await Cns.get_or_none(
+            patient=patient_record,
+            value=patient_cns_value
+        )
+        if not patient_cns:
+            await Cns.create(
+                patient=patient_record,
+                value=patient_cns_value
+            )
+
         # Create the address_patient_periods.
         try:
             if raw_addresses:
                 for address, raw_address in zip(addresses, raw_addresses):
+
+                    # Verify existance of period value
+                    if not raw_address.period:
+                        period_start = None
+                        period_end = None
+                    else:
+                        period_start = raw_address.period.start
+                        period_end = raw_address.period.end
+
                     await AddressPatientPeriod.create(
                         address=address,
                         patient=patient_record,
-                        period_start=raw_address.period.start,
-                        period_end=raw_address.period.end,
+                        period_start=period_start,
+                        period_end=period_end,
                     )
         except Exception as exc:
             await patient_record.delete()
@@ -223,9 +246,8 @@ class PatientRecord(Model):
                         period_start = None
                         period_end = None
                     else:
-                        #TODO: Implement Period Extraction from Raw Telecom
-                        period_start = None #NOTE: Temp value
-                        period_end = None #NOTE: Temp value
+                        period_start = raw_telecom.period.start
+                        period_end = raw_telecom.period.end
 
                     await TelecomPatientPeriod.create(
                         telecom=telecom,
@@ -258,7 +280,8 @@ class PatientRecord(Model):
         # one.
         cnss = []
         try:
-            for cns in self.cnss:
+            cnss_instances = await Cns.filter(patient=self)
+            for cns in cnss_instances:
                 if cns.is_main:
                     cnss.insert(0, cns.value)
                 else:
@@ -378,11 +401,11 @@ class Telecom(Model):
         # - system.
         if telecom_data["system"]:
             telecom_data["system"] = await TelecomSystem.get_or_none(
-                name=telecom_data.pop("system")
+                slug=telecom_data.pop("system")
             )
         # - use.
         if telecom_data["use"]:
-            telecom_data["use"] = await TelecomUse.get_or_none(name=telecom_data.pop("use"))
+            telecom_data["use"] = await TelecomUse.get_or_none(slug=telecom_data.pop("use"))
         # Create the telecom.
         return await Telecom.create(**telecom_data)
 
