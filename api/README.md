@@ -14,6 +14,26 @@
 |Banco de Dados (Postgres) |localhost|8001|postgres|postgres|
 |API (Fast API) | localhost|8000|-|-|
 
+## Dados Iniciais
+- Rode `python scripts/create_user.py --username pedro --password senha`
+
+
+## Debugging
+- Para fazer o debugging da API você vai rodá-la fora do container docker. Dessa forma a configuração é simples.
+- Arquivos de configuração disponíveis em `.vscode/launch.json`.
+
+### Setup
+- **Suba o container**: rode `docker compose up` para subir o banco de dados.
+- **Crie um ambiente virtual**: crie um ambiente poetry *dentro do projeto*.
+   - Por padrão, o poetry armazena os arquivos do ambiente fora do projeto.
+   - Neste caso, para facilitar a configuração da depuração, iremos configurar para salvar os arquivos em uma pasta `.venv` na raiz do projeto.
+   - Rode: `poetry config virtualenvs.in-project true`
+   - Se já tinha um ambiente, remova com `poetry env remove <ID_DO_ENV>` e inicie um novo ambiente
+
+### Uso
+- **Inicie a depuração**: o VSCode detecta automaticamente o arquivo que configura a depuração. Basta dar "play" na aba de depuração
+    
+
 ## Payloads para Testes
 
 ### Entidade `Patient` (Campos Obrigatórios)
