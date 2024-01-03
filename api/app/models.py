@@ -280,7 +280,7 @@ class PatientRecord(Model):
         # one.
         cnss = []
         try:
-            cnss_instances = await Cns.filter(patient=self)
+            cnss_instances = await self.cnss.all()
             for cns in cnss_instances:
                 if cns.is_main:
                     cnss.insert(0, cns.value)
@@ -303,20 +303,28 @@ class PatientRecord(Model):
         # Iterate over the patient's addresses.
         addresses = []
         try:
-            for address_patient_period in self.address_patient_periods:
-                address = address_patient_period.address
+            address_patient_periods_instances = await self.address_patient_periods.all()
+            for address_patient_period in address_patient_periods_instances:
+                # TODO: Refactor this part
+                address = await address_patient_period.address
+                type = await address.type
+                use = await address.use
+                city = await address.city
+                state = await city.state
+                country = await state.country
+
                 period = PeriodModel(
                     start=address_patient_period.period_start,
                     end=address_patient_period.period_end,
                 )
                 addresses.append(
                     AddressModel(
-                        use=address.use.name if address.use else None,
-                        type=address.type.name if address.type else None,
+                        use=use.name if use else None,
+                        type=type.name if type else None,
                         line=address.line,
-                        city=address.city.name,
-                        state=address.city.state.name,
-                        country=address.city.state.country.name,
+                        city=city.name,
+                        state=state.name,
+                        country=country.name,
                         postal_code=address.postal_code,
                         period=period,
                     )
@@ -326,16 +334,20 @@ class PatientRecord(Model):
         # Iterate over the patient's telecoms.
         telecoms = []
         try:
-            for telecom_patient_period in self.telecom_patient_periods:
-                telecom = telecom_patient_period.telecom
+            telecom_patient_period_instances = await self.telecom_patient_periods.all()
+            for telecom_patient_period in telecom_patient_period_instances:
+                telecom = await telecom_patient_period.telecom
+                use = await telecom.use
+                system = await telecom.system
+
                 period = PeriodModel(
                     start=telecom_patient_period.period_start,
                     end=telecom_patient_period.period_end,
                 )
                 telecoms.append(
                     TelecomModel(
-                        system=telecom.system.name if telecom.system else None,
-                        use=telecom.use.name if telecom.use else None,
+                        system=system.name if system else None,
+                        use=use.name if use else None,
                         value=telecom.value,
                         rank=telecom.rank,
                         period=period,
