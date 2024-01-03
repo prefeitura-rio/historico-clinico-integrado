@@ -204,15 +204,16 @@ class PatientRecord(Model):
         patient_record = await PatientRecord.create(**patient_data)
 
         patient_cns_value = patient_data.pop("cns")
-        patient_cns : Cns = await Cns.get_or_none(
-            patient=patient_record,
-            value=patient_cns_value
-        )
-        if not patient_cns:
-            await Cns.create(
+        if patient_cns_value:
+            patient_cns : Cns = await Cns.get_or_none(
                 patient=patient_record,
                 value=patient_cns_value
             )
+            if not patient_cns:
+                await Cns.create(
+                    patient=patient_record,
+                    value=patient_cns_value
+                )
 
         # Create the address_patient_periods.
         try:
@@ -264,15 +265,18 @@ class PatientRecord(Model):
     async def to_pydantic_model(self) -> PatientModel:
         # Dump the patient.
         active = self.active
-        birth_city = self.birth_city.name if self.birth_city else None
 
-        if self.birth_city.state:
-            state = await self.birth_city.state
-            birth_state = state.name
+        birth_city, birth_state, birth_country = None, None, None
+        if self.birth_city:
+            birth_city = self.birth_city.name
 
-            if state.country:
-                country = await state.country
-                birth_country = country.name
+            if self.birth_city.state:
+                state = await self.birth_city.state
+                birth_state = state.name
+
+                if state.country:
+                    country = await state.country
+                    birth_country = country.name
 
         birth_date = self.birth_date
         cpf = self.patient.cpf
@@ -313,10 +317,14 @@ class PatientRecord(Model):
                 state = await city.state
                 country = await state.country
 
-                period = PeriodModel(
-                    start=address_patient_period.period_start,
-                    end=address_patient_period.period_end,
-                )
+                if address_patient_period.period_start:
+                    period = PeriodModel(
+                        start=address_patient_period.period_start,
+                        end=address_patient_period.period_end,
+                    )
+                else:
+                    period = None
+
                 addresses.append(
                     AddressModel(
                         use=use.name if use else None,
@@ -340,10 +348,13 @@ class PatientRecord(Model):
                 use = await telecom.use
                 system = await telecom.system
 
-                period = PeriodModel(
-                    start=telecom_patient_period.period_start,
-                    end=telecom_patient_period.period_end,
-                )
+                if telecom_patient_period.period_start:
+                    period = PeriodModel(
+                        start=telecom_patient_period.period_start,
+                        end=telecom_patient_period.period_end,
+                    )
+                else:
+                    period = None
                 telecoms.append(
                     TelecomModel(
                         system=system.name if system else None,
