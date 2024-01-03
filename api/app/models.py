@@ -20,6 +20,7 @@ class Address(Model):
     # state: contained in city.
     postal_code = fields.CharField(max_length=8, null=True)
 
+    @classmethod
     async def create_from_pydantic_model(cls, address: AddressModel) -> "Address":
         # Dump the Pydantic model to a dict.
         address_data = address.model_dump()
@@ -141,7 +142,7 @@ class PatientRecord(Model):
             patient_obj = await Patient.create(cpf=patient_cpf)
         patient_data["patient"] = patient_obj
         # Start by parsing the address.
-        raw_addresses = patient_data.pop("address")
+        raw_addresses = patient.address
         addresses: list[Address] = []
         if raw_addresses:
             for address in raw_addresses:
@@ -183,7 +184,9 @@ class PatientRecord(Model):
         if patient_data["father"]:
             patient_data["father_name"] = patient_data.pop("father")
         # - gender.
-        patient_data["gender"] = await Gender.get_or_none(name=patient_data.pop("gender"))
+        patient_data["gender"] = await Gender.get_or_none(
+            slug=patient_data.pop("gender")
+        )
         # - mother_name.
         if patient_data["mother"]:
             patient_data["mother_name"] = patient_data.pop("mother")
@@ -214,11 +217,21 @@ class PatientRecord(Model):
         try:
             if raw_telecoms:
                 for telecom, raw_telecom in zip(telecoms, raw_telecoms):
+
+                    # Verify existance of period value
+                    if not raw_telecom.period:
+                        period_start = None
+                        period_end = None
+                    else:
+                        #TODO: Implement Period Extraction from Raw Telecom
+                        period_start = None #NOTE: Temp value
+                        period_end = None #NOTE: Temp value
+
                     await TelecomPatientPeriod.create(
                         telecom=telecom,
                         patient=patient_record,
-                        period_start=raw_telecom["period"]["start"],
-                        period_end=raw_telecom["period"]["end"],
+                        period_start=period_start,
+                        period_end=period_end,
                     )
         except Exception as exc:
             await patient_record.delete()
@@ -350,6 +363,7 @@ class Telecom(Model):
     value = fields.CharField(max_length=512)
     rank = fields.IntField(null=True)
 
+    @classmethod
     async def create_from_pydantic_model(cls, telecom: TelecomModel) -> "Telecom":
         # Dump the Pydantic model to a dict.
         telecom_data = telecom.model_dump()

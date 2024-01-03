@@ -15,6 +15,7 @@ class AddressModel(BaseModel):
     type: str | None = None
     line: str
     city: str
+    country: str
     state: str
     postal_code: str | None = None
     period: PeriodModel | None = None
