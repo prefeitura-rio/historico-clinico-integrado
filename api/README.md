@@ -32,7 +32,7 @@
 
 ### Uso
 - **Inicie a depuração**: o VSCode detecta automaticamente o arquivo que configura a depuração. Basta dar "play" na aba de depuração
-    
+
 
 ## Payloads para Testes
 
