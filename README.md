@@ -3,6 +3,7 @@
 ## Preparação de Ambiente
 
 - Rode `pre-commit install`
+- O projeto está na pasta `api/`
 - Garanta instalação de Docker e Docker Compose
 - Configure em `docker-compose.yaml` a variável `ENVIRONMENT` para `dev` ou `prod`
    - `dev`: Ambiente de Desenvolvimento
