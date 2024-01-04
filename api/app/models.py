@@ -110,23 +110,23 @@ class Patient(Model):
 
 
 class PatientRecord(Model):
-    patient = fields.ForeignKeyField("app.Patient", related_name="records")
-    data_source = fields.ForeignKeyField("app.DataSource", related_name="patients")
+    patient = fields.ForeignKeyField("app.Patient", related_name="patient")
+    data_source = fields.ForeignKeyField("app.DataSource", related_name="data_source")
 
     active = fields.BooleanField(default=True)
     birth_city = fields.ForeignKeyField("app.City", related_name="birth_patients", null=True)
     birth_date = fields.DateField()
     deceased = fields.BooleanField(default=False)
     deceased_date = fields.DateField(null=True)
-    ethnicity = fields.ForeignKeyField("app.Ethnicity", related_name="patients", null=True)
+    ethnicity = fields.ForeignKeyField("app.Ethnicity", related_name="ethnicity", null=True)
     father_name = fields.CharField(max_length=512, null=True)
-    gender = fields.ForeignKeyField("app.Gender", related_name="patients", null=True)
+    gender = fields.ForeignKeyField("app.Gender", related_name="gender", null=True)
     mother_name = fields.CharField(max_length=512, null=True)
     name = fields.CharField(max_length=512)
-    nationality = fields.ForeignKeyField("app.Nationality", related_name="patients", null=True)
+    nationality = fields.ForeignKeyField("app.Nationality", related_name="nationality", null=True)
     naturalization = fields.CharField(max_length=512, null=True)
     protected_person = fields.BooleanField(null=True)
-    race = fields.ForeignKeyField("app.Race", related_name="patients", null=True)
+    race = fields.ForeignKeyField("app.Race", related_name="race", null=True)
 
     class Meta:
         unique_together = (("patient", "data_source"),)

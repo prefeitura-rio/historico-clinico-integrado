@@ -27,7 +27,10 @@ async def get_patients(
             detail="User does not have a data source associated with it.",
         )
     else:
-        patients = await PatientRecord.filter(data_source__name=current_user.data_source.name)
+        data_source = await current_user.data_source
+        patients = await PatientRecord.filter(data_source__name=data_source.name).prefetch_related(
+            'patient','data_source', 'ethnicity','race','gender','nationality','birth_city'
+        )
     return [await patient.to_pydantic_model() for patient in patients]
 
 
