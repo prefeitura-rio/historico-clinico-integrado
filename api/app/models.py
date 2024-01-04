@@ -13,10 +13,10 @@ from app.pydantic_models import (
 
 class Address(Model):
     id = fields.UUIDField(pk=True)
-    use = fields.ForeignKeyField("app.AddressUse", related_name="addresses", null=True)
-    type = fields.ForeignKeyField("app.AddressType", related_name="addresses", null=True)
+    use = fields.ForeignKeyField("app.AddressUse", related_name="use", null=True)
+    type = fields.ForeignKeyField("app.AddressType", related_name="type", null=True)
     line = fields.CharField(max_length=1024)
-    city = fields.ForeignKeyField("app.City", related_name="addresses")
+    city = fields.ForeignKeyField("app.City", related_name="city")
     # state: contained in city.
     postal_code = fields.CharField(max_length=8, null=True)
 
@@ -309,13 +309,7 @@ class PatientRecord(Model):
         try:
             address_patient_periods_instances = await self.address_patient_periods.all()
             for address_patient_period in address_patient_periods_instances:
-                # TODO: Refactor this part
-                address = await address_patient_period.address
-                type = await address.type
-                use = await address.use
-                city = await address.city
-                state = await city.state
-                country = await state.country
+                address = await address_patient_period.address.prefetch_related('use','type','city', 'city__state', 'city__state__country')
 
                 if address_patient_period.period_start:
                     period = PeriodModel(
@@ -327,12 +321,12 @@ class PatientRecord(Model):
 
                 addresses.append(
                     AddressModel(
-                        use=use.name if use else None,
-                        type=type.name if type else None,
+                        use=address.use.name if address.use else None,
+                        type=address.type.name if address.type else None,
                         line=address.line,
-                        city=city.name,
-                        state=state.name,
-                        country=country.name,
+                        city=address.city.name,
+                        state=address.city.state.name,
+                        country=address.city.state.country.name,
                         postal_code=address.postal_code,
                         period=period,
                     )
@@ -344,9 +338,7 @@ class PatientRecord(Model):
         try:
             telecom_patient_period_instances = await self.telecom_patient_periods.all()
             for telecom_patient_period in telecom_patient_period_instances:
-                telecom = await telecom_patient_period.telecom
-                use = await telecom.use
-                system = await telecom.system
+                telecom = await telecom_patient_period.telecom.prefetch_related('use','system')
 
                 if telecom_patient_period.period_start:
                     period = PeriodModel(
@@ -357,8 +349,8 @@ class PatientRecord(Model):
                     period = None
                 telecoms.append(
                     TelecomModel(
-                        system=system.name if system else None,
-                        use=use.name if use else None,
+                        system=telecom.system.name if telecom.system else None,
+                        use=telecom.use.name if telecom.use else None,
                         value=telecom.value,
                         rank=telecom.rank,
                         period=period,
@@ -411,8 +403,8 @@ class State(Model):
 
 class Telecom(Model):
     id = fields.UUIDField(pk=True)
-    system = fields.ForeignKeyField("app.TelecomSystem", related_name="telecoms", null=True)
-    use = fields.ForeignKeyField("app.TelecomUse", related_name="telecoms", null=True)
+    system = fields.ForeignKeyField("app.TelecomSystem", related_name="system", null=True)
+    use = fields.ForeignKeyField("app.TelecomUse", related_name="use", null=True)
     value = fields.CharField(max_length=512)
     rank = fields.IntField(null=True)
 
