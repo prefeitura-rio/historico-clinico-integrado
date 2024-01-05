@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "API for FHIR Utils"
 authors = ["Escritório de Dados <escritoriodedados@gmail.com>"]
 license = "GPL-3.0-only"
-readme = "README.md"
 homepage = "https://github.com/prefeitura-rio/fhir-utils"
 repository = "https://github.com/prefeitura-rio/fhir-utils"
 keywords = ["fhir", "utilities", "data", "health", "government"]
