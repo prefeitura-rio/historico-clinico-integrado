@@ -4,7 +4,7 @@ sys.path.insert(0, "../")
 
 from app.main import app
 from fastapi.testclient import TestClient
-from utils import generate_cns, generate_cpf
+from .utils import generate_cns, generate_cpf
 
 
 def test_auth():
