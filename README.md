@@ -1,26 +1,50 @@
-# FHIR
+# Prontuários Integrados API
 
 ## Preparação de Ambiente
-
 - Rode `pre-commit install`
 - O projeto está na pasta `api/`
+- Para rodar o banco de dados é obrigatório utilizar um ambiente virtual docker
+- Para rodar a API você pode optar pelo docker ou pelo ambiente
+
+### Utilizando Docker (BD e API)
+*Ideal para deploy e subir o banco de dados localmente*
+
+- Esteja na pasta `./api/`
 - Garanta instalação de Docker e Docker Compose
 - Configure em `docker-compose.yaml` a variável `ENVIRONMENT` para `dev` ou `prod`
    - `dev`: Ambiente de Desenvolvimento
    - `prod`: Ambiente de Produção
-- Rode `docker compose up --build` na raiz do projeto
-- Os serviços estão disponíveis em:
+- Para subir a API e o banco de dados, rode `docker compose up --build`
+- Se quiser subir apenas o banco de dados: `docker compose up db --build`
+- Os serviços ficam disponíveis em:
 
 |Serviço|URL|Porta|Usuário|Senha|
 |--|--|--|--|--|
-|Banco de Dados (Postgres) |localhost|8001|postgres|postgres|
-|API (Fast API) | localhost|8000|-|-|
+|Banco de Dados (Postgres) |localhost|5432|postgres|postgres|
+|API (Fast API) | localhost|**8000**|-|-|
+
+### Utilizando Poetry (Apenas API)
+*Ideal para debugging da API e execução de testes localmente*
+- Na pasta `./api/` rode `poetry shell` e depois `poetry install`
+- Para inicializar a API rode: `uvicorn app.main:app --host 0.0.0.0 --port 8001`
+   - PS.: Recomendado seguir o tutorial de Debugging e executar por lá.
+- O serviço estará disponivel em:
+
+|Serviço|URL|Porta|Usuário|Senha|
+|--|--|--|--|--|
+|API (Fast API) | localhost|**8001**|-|-|
+
 
 ## Dados Iniciais
 - Dois scripts que populam o banco com dados iniciais:
   - Crie um usuário próprio: `python scripts/create_user.py --username <USUARIO> --password <SENHA>`
   - Crie dados iniciais: `python scripts/database_initial_data.py`
 - **Atenção**: Caso precise limpar todos os dados do banco: `python scripts/database_cleanup.py`
+
+## Testes Automatizados
+
+- Os testes estão definidos na pasta `api/tests/`
+- Para rodar os testes basta executar no terminal `pytest --disable-warnings`
 
 ## Debugging
 - Para fazer o debugging da API você vai rodá-la fora do container docker. Dessa forma a configuração é simples.
@@ -36,67 +60,8 @@
 
 ### Uso
 - **Inicie a depuração**: o VSCode detecta automaticamente o arquivo que configura a depuração. Basta dar "play" na aba de depuração
+- O serviço fica disponível em:
 
-## Payloads para Testes
-
-### Entidade `Patient` (Campos Obrigatórios)
-
-```json
-{
-	"active": true,
-	"birth_date": "1999-12-20",
-	"gender": "male",
-	"cpf": "11111111111",
-	"name": "MANUEL GOMES",
-   "telecom":  [{
-      "value": "5521123456789"
-   }]
-}
-```
-
-### Entidade `Patient` (Todos os Campos)
-
-```json
-{
-	"active": true,
-   "address": [{
-    	"use": "home",
-    	"type": "physical",
-    	"line": "AV SQN BLOCO M 604 APARTAMENTO ASA NORTE",
-    	"city": "Rio de Janeiro",
-    	"state": "Rio de Janeiro",
-		"country": "Brasil",
-    	"postal_code": "70752130",
-    	"period": {
-    		"start": "2020-10-01 00:00:00",
-    		"end": "2020-10-02 00:00:00"
-    		}
-    	}],
-   "birth_city": "Rio de Janeiro",
-	"birth_country": "Brasil",
-	"birth_state": "Rio de Janeiro",
-	"birth_date": "1999-12-20 00:00:00",
-	"deceased": false,
-	"gender": "male",
-	"cpf": "12345678901",
-	"cns": "1234567890000000",
-	"name": "GABRIELA INACIO ALVES",
-	"nationality": "B",
-	"naturalization": "",
-	"mother": "MARILIA FARES DA ROCHA ALVES",
-	"father": "JURACY ALVES",
-	"protected_person": false,
-	"race": "Parda",
-	"ethnicity": "PATAXO",
-	"telecom":  [{
-		"system": "phone",
-		"use": "home",
-      	"value": "5521123456789",
-      	"rank": "1",
-      	"period": {
-      		"start": "2020-10-01 00:00:00",
-    		"end": "2020-10-02 00:00:00"
-    		}
-    	}]
-}
-```
+|Serviço|URL|Porta|Usuário|Senha|
+|--|--|--|--|--|
+|API (Fast API) | localhost|**8001**|-|-|
