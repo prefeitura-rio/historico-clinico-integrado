@@ -13,7 +13,7 @@ from .utils import generate_cns, generate_cpf  # noqa
 @pytest.mark.run(order=1)
 async def test_auth(client: AsyncClient, username: str, password: str):
     response = await client.post(
-        "/auth/token/",
+        "/auth/token",
         headers={"content-type": "application/x-www-form-urlencoded"},
         data={"username": username, "password": password},
     )
@@ -31,7 +31,7 @@ async def test_auth(client: AsyncClient, username: str, password: str):
 @pytest.mark.run(order=2)
 async def test_patient_creation__minimal(client: AsyncClient, username: str, password: str):
     response = await client.post(
-        "/auth/token/",
+        "/auth/token",
         headers={"content-type": "application/x-www-form-urlencoded"},
         data={"username": username, "password": password},
     )
@@ -61,7 +61,7 @@ async def test_patient_creation__minimal(client: AsyncClient, username: str, pas
 @pytest.mark.run(order=2)
 async def test_patient_creation__complete(client: AsyncClient, username: str, password: str):
     response = await client.post(
-        "/auth/token/",
+        "/auth/token",
         headers={"content-type": "application/x-www-form-urlencoded"},
         data={"username": username, "password": password},
     )
