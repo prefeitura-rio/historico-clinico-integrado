@@ -76,7 +76,7 @@ def inject_environment_variables(environment: str):
     secrets = infisical_client.get_all_secrets(environment=environment, attach_to_os_environ=True)
     logger.info(f"Injecting {len(secrets)} environment variables from Infisical:")
     for secret in secrets:
-        logger.info(f" - {secret.secret_name}: {secret.secret_value}")
+        logger.info(f" - {secret.secret_name}: {'*' * len(secret.secret_value)}")
 
 
 environment = getenv_or_action("ENVIRONMENT", action="warn", default="dev")
