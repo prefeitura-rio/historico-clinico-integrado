@@ -7,7 +7,7 @@ from tortoise import Tortoise
 
 from app.db import TORTOISE_ORM
 from app.main import app
-from app.models import City, Country, DataSource, Gender, State, User
+from api.app.models.mrg import City, Country, DataSource, Gender, State, User
 from app.utils import password_hash
 
 

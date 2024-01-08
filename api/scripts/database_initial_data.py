@@ -3,7 +3,7 @@ from loguru import logger
 from tortoise import Tortoise, run_async
 
 from app.db import TORTOISE_ORM
-from app.models import (
+from api.app.models.mrg import (
     AddressType,
     AddressUse,
     City,

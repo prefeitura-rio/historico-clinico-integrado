@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import config
-from app.models import User
+from api.app.models.mrg import User
 from app.pydantic_models import Token
 from app.utils import authenticate_user, create_access_token
 

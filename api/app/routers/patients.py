@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import get_current_active_user
-from app.models import PatientRecord, User
+from api.app.models.mrg import PatientRecord, User
 from app.pydantic_models import PatientModel
 
 router = APIRouter(prefix="/patients", tags=["patients"])

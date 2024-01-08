@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
-from app.models import User
+from api.app.models.mrg import User
 from app.utils import password_hash
 
 router = APIRouter(prefix="/users", tags=["users"])

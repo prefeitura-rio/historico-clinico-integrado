@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
-from app.models import (
+from api.app.models.mrg import (
     AddressType,
     AddressUse,
     City,

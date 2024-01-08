@@ -7,7 +7,9 @@ TORTOISE_ORM = {
         "app": {
             "models": [
                 "aerich.models",
-                "app.models",
+                "app.models.raw",
+                "app.models.std",
+                "app.models.mrg"
             ],
             "default_connection": "default",
         },
