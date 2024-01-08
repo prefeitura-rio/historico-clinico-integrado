@@ -30,7 +30,7 @@ spec:
                 name: unificacao-prontuarios-secrets
           readinessProbe:
             httpGet:
-              path: /healthcheck/
+              path: /docs
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
