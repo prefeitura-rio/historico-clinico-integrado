@@ -16,7 +16,7 @@ def generate_cpf():
 
 
 def generate_cns():
-    cns = [random.randint(0, 16) for x in range(9)]
+    cns = [random.randint(0, 9) for x in range(16)]
     cns = [str(x) for x in cns]
 
     return "".join(cns)

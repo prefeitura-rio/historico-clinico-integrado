@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 from tortoise import fields
 from tortoise.exceptions import NoValuesFetched
 from tortoise.models import Model
@@ -18,7 +20,7 @@ class Address(Model):
     @classmethod
     async def create_from_pydantic_model(cls, address: AddressModel) -> "Address":
         # Dump the Pydantic model to a dict.
-        address_data = address.model_dump()
+        address_data = address.dict()
         # Parse the foreign keys.
         # - use.
         if address_data["use"]:
@@ -129,7 +131,7 @@ class PatientRecord(Model):
     @classmethod
     async def create_from_pydantic_model(cls, patient: PatientModel) -> "PatientRecord":
         # Dump the Pydantic model to a dict.
-        patient_data = patient.model_dump()
+        patient_data = patient.dict()
         # Check if the patient already exists using the CPF
         patient_cpf = patient_data.pop("cpf")
 
@@ -302,8 +304,12 @@ class PatientRecord(Model):
 
                 if address_patient_period.period_start:
                     period = PeriodModel(
-                        start=address_patient_period.period_start,
-                        end=address_patient_period.period_end,
+                        start=datetime.combine(
+                            address_patient_period.period_start, datetime.min.time()
+                        ),
+                        end=datetime.combine(address_patient_period.period_end, datetime.min.time())
+                        if address_patient_period.period_end
+                        else None,
                     )
                 else:
                     period = None
@@ -331,8 +337,12 @@ class PatientRecord(Model):
 
                 if telecom_patient_period.period_start:
                     period = PeriodModel(
-                        start=telecom_patient_period.period_start,
-                        end=telecom_patient_period.period_end,
+                        start=datetime.combine(
+                            telecom_patient_period.period_start, datetime.min.time()
+                        ),
+                        end=datetime.combine(telecom_patient_period.period_end, datetime.min.time())
+                        if telecom_patient_period.period_end
+                        else None,
                     )
                 else:
                     period = None
@@ -400,7 +410,7 @@ class Telecom(Model):
     @classmethod
     async def create_from_pydantic_model(cls, telecom: TelecomModel) -> "Telecom":
         # Dump the Pydantic model to a dict.
-        telecom_data = telecom.model_dump()
+        telecom_data = telecom.dict()
         # Parse the foreign keys.
         # - system.
         if telecom_data["system"]:

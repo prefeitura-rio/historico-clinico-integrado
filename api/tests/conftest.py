@@ -7,7 +7,7 @@ from tortoise import Tortoise
 
 from app.db import TORTOISE_ORM
 from app.main import app
-from app.models import User
+from app.models import City, Country, DataSource, Gender, State, User
 from app.utils import password_hash
 
 
@@ -36,13 +36,24 @@ async def client():
 async def initialize_tests():
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
+    await City.all().delete()
+    await Country.all().delete()
+    await DataSource.all().delete()
+    await Gender.all().delete()
+    await State.all().delete()
     await User.all().delete()
+    country = await Country.create(name="Brasil")
+    state = await State.create(name="Rio de Janeiro", country=country)
+    await City.create(name="Rio de Janeiro", state=state)
+    ds = await DataSource.create(name="test_datasource")
+    await Gender.create(slug="male", name="male")
     await User.create(
         username="pedro",
         email="pedro@example.com",
         password=password_hash("senha"),
         is_active=True,
         is_superuser=True,
+        data_source=ds,
     )
     yield
     await Tortoise.close_connections()

@@ -90,7 +90,7 @@ async def test_patient_creation__complete(client: AsyncClient, username: str, pa
             "birth_city": "Rio de Janeiro",
             "birth_country": "Brasil",
             "birth_state": "Rio de Janeiro",
-            "birth_date": "1999-12-20 00:00:00",
+            "birth_date": "1999-12-20",
             "deceased": False,
             "gender": "male",
             "cpf": random_cpf,
