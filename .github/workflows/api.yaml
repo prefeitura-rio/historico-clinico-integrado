@@ -61,6 +61,12 @@ jobs:
           poetry config virtualenvs.create false
           poetry install --with dev
 
+      - name: Set up database
+        run: |
+          cd api/
+          aerich init-db
+          aerich upgrade
+
       - name: Run tests
         run: |
           cd api/
