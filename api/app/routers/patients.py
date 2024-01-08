@@ -4,13 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import get_current_active_user
-from app.models import (
-    PatientRecord,
-    User,
-)
-from app.pydantic_models import (
-    PatientModel,
-)
+from app.models import PatientRecord, User
+from app.pydantic_models import PatientModel
 
 router = APIRouter(prefix="/patients", tags=["patients"])
 
@@ -29,7 +24,7 @@ async def get_patients(
     else:
         data_source = await current_user.data_source
         patients = await PatientRecord.filter(data_source__name=data_source.name).prefetch_related(
-            'patient','data_source', 'ethnicity','race','gender','nationality','birth_city'
+            "patient", "data_source", "ethnicity", "race", "gender", "nationality", "birth_city"
         )
     return [await patient.to_pydantic_model() for patient in patients]
 
@@ -39,12 +34,11 @@ async def create_patient(
     current_user: Annotated[User, Depends(get_current_active_user)],
     patient_input: PatientModel,
 ) -> PatientModel:
-
     user_data_source = await current_user.data_source
     if not user_data_source:
         raise HTTPException(
             status_code=400,
-            detail=f"User does not have a data source associated with it",
+            detail="User does not have a data source associated with it",
         )
     patient_input.data_source_name = user_data_source.name
     patient = await PatientRecord.create_from_pydantic_model(patient_input)

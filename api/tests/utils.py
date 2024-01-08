@@ -12,11 +12,11 @@ def generate_cpf():
 
     cpf = [str(x) for x in cpf]
 
-    return ''.join(cpf)
+    return "".join(cpf)
 
 
 def generate_cns():
     cns = [random.randint(0, 16) for x in range(9)]
     cns = [str(x) for x in cns]
 
-    return ''.join(cns)
+    return "".join(cns)

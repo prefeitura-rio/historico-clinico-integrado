@@ -1,10 +1,22 @@
 # -*- coding: utf-8 -*-
+from loguru import logger
 from tortoise import Tortoise, run_async
 
-from loguru import logger
-
 from app.db import TORTOISE_ORM
-from app.models import Country, DataSource, Ethnicity, Gender, Nationality, Race, State, City, AddressUse, TelecomUse, AddressType, TelecomSystem
+from app.models import (
+    AddressType,
+    AddressUse,
+    City,
+    Country,
+    DataSource,
+    Ethnicity,
+    Gender,
+    Nationality,
+    Race,
+    State,
+    TelecomSystem,
+    TelecomUse,
+)
 
 
 async def run():
@@ -48,13 +60,17 @@ async def run():
     logger.info("Countries created successfully")
 
     states = []
-    for state_data in [{"name": "Rio de Janeiro", "country": await Country.get_or_none(name="Brasil")}]:
+    for state_data in [
+        {"name": "Rio de Janeiro", "country": await Country.get_or_none(name="Brasil")}
+    ]:
         states.append(State(**state_data))
     await State.bulk_create(states)
     logger.info("States created successfully")
 
     cities = []
-    for city_data in [{"name": "Rio de Janeiro", "state": await State.get_or_none(name="Rio de Janeiro")}]:
+    for city_data in [
+        {"name": "Rio de Janeiro", "state": await State.get_or_none(name="Rio de Janeiro")}
+    ]:
         cities.append(City(**city_data))
     await City.bulk_create(cities)
     logger.info("Cities created successfully")

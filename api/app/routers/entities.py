@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
