@@ -35,11 +35,9 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
-            exec:
-              command:
-                - bash
-                - "-c"
-                - kill -0 $(cat /run/nginx.pid)
+            httpGet:
+              path: /docs
+              port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
