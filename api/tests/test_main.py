@@ -40,7 +40,7 @@ async def test_patient_creation__minimal(client: AsyncClient, username: str, pas
     random_cpf = generate_cpf()
 
     response = await client.post(
-        "/patients/",
+        "/patients",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "active": True,
@@ -71,7 +71,7 @@ async def test_patient_creation__complete(client: AsyncClient, username: str, pa
     random_cns = generate_cns()
 
     response = await client.post(
-        "/patients/",
+        "/patients",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "active": True,
