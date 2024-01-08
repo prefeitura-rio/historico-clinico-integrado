@@ -3,7 +3,7 @@ name: API
 on:
   push:
     paths:
-      - ".github/workflows/api-*"
+      - ".github/workflows/api*"
       - "api/**/*"
 
 jobs:
