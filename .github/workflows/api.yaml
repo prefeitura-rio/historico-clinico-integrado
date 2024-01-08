@@ -8,13 +8,8 @@ on:
 
 jobs:
   lint:
-    name: Lint (${{ matrix.os }}${{ matrix.arch }} Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        arch: [x64]
-        python-version: ["3.11.x"]
+    name: Lint
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -22,8 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.arch }}
+          python-version: "3.11.x"
 
       - name: Set up dependencies
         run: |
@@ -38,16 +32,12 @@ jobs:
           task lint
 
   tests:
-    name: Test (${{ matrix.os }}${{ matrix.arch }} Python ${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
+    name: Tests
+    runs-on: ubuntu-latest
+    container: python:3.11-slim
     env:
       INFISICAL_ADDRESS: ${{ secrets.INFISICAL_ADDRESS }}
       INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        arch: [x64]
-        python-version: ["3.11.x"]
     services:
       db:
         image: postgres:15
@@ -63,12 +53,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.arch }}
 
       - name: Set up dependencies
         run: |
