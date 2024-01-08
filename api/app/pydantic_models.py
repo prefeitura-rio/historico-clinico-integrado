@@ -2,7 +2,6 @@
 from datetime import date, datetime
 
 from pydantic import BaseModel
-from tortoise.contrib.pydantic import pydantic_model_creator
 
 
 class PeriodModel(BaseModel):

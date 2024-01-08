@@ -1,4 +1,4 @@
-name: CI - Tests
+name: Lib - Tests
 
 on:
   push:

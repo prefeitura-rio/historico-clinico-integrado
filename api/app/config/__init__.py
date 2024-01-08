@@ -2,6 +2,7 @@
 from os import getenv
 from typing import List
 
+from infisical import InfisicalClient
 from loguru import logger
 
 
@@ -64,9 +65,25 @@ def getenv_list_or_action(
     return []
 
 
+def inject_environment_variables(environment: str):
+    """Inject environment variables from Infisical."""
+    site_url = getenv_or_action("INFISICAL_ADDRESS", action="raise")
+    token = getenv_or_action("INFISICAL_TOKEN", action="raise")
+    infisical_client = InfisicalClient(
+        token=token,
+        site_url=site_url,
+    )
+    secrets = infisical_client.get_all_secrets(environment=environment, attach_to_os_environ=True)
+    logger.info(f"Injecting {len(secrets)} environment variables from Infisical:")
+    for secret in secrets:
+        logger.info(f" - {secret.secret_name}: {'*' * len(secret.secret_value)}")
+
+
 environment = getenv_or_action("ENVIRONMENT", action="warn", default="dev")
-if environment not in ["dev", "prod"]:
-    raise ValueError("ENVIRONMENT must be one of 'dev' or 'prod'")
+if environment not in ["dev", "staging", "prod"]:
+    raise ValueError("ENVIRONMENT must be one of 'dev', 'staging' or 'prod'")
+
+inject_environment_variables(environment=environment)
 
 if environment == "dev":
     from app.config.dev import *  # noqa: F401, F403

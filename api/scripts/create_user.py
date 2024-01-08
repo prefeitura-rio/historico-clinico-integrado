@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from argparse import ArgumentParser
-from uuid import uuid4
 
 from loguru import logger
 from tortoise import Tortoise, run_async

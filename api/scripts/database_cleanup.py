@@ -3,8 +3,8 @@ from loguru import logger
 from tortoise import Tortoise, run_async
 from tortoise.models import Model
 
-from app.db import TORTOISE_ORM
 from app import models
+from app.db import TORTOISE_ORM
 
 
 async def run():

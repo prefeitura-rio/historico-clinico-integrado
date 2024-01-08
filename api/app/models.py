@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 from tortoise import fields
 from tortoise.exceptions import NoValuesFetched
 from tortoise.models import Model
 
-from app.pydantic_models import (
-    AddressModel,
-    PatientModel,
-    PeriodModel,
-    TelecomModel,
-)
+from app.pydantic_models import AddressModel, PatientModel, PeriodModel, TelecomModel
 
 
 class Address(Model):
@@ -23,7 +20,7 @@ class Address(Model):
     @classmethod
     async def create_from_pydantic_model(cls, address: AddressModel) -> "Address":
         # Dump the Pydantic model to a dict.
-        address_data = address.model_dump()
+        address_data = address.dict()
         # Parse the foreign keys.
         # - use.
         if address_data["use"]:
@@ -134,7 +131,7 @@ class PatientRecord(Model):
     @classmethod
     async def create_from_pydantic_model(cls, patient: PatientModel) -> "PatientRecord":
         # Dump the Pydantic model to a dict.
-        patient_data = patient.model_dump()
+        patient_data = patient.dict()
         # Check if the patient already exists using the CPF
         patient_cpf = patient_data.pop("cpf")
 
@@ -186,9 +183,7 @@ class PatientRecord(Model):
         if patient_data["father"]:
             patient_data["father_name"] = patient_data.pop("father")
         # - gender.
-        patient_data["gender"] = await Gender.get_or_none(
-            slug=patient_data.pop("gender")
-        )
+        patient_data["gender"] = await Gender.get_or_none(slug=patient_data.pop("gender"))
         # - mother_name.
         if patient_data["mother"]:
             patient_data["mother_name"] = patient_data.pop("mother")
@@ -205,21 +200,16 @@ class PatientRecord(Model):
 
         patient_cns_value = patient_data.pop("cns")
         if patient_cns_value:
-            patient_cns : Cns = await Cns.get_or_none(
-                patient=patient_record,
-                value=patient_cns_value
+            patient_cns: Cns = await Cns.get_or_none(
+                patient=patient_record, value=patient_cns_value
             )
             if not patient_cns:
-                await Cns.create(
-                    patient=patient_record,
-                    value=patient_cns_value
-                )
+                await Cns.create(patient=patient_record, value=patient_cns_value)
 
         # Create the address_patient_periods.
         try:
             if raw_addresses:
                 for address, raw_address in zip(addresses, raw_addresses):
-
                     # Verify existance of period value
                     if not raw_address.period:
                         period_start = None
@@ -241,7 +231,6 @@ class PatientRecord(Model):
         try:
             if raw_telecoms:
                 for telecom, raw_telecom in zip(telecoms, raw_telecoms):
-
                     # Verify existance of period value
                     if not raw_telecom.period:
                         period_start = None
@@ -309,12 +298,18 @@ class PatientRecord(Model):
         try:
             address_patient_periods_instances = await self.address_patient_periods.all()
             for address_patient_period in address_patient_periods_instances:
-                address = await address_patient_period.address.prefetch_related('use','type','city', 'city__state', 'city__state__country')
+                address = await address_patient_period.address.prefetch_related(
+                    "use", "type", "city", "city__state", "city__state__country"
+                )
 
                 if address_patient_period.period_start:
                     period = PeriodModel(
-                        start=address_patient_period.period_start,
-                        end=address_patient_period.period_end,
+                        start=datetime.combine(
+                            address_patient_period.period_start, datetime.min.time()
+                        ),
+                        end=datetime.combine(address_patient_period.period_end, datetime.min.time())
+                        if address_patient_period.period_end
+                        else None,
                     )
                 else:
                     period = None
@@ -338,12 +333,16 @@ class PatientRecord(Model):
         try:
             telecom_patient_period_instances = await self.telecom_patient_periods.all()
             for telecom_patient_period in telecom_patient_period_instances:
-                telecom = await telecom_patient_period.telecom.prefetch_related('use','system')
+                telecom = await telecom_patient_period.telecom.prefetch_related("use", "system")
 
                 if telecom_patient_period.period_start:
                     period = PeriodModel(
-                        start=telecom_patient_period.period_start,
-                        end=telecom_patient_period.period_end,
+                        start=datetime.combine(
+                            telecom_patient_period.period_start, datetime.min.time()
+                        ),
+                        end=datetime.combine(telecom_patient_period.period_end, datetime.min.time())
+                        if telecom_patient_period.period_end
+                        else None,
                     )
                 else:
                     period = None
@@ -411,7 +410,7 @@ class Telecom(Model):
     @classmethod
     async def create_from_pydantic_model(cls, telecom: TelecomModel) -> "Telecom":
         # Dump the Pydantic model to a dict.
-        telecom_data = telecom.model_dump()
+        telecom_data = telecom.dict()
         # Parse the foreign keys.
         # - system.
         if telecom_data["system"]:
