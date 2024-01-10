@@ -53,7 +53,7 @@ class StandardizedPatientRecord(Model):
     raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw")
 
     cns_list        = fields.JSONField(null=True)
-    addresses_list  = fields.JSONField(null=True)
+    address_list    = fields.JSONField(null=True)
     telecom_list    = fields.JSONField(null=True)
 
     created_at      = fields.DatetimeField(auto_now_add=True)
