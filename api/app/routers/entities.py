@@ -5,18 +5,17 @@ from fastapi import APIRouter, Depends, HTTPException
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
-from app.pydantic_models import PatientModel
+from app.pydantic_models import PatientModel, PatientConditionListModel
 from app.models import (
     User, DataSource, Patient, City, Race, Gender, Nationality, Address, Telecom, PatientCondition, ConditionCode
 )
 
 PatientOutput = pydantic_model_creator(Patient, name="PatientOutput")
+PatientConditionOutput = pydantic_model_creator(PatientCondition, name="PatientConditionOutput")
 
 
 router = APIRouter(prefix="/mrg", tags=["Entidades MRG (Formato Merged/Fundido)"])
 
-
-# Endpoint 1 - [PUT] Create Patient
 
 @router.put("/patient", response_model=PatientOutput, status_code=200)
 async def create_or_update_patient(
@@ -79,7 +78,34 @@ async def create_or_update_patient(
     return await PatientOutput.from_tortoise_orm(patient)
 
 
+@router.put("/patientcondition", response_model=list[PatientConditionOutput], status_code=200)
+async def create_or_update_patientcondition(
+    _: Annotated[User, Depends(get_current_active_user)],
+    patientcondition: PatientConditionListModel,
+) -> list[PatientConditionOutput]:
+    input = patientcondition.dict()
 
+    patient = await Patient.get_or_none(
+        patient_cpf=input.get('patient_cpf')
+    ).prefetch_related('patientconditions')
 
-# Endpoint 3 - [GET] Patient
-# - Lista com todos os endereços, telecoms e Conditions
+    if patient == None:
+        raise HTTPException(status_code=400, detail="Patient don't exist")
+
+    # Reset Patient Conditions
+    for instance in patient.patientconditions.related_objects:
+        await instance.delete()
+
+    conditions = []
+    for condition in input.get('conditions'):
+        condition_code = await ConditionCode.get_or_none(
+            value=condition.get('code')
+        )
+        if condition_code == None:
+            raise HTTPException(status_code=400, detail=f"Condition Code {condition.get('code')} don't exist")
+        condition['patient'] = patient
+        condition['condition_code'] = condition_code
+        new_condition = await PatientCondition.create(**condition)
+        conditions.append(new_condition)
+
+    return conditions

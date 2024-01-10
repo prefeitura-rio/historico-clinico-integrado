@@ -61,11 +61,15 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
-class PatientConditionModel(BaseModel):
+class ConditionListModel(BaseModel):
     code: str
     clinical_status: str
     category: str
     date: datetime
+
+class PatientConditionListModel(BaseModel):
+    patient_cpf: str
+    conditions: List[ConditionListModel]
 
 class PatientModel(BaseModel):
     active: bool | None = True
