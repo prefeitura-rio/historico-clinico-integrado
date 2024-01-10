@@ -105,3 +105,12 @@ class StandardizedPatientRecordModel(BaseModel):
     address_list: List[StandardizedAddressModel] | None = None
     telecom_list: List[StandardizedTelecomModel] | None = None
     raw_source_id: str | None = None
+
+class StandardizedPatientConditionModel(BaseModel):
+    patient_cpf : str
+    cid : str
+    ciap: str | None = None
+    clinical_status: str
+    category: str
+    date: datetime
+    raw_source_id: str | None = None
