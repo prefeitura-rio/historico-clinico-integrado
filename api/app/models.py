@@ -113,10 +113,28 @@ class State(Model):
     country = fields.ForeignKeyField("app.Country", related_name="states")
 
 
+class Gender(Model):
+    id = fields.UUIDField(pk=True)
+    slug = fields.CharField(max_length=32, unique=True)
+    name = fields.CharField(max_length=512)
+
+
+class Race(Model):
+    id = fields.UUIDField(pk=True)
+    slug = fields.CharField(max_length=32, unique=True)
+    name = fields.CharField(max_length=512)
+
+
+class Nationality(Model):
+    id = fields.UUIDField(pk=True)
+    slug = fields.CharField(max_length=32, unique=True)
+    name = fields.CharField(max_length=512)
+
+
 class Address(Model):
     id = fields.UUIDField(pk=True)
-    use = fields.CharField(max_length=32, unique=True)
-    type = fields.CharField(max_length=32, unique=True)
+    use = fields.CharField(max_length=32)
+    type = fields.CharField(max_length=32)
     line = fields.CharField(max_length=1024)
     city = fields.ForeignKeyField("app.City", related_name="city")
     postal_code = fields.CharField(max_length=8, null=True)
@@ -127,8 +145,8 @@ class Address(Model):
 
 class Telecom(Model):
     id = fields.UUIDField(pk=True)
-    system = fields.CharField(max_length=32, unique=True)
-    use = fields.CharField(max_length=32, unique=True)
+    system = fields.CharField(max_length=32)
+    use = fields.CharField(max_length=32)
     value = fields.CharField(max_length=512)
     rank = fields.IntField(null=True)
     patient = fields.ForeignKeyField("app.Patient", related_name="telecom_patient_periods")
@@ -156,9 +174,9 @@ class Patient(Model):
     mother_name         = fields.CharField(max_length=512, null=True)
     name                = fields.CharField(max_length=512)
     naturalization      = fields.CharField(max_length=512, null=True)
-    race                = fields.CharEnumField(enum_type=RaceEnum, max_length=32)
-    gender              = fields.CharEnumField(enum_type=GenderEnum, max_length=32)
-    nationality         = fields.CharEnumField(enum_type=NationalityEnum, max_length=1)
+    race                = fields.ForeignKeyField("app.Race", related_name="patient_race")
+    gender              = fields.ForeignKeyField("app.Gender", related_name="patient_gender")
+    nationality         = fields.ForeignKeyField("app.Nationality", related_name="patient_nationality")
 
     birth_city = fields.ForeignKeyField("app.City", related_name="birth_patients", null=True)
 
@@ -189,4 +207,3 @@ class User(Model):
 
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
-

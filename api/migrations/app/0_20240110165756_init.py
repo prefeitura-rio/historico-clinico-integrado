@@ -10,6 +10,17 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     "app" VARCHAR(100) NOT NULL,
     "content" JSONB NOT NULL
 );
+CREATE TABLE IF NOT EXISTS "conditioncode" (
+    "id" UUID NOT NULL  PRIMARY KEY,
+    "type" VARCHAR(4) NOT NULL,
+    "value" VARCHAR(4) NOT NULL
+);
+COMMENT ON COLUMN "conditioncode"."type" IS 'CID: cid\nCIAP: ciap';
+CREATE TABLE IF NOT EXISTS "country" (
+    "id" UUID NOT NULL  PRIMARY KEY,
+    "code" VARCHAR(10) NOT NULL,
+    "name" VARCHAR(512) NOT NULL
+);
 CREATE TABLE IF NOT EXISTS "datasource" (
     "id" UUID NOT NULL  PRIMARY KEY,
     "system" VARCHAR(10) NOT NULL,
@@ -17,8 +28,24 @@ CREATE TABLE IF NOT EXISTS "datasource" (
     "description" VARCHAR(512) NOT NULL
 );
 COMMENT ON COLUMN "datasource"."system" IS 'VITACARE: vitacare\nVITAI: vitai\nPRONTUARIO: prontuario\nSMSRIO: smsrio';
+CREATE TABLE IF NOT EXISTS "gender" (
+    "id" UUID NOT NULL  PRIMARY KEY,
+    "slug" VARCHAR(32) NOT NULL UNIQUE,
+    "name" VARCHAR(512) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS "nationality" (
+    "id" UUID NOT NULL  PRIMARY KEY,
+    "slug" VARCHAR(32) NOT NULL UNIQUE,
+    "name" VARCHAR(512) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS "race" (
+    "id" UUID NOT NULL  PRIMARY KEY,
+    "slug" VARCHAR(32) NOT NULL UNIQUE,
+    "name" VARCHAR(512) NOT NULL
+);
 CREATE TABLE IF NOT EXISTS "raw__patientcondition" (
     "id" UUID NOT NULL  PRIMARY KEY,
+    "patient_cpf" VARCHAR(11) NOT NULL,
     "data" JSONB NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
@@ -26,6 +53,7 @@ CREATE TABLE IF NOT EXISTS "raw__patientcondition" (
 );
 CREATE TABLE IF NOT EXISTS "raw__patientrecord" (
     "id" UUID NOT NULL  PRIMARY KEY,
+    "patient_cpf" VARCHAR(11) NOT NULL,
     "data" JSONB NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
@@ -64,7 +92,7 @@ CREATE TABLE IF NOT EXISTS "std__patientrecord" (
     "gender" VARCHAR(7) NOT NULL,
     "nationality" VARCHAR(1) NOT NULL,
     "cns_list" JSONB,
-    "addresses_list" JSONB,
+    "address_list" JSONB,
     "telecom_list" JSONB,
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
@@ -73,18 +101,6 @@ CREATE TABLE IF NOT EXISTS "std__patientrecord" (
 COMMENT ON COLUMN "std__patientrecord"."race" IS 'BRANCA: branca\nPRETA: preta\nPARDA: parda\nAMARELA: amarela\nINDIGENA: indigena';
 COMMENT ON COLUMN "std__patientrecord"."gender" IS 'MALE: male\nFEMALE: female\nUNKNOWN: unknown';
 COMMENT ON COLUMN "std__patientrecord"."nationality" IS 'BRASILEIRO: B\nESTRANGEIRO: E\nNATURALIZADO: N';
-CREATE TABLE IF NOT EXISTS "conditioncode" (
-    "id" UUID NOT NULL  PRIMARY KEY,
-    "type" VARCHAR(4) NOT NULL,
-    "version" VARCHAR(12) NOT NULL,
-    "value" VARCHAR(4) NOT NULL
-);
-COMMENT ON COLUMN "conditioncode"."type" IS 'CID: cid\nCIAP: ciap';
-CREATE TABLE IF NOT EXISTS "country" (
-    "id" UUID NOT NULL  PRIMARY KEY,
-    "code" VARCHAR(10) NOT NULL,
-    "name" VARCHAR(512) NOT NULL
-);
 CREATE TABLE IF NOT EXISTS "state" (
     "id" UUID NOT NULL  PRIMARY KEY,
     "code" VARCHAR(10) NOT NULL,
@@ -105,23 +121,19 @@ CREATE TABLE IF NOT EXISTS "patient" (
     "protected_person" BOOL,
     "deceased" BOOL NOT NULL  DEFAULT False,
     "deceased_date" DATE,
-    "ethnicity" VARCHAR(32) NOT NULL,
     "father_name" VARCHAR(512),
     "mother_name" VARCHAR(512),
     "name" VARCHAR(512) NOT NULL,
     "naturalization" VARCHAR(512),
-    "race" VARCHAR(32) NOT NULL,
-    "gender" VARCHAR(32) NOT NULL,
-    "nationality" VARCHAR(1) NOT NULL,
-    "birth_city_id" UUID REFERENCES "city" ("id") ON DELETE CASCADE
+    "birth_city_id" UUID REFERENCES "city" ("id") ON DELETE CASCADE,
+    "gender_id" UUID NOT NULL REFERENCES "gender" ("id") ON DELETE CASCADE,
+    "nationality_id" UUID NOT NULL REFERENCES "nationality" ("id") ON DELETE CASCADE,
+    "race_id" UUID NOT NULL REFERENCES "race" ("id") ON DELETE CASCADE
 );
-COMMENT ON COLUMN "patient"."race" IS 'BRANCA: branca\nPRETA: preta\nPARDA: parda\nAMARELA: amarela\nINDIGENA: indigena';
-COMMENT ON COLUMN "patient"."gender" IS 'MALE: male\nFEMALE: female\nUNKNOWN: unknown';
-COMMENT ON COLUMN "patient"."nationality" IS 'BRASILEIRO: B\nESTRANGEIRO: E\nNATURALIZADO: N';
 CREATE TABLE IF NOT EXISTS "address" (
     "id" UUID NOT NULL  PRIMARY KEY,
-    "use" VARCHAR(32) NOT NULL UNIQUE,
-    "type" VARCHAR(32) NOT NULL UNIQUE,
+    "use" VARCHAR(32) NOT NULL,
+    "type" VARCHAR(32) NOT NULL,
     "line" VARCHAR(1024) NOT NULL,
     "postal_code" VARCHAR(8),
     "period_start" DATE,
@@ -149,8 +161,8 @@ COMMENT ON COLUMN "patientcondition"."clinical_status" IS 'RESOLVED: resolved\nR
 COMMENT ON COLUMN "patientcondition"."category" IS 'PROBLEM_LIST_ITEM: problem-list-item\nENCOUTER_DIAGNOSIS: encounter-diagnosis';
 CREATE TABLE IF NOT EXISTS "telecom" (
     "id" UUID NOT NULL  PRIMARY KEY,
-    "system" VARCHAR(32) NOT NULL UNIQUE,
-    "use" VARCHAR(32) NOT NULL UNIQUE,
+    "system" VARCHAR(32) NOT NULL,
+    "use" VARCHAR(32) NOT NULL,
     "value" VARCHAR(512) NOT NULL,
     "rank" INT,
     "period_start" DATE,
