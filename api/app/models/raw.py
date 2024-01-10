@@ -2,10 +2,14 @@
 from tortoise import fields
 from tortoise.models import Model
 
+from app.models.enums import SystemEnum, TestEnum
+
 
 class DataSource(Model):
-    id = fields.UUIDField(pk=True)
-    name = fields.CharField(max_length=512)
+    id          = fields.UUIDField(pk=True)
+    system      = fields.IntEnumField(TestEnum)
+    cnes        = fields.CharField(max_length=50, unique=True)
+    description = fields.CharField(max_length=512)
 
 
 class RawPatientRecord(Model):
@@ -16,7 +20,7 @@ class RawPatientRecord(Model):
     updated_at  = fields.DatetimeField(auto_now=True)
 
     class Meta:
-        schema="raw"
+        table="raw__patientrecord"
 
 
 class RawPatientCondition(Model):
@@ -27,4 +31,4 @@ class RawPatientCondition(Model):
     updated_at  = fields.DatetimeField(auto_now=True)
 
     class Meta:
-        schema="raw"
+        table="raw__patientcondition"
