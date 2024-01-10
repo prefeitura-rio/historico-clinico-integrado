@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from enum import Enum, IntEnum
+from enum import Enum
 
-class TestEnum(IntEnum):
-	TESTE1=1
-	TESTE2=2
+
+class ConditionCodeTypeEnum(str, Enum):
+	CID="cid"
+	CIAP="ciap"
 
 class SystemEnum(str, Enum):
 	VITACARE="vitacare"

@@ -5,7 +5,7 @@ from loguru import logger
 from tortoise import Tortoise, run_async
 
 from app.db import TORTOISE_ORM
-from api.app.models.mrg import User
+from app.models import User
 from app.utils import password_hash
 
 

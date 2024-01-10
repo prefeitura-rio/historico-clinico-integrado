@@ -9,7 +9,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from app import config
 from app.db import TORTOISE_ORM
-from app.routers import auth#, entities, patients, users
+from app.routers import auth, entities, users#, patients, users
 
 logger.remove()
 logger.add(sys.stdout, level=config.LOG_LEVEL)
@@ -22,7 +22,7 @@ if config.SENTRY_ENABLE:
     )
 
 app = FastAPI(
-    title="FHIR Parser API",
+    title="Unificador de Prontuários - SMSRio",
 )
 
 logger.debug("Configuring CORS with the following settings:")
@@ -43,13 +43,13 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
-#app.include_router(entities.router)
+app.include_router(entities.router)
+app.include_router(users.router)
 #app.include_router(patients.router)
-#app.include_router(users.router)
 
 register_tortoise(
     app,
     config=TORTOISE_ORM,
     generate_schemas=False,
-    add_exception_handlers=False,
+    add_exception_handlers=True,
 )

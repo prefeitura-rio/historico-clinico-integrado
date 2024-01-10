@@ -4,11 +4,6 @@ from datetime import date, datetime
 from pydantic import BaseModel
 
 
-class PeriodModel(BaseModel):
-    start: datetime
-    end: datetime | None = None
-
-
 class AddressModel(BaseModel):
     use: str | None = None
     type: str | None = None
@@ -17,7 +12,8 @@ class AddressModel(BaseModel):
     country: str
     state: str
     postal_code: str | None = None
-    period: PeriodModel | None = None
+    start: datetime
+    end: datetime | None = None
 
 
 class TelecomModel(BaseModel):
@@ -25,7 +21,8 @@ class TelecomModel(BaseModel):
     use: str | None = None
     value: str
     rank: int | None = None
-    period: PeriodModel | None = None
+    start: datetime
+    end: datetime | None = None
 
 
 class Token(BaseModel):
