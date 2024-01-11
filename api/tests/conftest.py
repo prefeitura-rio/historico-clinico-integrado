@@ -30,8 +30,8 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 async def client():
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        yield client
+    async with AsyncClient(app=app, base_url="http://test") as client_object:
+        yield client_object
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -54,7 +54,11 @@ async def initialize_tests(patient_cpf: str):
     await Address.all().delete()
     await Telecom.all().delete()
 
-    datasource  = await DataSource.create(description="test_datasource", system="vitacare", cnes="1234567")
+    datasource  = await DataSource.create(
+        description="test_datasource",
+        system="vitacare",
+        cnes="1234567"
+    )
     country     = await Country.create(name="Brasil", code="00001")
     state       = await State.create(name="Rio de Janeiro", country=country, code="00001")
     city        = await City.create(name="Rio de Janeiro", state=state, code="00001")
