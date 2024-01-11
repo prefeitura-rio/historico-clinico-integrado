@@ -112,19 +112,19 @@ class State(Model):
 
 class Gender(Model):
     id      = fields.UUIDField(pk=True)
-    slug    = fields.CharField(max_length=32, unique=True)
+    slug    = fields.CharEnumField(enum_type=GenderEnum, unique=True)
     name    = fields.CharField(max_length=512)
 
 
 class Race(Model):
     id      = fields.UUIDField(pk=True)
-    slug    = fields.CharField(max_length=32, unique=True)
+    slug    = fields.CharEnumField(enum_type=RaceEnum, unique=True)
     name    = fields.CharField(max_length=512)
 
 
 class Nationality(Model):
     id      = fields.UUIDField(pk=True)
-    slug    = fields.CharField(max_length=32, unique=True)
+    slug    = fields.CharEnumField(enum_type=NationalityEnum, unique=True)
     name    = fields.CharField(max_length=512)
 
 

@@ -8,7 +8,8 @@ from tortoise import Tortoise
 from app.db import TORTOISE_ORM
 from app.main import app
 from app.models import City, Country, DataSource, State, User, Gender, Patient, \
-    ConditionCode, PatientCondition, Cns, Race, Nationality, Address, Telecom
+    ConditionCode, PatientCondition, Cns, Race, Nationality, Address, Telecom, \
+    RawPatientRecord, RawPatientCondition
 from app.utils import password_hash
 
 
@@ -34,7 +35,7 @@ async def client():
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def initialize_tests():
+async def initialize_tests(patient_cpf: str):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
@@ -59,7 +60,7 @@ async def initialize_tests():
     city        = await City.create(name="Rio de Janeiro", state=state, code="00001")
     gender      = await Gender.create(slug="male", name="male")
     race        = await Race.create(slug="parda", name="parda")
-    nationality = await Nationality.create(slug="b", name="B")
+    nationality = await Nationality.create(slug="B", name="B")
 
     await User.create(
         username="pedro",
@@ -71,7 +72,7 @@ async def initialize_tests():
     )
     patient = await Patient.create(
         name="Pedro",
-        patient_cpf="11111111111",
+        patient_cpf=patient_cpf,
         birth_date="2021-01-01",
         active=True,
         protected_person=False,
@@ -136,3 +137,34 @@ async def email():
 @pytest.fixture(scope="session")
 async def password():
     yield "senha"
+
+@pytest.fixture(scope="session")
+async def patient_cpf():
+    yield "1111111111"
+
+@pytest.fixture(scope="session")
+async def token(client: AsyncClient, username: str, password: str):
+    response = await client.post(
+        "/auth/token",
+        headers={"content-type": "application/x-www-form-urlencoded"},
+        data={"username": username, "password": password},
+    )
+    yield response.json().get("access_token")
+
+@pytest.fixture(scope="session")
+async def patientrecord_raw_source():
+    await Tortoise.init(config=TORTOISE_ORM)
+    await Tortoise.generate_schemas()
+
+    raw_patientrecord = await RawPatientRecord.first()
+
+    yield str(raw_patientrecord.id)
+
+@pytest.fixture(scope="session")
+async def patientcondition_raw_source():
+    await Tortoise.init(config=TORTOISE_ORM)
+    await Tortoise.generate_schemas()
+
+    raw_patientcondition = await RawPatientCondition.first()
+
+    yield str(raw_patientcondition.id)

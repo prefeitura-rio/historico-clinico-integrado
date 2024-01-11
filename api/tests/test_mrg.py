@@ -28,12 +28,9 @@ async def test_auth(client: AsyncClient, username: str, password: str):
 
 @pytest.mark.anyio
 @pytest.mark.run(order=2)
-async def test_get_patient(client: AsyncClient, username: str, password: str):
-    token = await test_auth(client, username, password)
-
-    test_cpf = "11111111111"
+async def test_get_patient(client: AsyncClient, token: str, patient_cpf : str):
     response = await client.get(
-        f"/mrg/patient/{test_cpf}",
+        f"/mrg/patient/{patient_cpf}",
         headers={"Authorization": f"Bearer {token}"}
     )
 
