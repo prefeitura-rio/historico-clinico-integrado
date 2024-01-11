@@ -7,7 +7,7 @@ from tortoise import Tortoise
 
 from app.db import TORTOISE_ORM
 from app.main import app
-from app.models import City, Country, DataSource, State, User
+from app.models import City, Country, DataSource, State, User, Gender
 from app.utils import password_hash
 
 
@@ -42,10 +42,10 @@ async def initialize_tests():
     await Gender.all().delete()
     await State.all().delete()
     await User.all().delete()
-    country = await Country.create(name="Brasil")
-    state = await State.create(name="Rio de Janeiro", country=country)
-    await City.create(name="Rio de Janeiro", state=state)
-    ds = await DataSource.create(name="test_datasource")
+    country = await Country.create(name="Brasil", code="00001")
+    state = await State.create(name="Rio de Janeiro", country=country, code="00001")
+    await City.create(name="Rio de Janeiro", state=state, code="00001")
+    ds = await DataSource.create(description="test_datasource", system="vitacare", cnes="1234567")
     await Gender.create(slug="male", name="male")
     await User.create(
         username="pedro",
