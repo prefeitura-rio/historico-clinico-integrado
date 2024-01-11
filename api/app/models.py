@@ -51,13 +51,11 @@ class StandardizedPatientRecord(Model):
     gender              = fields.CharEnumField(enum_type=GenderEnum)
     nationality         = fields.CharEnumField(enum_type=NationalityEnum)
     raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw")
-
-    cns_list        = fields.JSONField(null=True)
-    address_list    = fields.JSONField(null=True)
-    telecom_list    = fields.JSONField(null=True)
-
-    created_at      = fields.DatetimeField(auto_now_add=True)
-    updated_at      = fields.DatetimeField(auto_now=True)
+    cns_list            = fields.JSONField(null=True)
+    address_list        = fields.JSONField(null=True)
+    telecom_list        = fields.JSONField(null=True)
+    created_at          = fields.DatetimeField(auto_now_add=True)
+    updated_at          = fields.DatetimeField(auto_now=True)
 
     class Meta:
         table="std__patientrecord"
@@ -72,7 +70,6 @@ class StandardizedPatientCondition(Model):
     category        = fields.CharEnumField(enum_type=CategoryEnum, max_length=32)
     date            = fields.DatetimeField()
     raw_source      = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw")
-
     created_at      = fields.DatetimeField(auto_now_add=True)
     updated_at      = fields.DatetimeField(auto_now=True)
 
@@ -88,82 +85,81 @@ class DataSource(Model):
 
 
 class ConditionCode(Model):
-    id = fields.UUIDField(pk=True)
-    type = fields.CharEnumField(enum_type=ConditionCodeTypeEnum)
-    value = fields.CharField(max_length=4)
+    id      = fields.UUIDField(pk=True)
+    type    = fields.CharEnumField(enum_type=ConditionCodeTypeEnum)
+    value   = fields.CharField(max_length=4)
 
 
 class City(Model):
-    id = fields.UUIDField(pk=True)
-    code = fields.CharField(max_length=10)
-    name = fields.CharField(max_length=512)
-    state = fields.ForeignKeyField("app.State", related_name="cities")
+    id      = fields.UUIDField(pk=True)
+    code    = fields.CharField(max_length=10)
+    name    = fields.CharField(max_length=512)
+    state   = fields.ForeignKeyField("app.State", related_name="cities")
 
 
 class Country(Model):
-    id = fields.UUIDField(pk=True)
-    code = fields.CharField(max_length=10)
-    name = fields.CharField(max_length=512)
+    id      = fields.UUIDField(pk=True)
+    code    = fields.CharField(max_length=10)
+    name    = fields.CharField(max_length=512)
 
 
 class State(Model):
-    id = fields.UUIDField(pk=True)
-    code = fields.CharField(max_length=10)
-    name = fields.CharField(max_length=512)
+    id      = fields.UUIDField(pk=True)
+    code    = fields.CharField(max_length=10)
+    name    = fields.CharField(max_length=512)
     country = fields.ForeignKeyField("app.Country", related_name="states")
 
 
 class Gender(Model):
-    id = fields.UUIDField(pk=True)
-    slug = fields.CharField(max_length=32, unique=True)
-    name = fields.CharField(max_length=512)
+    id      = fields.UUIDField(pk=True)
+    slug    = fields.CharField(max_length=32, unique=True)
+    name    = fields.CharField(max_length=512)
 
 
 class Race(Model):
-    id = fields.UUIDField(pk=True)
-    slug = fields.CharField(max_length=32, unique=True)
-    name = fields.CharField(max_length=512)
+    id      = fields.UUIDField(pk=True)
+    slug    = fields.CharField(max_length=32, unique=True)
+    name    = fields.CharField(max_length=512)
 
 
 class Nationality(Model):
-    id = fields.UUIDField(pk=True)
-    slug = fields.CharField(max_length=32, unique=True)
-    name = fields.CharField(max_length=512)
+    id      = fields.UUIDField(pk=True)
+    slug    = fields.CharField(max_length=32, unique=True)
+    name    = fields.CharField(max_length=512)
 
 
 class Address(Model):
-    id = fields.UUIDField(pk=True)
-    use = fields.CharField(max_length=32)
-    type = fields.CharField(max_length=32)
-    line = fields.CharField(max_length=1024)
-    city = fields.ForeignKeyField("app.City", related_name="city")
-    postal_code = fields.CharField(max_length=8, null=True)
-    patient = fields.ForeignKeyField("app.Patient", related_name="address_patient_periods")
-    period_start = fields.DateField(null=True)
-    period_end = fields.DateField(null=True)
+    id              = fields.UUIDField(pk=True)
+    patient         = fields.ForeignKeyField("app.Patient", related_name="address_patient_periods")
+    use             = fields.CharField(max_length=32)
+    type            = fields.CharField(max_length=32)
+    line            = fields.CharField(max_length=1024)
+    city            = fields.ForeignKeyField("app.City", related_name="city")
+    postal_code     = fields.CharField(max_length=8, null=True)
+    period_start    = fields.DateField(null=True)
+    period_end      = fields.DateField(null=True)
 
 
 class Telecom(Model):
-    id = fields.UUIDField(pk=True)
-    system = fields.CharField(max_length=32)
-    use = fields.CharField(max_length=32)
-    value = fields.CharField(max_length=512)
-    rank = fields.IntField(null=True)
-    patient = fields.ForeignKeyField("app.Patient", related_name="telecom_patient_periods")
-    period_start = fields.DateField(null=True)
-    period_end = fields.DateField(null=True)
+    id              = fields.UUIDField(pk=True)
+    patient         = fields.ForeignKeyField("app.Patient", related_name="telecom_patient_periods")
+    system          = fields.CharField(max_length=32)
+    use             = fields.CharField(max_length=32)
+    value           = fields.CharField(max_length=512)
+    rank            = fields.IntField(null=True)
+    period_start    = fields.DateField(null=True)
+    period_end      = fields.DateField(null=True)
 
 
 class Cns(Model):
-    id = fields.UUIDField(pk=True)
-    value = fields.CharField(max_length=16, unique=True)
-    patient = fields.ForeignKeyField("app.Patient", related_name="cnss")
-    is_main = fields.BooleanField(default=False)
+    id          = fields.UUIDField(pk=True)
+    patient     = fields.ForeignKeyField("app.Patient", related_name="cnss")
+    value       = fields.CharField(max_length=16, unique=True)
+    is_main     = fields.BooleanField(default=False)
 
 
 class Patient(Model):
-    id = fields.UUIDField(pk=True)
-
+    id                  = fields.UUIDField(pk=True)
     patient_cpf         = fields.CharField(max_length=11, unique=True)
     birth_date          = fields.DateField()
     active              = fields.BooleanField(default=True)
@@ -177,8 +173,8 @@ class Patient(Model):
     race                = fields.ForeignKeyField("app.Race", related_name="patient_race")
     gender              = fields.ForeignKeyField("app.Gender", related_name="patient_gender")
     nationality         = fields.ForeignKeyField("app.Nationality", related_name="patient_nationality")
-
-    birth_city = fields.ForeignKeyField("app.City", related_name="birth_patients", null=True)
+    birth_city          = fields.ForeignKeyField("app.City", related_name="birth_patients", null=True)
+    created_at          = fields.DatetimeField(auto_now_add=True)
 
 
 class PatientCondition(Model):
@@ -188,22 +184,16 @@ class PatientCondition(Model):
     clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, max_length=32)
     category        = fields.CharEnumField(enum_type=CategoryEnum, max_length=32)
     date            = fields.DatetimeField()
-
     created_at      = fields.DatetimeField(auto_now_add=True)
-    updated_at      = fields.DatetimeField(auto_now=True)
-
-    class Meta:
-        table="patientcondition"
 
 
 class User(Model):
-    id = fields.UUIDField(pk=True)
-    username = fields.CharField(max_length=255, unique=True)
-    email = fields.CharField(max_length=255, unique=True)
-    data_source = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
-    password = fields.CharField(max_length=255)
-    is_active = fields.BooleanField(default=True)
-    is_superuser = fields.BooleanField(default=False)
-
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
+    id              = fields.UUIDField(pk=True)
+    username        = fields.CharField(max_length=255, unique=True)
+    email           = fields.CharField(max_length=255, unique=True)
+    data_source     = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
+    password        = fields.CharField(max_length=255)
+    is_active       = fields.BooleanField(default=True)
+    is_superuser    = fields.BooleanField(default=False)
+    created_at      = fields.DatetimeField(auto_now_add=True)
+    updated_at      = fields.DatetimeField(auto_now=True)

@@ -2,8 +2,7 @@
 from datetime import date, datetime
 
 from pydantic import BaseModel
-from typing import Union, Optional
-from typing import Any, List
+from typing import Optional, List
 
 
 class AddressModel(BaseModel):
@@ -70,9 +69,9 @@ class PatientModel(BaseModel):
     naturalization: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
-    cns_list: list[CnsModel]
-    telecom_list: list[TelecomModel]
-    address_list: list[AddressModel]
+    cns_list: List[CnsModel]
+    telecom_list: List[TelecomModel]
+    address_list: List[AddressModel]
 
 
 class CompletePatientModel(BaseModel):
@@ -80,10 +79,10 @@ class CompletePatientModel(BaseModel):
     patient_cpf: str
     gender: str
     name: str
-    cns_list: list[CnsModel]
-    telecom_list: list[TelecomModel]
-    address_list: list[AddressModel]
-    condition_list: list[ConditionListModel]
+    cns_list: List[CnsModel]
+    telecom_list: List[TelecomModel]
+    address_list: List[AddressModel]
+    condition_list: List[ConditionListModel]
     active: Optional[bool]
     birth_city: Optional[str]
     birth_state: Optional[str]

@@ -25,3 +25,26 @@ async def test_auth(client: AsyncClient, username: str, password: str):
     assert "access_token" in result_body.keys()
 
     return result_body.get("access_token")
+
+@pytest.mark.anyio
+@pytest.mark.run(order=2)
+async def test_get_patient(client: AsyncClient, username: str, password: str):
+    token = await test_auth(client, username, password)
+
+    test_cpf = "11111111111"
+    response = await client.get(
+        f"/mrg/patient/{test_cpf}",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    assert 'gender' in response.json()
+    assert 'nationality' in response.json()
+    assert 'race' in response.json()
+    assert 'birth_city' in response.json()
+    assert 'birth_state' in response.json()
+    assert 'birth_country' in response.json()
+    assert 'address_list' in response.json()
+    assert 'telecom_list' in response.json()
+    assert 'condition_list' in response.json()
+    assert 'cns_list' in response.json()

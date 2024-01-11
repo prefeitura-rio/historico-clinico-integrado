@@ -7,7 +7,8 @@ from tortoise import Tortoise
 
 from app.db import TORTOISE_ORM
 from app.main import app
-from app.models import City, Country, DataSource, State, User, Gender
+from app.models import City, Country, DataSource, State, User, Gender, Patient, \
+    ConditionCode, PatientCondition, Cns, Race, Nationality, Address, Telecom
 from app.utils import password_hash
 
 
@@ -36,24 +37,87 @@ async def client():
 async def initialize_tests():
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
+
     await City.all().delete()
     await Country.all().delete()
     await DataSource.all().delete()
     await Gender.all().delete()
+    await Race.all().delete()
+    await Nationality.all().delete()
     await State.all().delete()
     await User.all().delete()
-    country = await Country.create(name="Brasil", code="00001")
-    state = await State.create(name="Rio de Janeiro", country=country, code="00001")
-    await City.create(name="Rio de Janeiro", state=state, code="00001")
-    ds = await DataSource.create(description="test_datasource", system="vitacare", cnes="1234567")
-    await Gender.create(slug="male", name="male")
+    await Patient.all().delete()
+    await ConditionCode.all().delete()
+    await PatientCondition.all().delete()
+    await Cns.all().delete()
+    await Address.all().delete()
+    await Telecom.all().delete()
+
+    datasource  = await DataSource.create(description="test_datasource", system="vitacare", cnes="1234567")
+    country     = await Country.create(name="Brasil", code="00001")
+    state       = await State.create(name="Rio de Janeiro", country=country, code="00001")
+    city        = await City.create(name="Rio de Janeiro", state=state, code="00001")
+    gender      = await Gender.create(slug="male", name="male")
+    race        = await Race.create(slug="parda", name="parda")
+    nationality = await Nationality.create(slug="b", name="B")
+
     await User.create(
         username="pedro",
         email="pedro@example.com",
         password=password_hash("senha"),
         is_active=True,
         is_superuser=True,
-        data_source=ds,
+        data_source=datasource,
+    )
+    patient = await Patient.create(
+        name="Pedro",
+        patient_cpf="11111111111",
+        birth_date="2021-01-01",
+        active=True,
+        protected_person=False,
+        deceased=False,
+        deceased_date=None,
+        mother_name="Maria",
+        father_name="João",
+        naturalization="",
+        nationality=nationality,
+        race=race,
+        birth_city=city,
+        gender=gender
+    )
+    await Cns.create(
+        value="123456789012345",
+        patient=patient,
+        is_main=True,
+    )
+    await Address.create(
+        patient=patient,
+        city=city,
+        state=state,
+        country=country,
+        postal_code="00000000",
+        line="Rua 1",
+        type="home",
+        use="home",
+        period_start="2021-01-01"
+    )
+    await Telecom.create(
+        patient=patient,
+        system="phone",
+        use="home",
+        value="21999999999",
+        period_start="2021-01-01"
+    )
+    code = await ConditionCode.create(
+        value="A001",
+        type="cid"
+    )
+    await PatientCondition.create(
+        patient=patient,
+        condition_code=code,
+        clinical_status="resolved",
+        category="encounter-diagnosis",
+        date="2021-01-01"
     )
     yield
     await Tortoise.close_connections()
