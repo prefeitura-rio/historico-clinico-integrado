@@ -14,8 +14,8 @@ class AddressModel(BaseModel):
     country: str
     state: str
     postal_code: str | None = None
-    period_start: datetime
-    period_end: datetime | None = None
+    period_start: date
+    period_end: date | None = None
 
 
 class TelecomModel(BaseModel):
@@ -23,8 +23,8 @@ class TelecomModel(BaseModel):
     use: str | None = None
     value: str
     rank: int | None = None
-    period_start: datetime
-    period_end: datetime | None = None
+    period_start: date
+    period_end: date | None = None
 
 
 class StandardizedAddressModel(BaseModel):
@@ -79,7 +79,7 @@ class PatientModel(BaseModel):
     birth_date: date
     patient_cpf: str
     deceased: bool | None = None
-    deceased_date: datetime | None = None
+    deceased_date: date | None = None
     father: str | None = None
     gender: str
     mother: str | None = None
@@ -91,6 +91,28 @@ class PatientModel(BaseModel):
     cns_list: list[CnsModel] | None = None
     telecom_list: list[TelecomModel] | None = None
     address_list: list[AddressModel] | None = None
+
+class CompletePatientModel(BaseModel):
+    active: bool | None = True
+    birth_city: str | None = None
+    birth_state: str | None = None
+    birth_country: str | None = None
+    birth_date: date
+    patient_cpf: str
+    deceased: bool | None = None
+    deceased_date: date | None = None
+    father_name: str | None = None
+    mother_name: str | None = None
+    gender: str
+    name: str
+    nationality: str | None = None
+    naturalization: str | None = None
+    protected_person: bool | None = None
+    race: str | None = None
+    cns_list: list[CnsModel] | None = None
+    telecom_list: list[TelecomModel] | None = None
+    address_list: list[AddressModel] | None = None
+    condition_list: list[ConditionListModel] | None = None
 
 
 class StandardizedPatientRecordModel(BaseModel):
