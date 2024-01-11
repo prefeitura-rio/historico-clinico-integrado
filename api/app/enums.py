@@ -34,6 +34,6 @@ class RaceEnum(str, Enum):
 	INDIGENA = "indigena"
 
 class NationalityEnum(str, Enum):
-    BRASILEIRO = "B"
-    ESTRANGEIRO = "E"
-    NATURALIZADO = "N"
+	BRASILEIRO = "B"
+	ESTRANGEIRO = "E"
+	NATURALIZADO = "N"

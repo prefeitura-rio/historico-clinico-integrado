@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
@@ -10,11 +10,21 @@ from app.models import (
 )
 
 
-RawPatientConditionInput = pydantic_model_creator(RawPatientCondition, name="RawPatientConditionInput", exclude=("id","created_at","updated_at"))
-RawPatientConditionOutput = pydantic_model_creator(RawPatientCondition, name="RawPatientConditionOutput")
+RawPatientConditionInput = pydantic_model_creator(
+    RawPatientCondition, name="RawPatientConditionInput",
+    exclude=("id","created_at","updated_at")
+)
+RawPatientConditionOutput = pydantic_model_creator(
+    RawPatientCondition, name="RawPatientConditionOutput"
+)
 
-RawPatientRecordInput = pydantic_model_creator(RawPatientRecord, name="RawPatientRecordInput", exclude=("id","created_at","updated_at"))
-RawPatientRecordOutput = pydantic_model_creator(RawPatientRecord, name="RawPatientRecordOutput")
+RawPatientRecordInput = pydantic_model_creator(
+    RawPatientRecord, name="RawPatientRecordInput",
+    exclude=("id","created_at","updated_at")
+)
+RawPatientRecordOutput = pydantic_model_creator(
+    RawPatientRecord, name="RawPatientRecordOutput"
+)
 
 
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])

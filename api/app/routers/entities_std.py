@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
@@ -35,9 +35,10 @@ async def get_standardized_patientrecord(
     ))
 
 
-@router.post("/patientrecord", response_model=StandardizedPatientRecordOutput, status_code=201)
+@router.post("/patientrecord", response_model=StandardizedPatientRecordOutput,
+             status_code=201)
 async def create_standardized_patientrecord(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_active_user)],
     record: StandardizedPatientRecordModel,
 ) -> StandardizedPatientRecordOutput:
 
@@ -55,16 +56,20 @@ async def get_standardized_patientcondition(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> list[StandardizedPatientConditionOutput]:
     if current_user.is_superuser:
-        return await StandardizedPatientConditionOutput.from_queryset(StandardizedPatientCondition.all())
+        return await StandardizedPatientConditionOutput.from_queryset(
+            StandardizedPatientCondition.all()
+        )
 
     user_data_source = await current_user.data_source
-    return await StandardizedPatientConditionOutput.from_queryset(StandardizedPatientCondition.filter(
-        raw_source__data_source=user_data_source
-    ))
+    return await StandardizedPatientConditionOutput.from_queryset(
+        StandardizedPatientCondition.filter(
+            raw_source__data_source=user_data_source
+        ))
 
-@router.post("/patientcondition", response_model=StandardizedPatientConditionOutput, status_code=201)
+@router.post("/patientcondition", response_model=StandardizedPatientConditionOutput,
+             status_code=201)
 async def create_standardized_patientcondition(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_active_user)],
     condition: StandardizedPatientConditionModel,
 ) -> StandardizedPatientConditionOutput:
 

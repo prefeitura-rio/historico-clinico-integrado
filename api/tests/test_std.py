@@ -11,7 +11,7 @@ from httpx import AsyncClient  # noqa
 @pytest.mark.run(order=10)
 async def test_post_stdpatientrecord(client: AsyncClient, token: str, patient_cpf : str, patientrecord_raw_source: str):
     response = await client.post(
-        f"/std/patientrecord",
+        "/std/patientrecord",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "active": True,
@@ -69,7 +69,7 @@ async def test_post_stdpatientrecord(client: AsyncClient, token: str, patient_cp
 @pytest.mark.run(order=11)
 async def test_get_stdpatientrecord(client: AsyncClient, token: str):
     response = await client.get(
-        f"/raw/patientrecord",
+        "/raw/patientrecord",
         headers={"Authorization": f"Bearer {token}"}
     )
 
@@ -82,7 +82,7 @@ async def test_get_stdpatientrecord(client: AsyncClient, token: str):
 @pytest.mark.run(order=10)
 async def test_post_stdpatientcondition(client: AsyncClient, token: str, patient_cpf : str, patientcondition_raw_source: str):
     response = await client.post(
-        f"/std/patientcondition",
+        "/std/patientcondition",
         headers={"Authorization": f"Bearer {token}"},
         json={
                 "patient_cpf": patient_cpf,
@@ -102,7 +102,7 @@ async def test_post_stdpatientcondition(client: AsyncClient, token: str, patient
 @pytest.mark.run(order=11)
 async def test_get_stdpatientcondition(client: AsyncClient, token: str):
     response = await client.get(
-        f"/raw/patientcondition",
+        "/raw/patientcondition",
         headers={"Authorization": f"Bearer {token}"}
     )
 

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-import sys
+from httpx import AsyncClient  # noqa
+import pytest  # noqa
 
+import sys
 sys.path.insert(0, "../")
 
-import pytest  # noqa
-from httpx import AsyncClient  # noqa
 
 
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
 async def test_post_rawpatientrecord(client: AsyncClient, token: str, patient_cpf: str):
     response = await client.post(
-        f"/raw/patientrecord",
+        "/raw/patientrecord",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "patient_cpf": patient_cpf,
@@ -30,7 +30,7 @@ async def test_post_rawpatientrecord(client: AsyncClient, token: str, patient_cp
 @pytest.mark.run(order=2)
 async def test_get_rawpatientrecord(client: AsyncClient, token: str):
     response = await client.get(
-        f"/raw/patientrecord",
+        "/raw/patientrecord",
         headers={"Authorization": f"Bearer {token}"}
     )
 
@@ -44,7 +44,7 @@ async def test_get_rawpatientrecord(client: AsyncClient, token: str):
 @pytest.mark.run(order=1)
 async def test_post_rawpatientcondition(client: AsyncClient, token: str, patient_cpf: str):
     response = await client.post(
-        f"/raw/patientcondition",
+        "/raw/patientcondition",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "patient_cpf": patient_cpf,
@@ -62,7 +62,7 @@ async def test_post_rawpatientcondition(client: AsyncClient, token: str, patient
 @pytest.mark.run(order=2)
 async def test_get_rawpatientcondition(client: AsyncClient, token: str):
     response = await client.get(
-        f"/raw/patientcondition",
+        "/raw/patientcondition",
         headers={"Authorization": f"Bearer {token}"}
     )
 
