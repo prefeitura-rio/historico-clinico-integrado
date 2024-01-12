@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # -*- coding: utf-8 -*-
 import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
