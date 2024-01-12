@@ -28,9 +28,9 @@ async def test_post_rawpatientrecord(client: AsyncClient, token: str, patient_cp
 
 @pytest.mark.anyio
 @pytest.mark.run(order=2)
-async def test_get_rawpatientrecord(client: AsyncClient, token: str):
+async def test_get_rawpatientrecords(client: AsyncClient, token: str):
     response = await client.get(
-        "/raw/patientrecord",
+        "/raw/patientrecords",
         headers={"Authorization": f"Bearer {token}"}
     )
 
@@ -60,9 +60,9 @@ async def test_post_rawpatientcondition(client: AsyncClient, token: str, patient
 
 @pytest.mark.anyio
 @pytest.mark.run(order=2)
-async def test_get_rawpatientcondition(client: AsyncClient, token: str):
+async def test_get_rawpatientconditions(client: AsyncClient, token: str):
     response = await client.get(
-        "/raw/patientcondition",
+        "/raw/patientconditions",
         headers={"Authorization": f"Bearer {token}"}
     )
 

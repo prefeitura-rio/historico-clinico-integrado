@@ -67,9 +67,9 @@ async def test_post_stdpatientrecord(client: AsyncClient, token: str, patient_cp
 
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
-async def test_get_stdpatientrecord(client: AsyncClient, token: str):
+async def test_get_stdpatientrecords(client: AsyncClient, token: str):
     response = await client.get(
-        "/raw/patientrecord",
+        "/raw/patientrecords",
         headers={"Authorization": f"Bearer {token}"}
     )
 
@@ -100,9 +100,9 @@ async def test_post_stdpatientcondition(client: AsyncClient, token: str, patient
 
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
-async def test_get_stdpatientcondition(client: AsyncClient, token: str):
+async def test_get_stdpatientconditions(client: AsyncClient, token: str):
     response = await client.get(
-        "/raw/patientcondition",
+        "/raw/patientconditions",
         headers={"Authorization": f"Bearer {token}"}
     )
 

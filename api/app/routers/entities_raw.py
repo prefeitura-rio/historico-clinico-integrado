@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from typing import Annotated
+import datetime
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
@@ -30,16 +31,23 @@ RawPatientRecordOutput = pydantic_model_creator(
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
 
-@router.get("/patientrecord", response_model=list[RawPatientRecordOutput])
-async def get_raw_patientrecord(
+@router.get("/patientrecords", response_model=list[RawPatientRecordOutput])
+async def get_raw_patientrecords(
     current_user: Annotated[User, Depends(get_current_active_user)],
+    start_date: datetime.date = datetime.date.today(),
+    end_date: datetime.date = datetime.date.today() + datetime.timedelta(days=1),
 ) -> list[RawPatientRecordOutput]:
     if current_user.is_superuser:
-        return await RawPatientRecordOutput.from_queryset(RawPatientRecord.all())
+        return await RawPatientRecordOutput.from_queryset(RawPatientRecord.filter(
+            created_at__gte=start_date,
+            created_at__lt=end_date
+        ))
 
     user_data_source = await current_user.data_source
     return await RawPatientRecordOutput.from_queryset(RawPatientRecord.filter(
-        data_source=user_data_source
+        data_source=user_data_source,
+        created_at__gte=start_date,
+        created_at__lt=end_date
     ))
 
 
@@ -58,16 +66,23 @@ async def create_raw_patientrecord(
     return await RawPatientRecordOutput.from_tortoise_orm(record_instance)
 
 
-@router.get("/patientcondition", response_model=list[RawPatientConditionOutput])
-async def get_raw_patientcondition(
+@router.get("/patientconditions", response_model=list[RawPatientConditionOutput])
+async def get_raw_patientconditions(
     current_user: Annotated[User, Depends(get_current_active_user)],
+    start_date: datetime.date = datetime.date.today(),
+    end_date: datetime.date = datetime.date.today() + datetime.timedelta(days=1),
 ) -> list[RawPatientConditionOutput]:
     if current_user.is_superuser:
-        return await RawPatientConditionOutput.from_queryset(RawPatientCondition.all())
+        return await RawPatientConditionOutput.from_queryset(RawPatientCondition.filter(
+            created_at__gte=start_date,
+            created_at__lt=end_date
+        ))
 
     user_data_source = await current_user.data_source
     return await RawPatientConditionOutput.from_queryset(RawPatientCondition.filter(
-        data_source=user_data_source
+        data_source=user_data_source,
+        created_at__gte=start_date,
+        created_at__lt=end_date
     ))
 
 

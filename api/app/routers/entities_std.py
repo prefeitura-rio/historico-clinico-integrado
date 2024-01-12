@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from typing import Annotated
+# -*- coding: utf-8 -*-
+import datetime
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
@@ -22,16 +24,23 @@ StandardizedPatientConditionOutput = pydantic_model_creator(
 router = APIRouter(prefix="/std", tags=["Entidades STD (Formato Standardized/Padronizado)"])
 
 
-@router.get("/patientrecord", response_model=list[StandardizedPatientRecordOutput])
-async def get_standardized_patientrecord(
+@router.get("/patientrecords", response_model=list[StandardizedPatientRecordOutput])
+async def get_standardized_patientrecords(
     current_user: Annotated[User, Depends(get_current_active_user)],
+    start_date: datetime.date = datetime.date.today(),
+    end_date: datetime.date = datetime.date.today() + datetime.timedelta(days=1),
 ) -> list[StandardizedPatientRecordOutput]:
     if current_user.is_superuser:
-        return await StandardizedPatientRecordOutput.from_queryset(StandardizedPatientRecord.all())
+        return await StandardizedPatientRecordOutput.from_queryset(StandardizedPatientRecord.filter(
+            created_at__gte=start_date,
+            created_at__lt=end_date
+        ))
 
     user_data_source = await current_user.data_source
     return await StandardizedPatientRecordOutput.from_queryset(StandardizedPatientRecord.filter(
-        raw_source__data_source=user_data_source
+        raw_source__data_source=user_data_source,
+        created_at__gte=start_date,
+        created_at__lt=end_date
     ))
 
 
@@ -51,19 +60,26 @@ async def create_standardized_patientrecord(
     return await StandardizedPatientRecordOutput.from_tortoise_orm(record_instance)
 
 
-@router.get("/patientcondition", response_model=list[StandardizedPatientConditionOutput])
-async def get_standardized_patientcondition(
+@router.get("/patientconditions", response_model=list[StandardizedPatientConditionOutput])
+async def get_standardized_patientconditions(
     current_user: Annotated[User, Depends(get_current_active_user)],
+    start_date: datetime.date = datetime.date.today(),
+    end_date: datetime.date = datetime.date.today() + datetime.timedelta(days=1),
 ) -> list[StandardizedPatientConditionOutput]:
     if current_user.is_superuser:
         return await StandardizedPatientConditionOutput.from_queryset(
-            StandardizedPatientCondition.all()
+            StandardizedPatientCondition.filter(
+                created_at__gte=start_date,
+                created_at__lt=end_date
+            )
         )
 
     user_data_source = await current_user.data_source
     return await StandardizedPatientConditionOutput.from_queryset(
         StandardizedPatientCondition.filter(
-            raw_source__data_source=user_data_source
+            raw_source__data_source=user_data_source,
+            created_at__gte=start_date,
+            created_at__lt=end_date
         ))
 
 @router.post("/patientcondition", response_model=StandardizedPatientConditionOutput,
