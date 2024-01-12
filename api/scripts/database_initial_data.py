@@ -37,7 +37,7 @@ async def run():
     logger.info("Races created successfully")
 
     nationalities = []
-    for nationality_data in [{"slug": "b", "name": "B"}]:
+    for nationality_data in [{"slug": "B", "name": "Brasileiro"}]:
         nationalities.append(Nationality(**nationality_data))
     await Nationality.bulk_create(nationalities)
     logger.info("Nationality created successfully")
