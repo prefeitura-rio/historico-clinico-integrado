@@ -3,6 +3,7 @@ repos:
     rev: v4.2.0
     hooks:
     - id: check-added-large-files # prevents adding large files
+      args: ['--maxkb=1000']
     - id: detect-private-key # detects private keys
     - id: fix-byte-order-marker # fixes BOM
     - id: fix-encoding-pragma # fixes encoding pragma
