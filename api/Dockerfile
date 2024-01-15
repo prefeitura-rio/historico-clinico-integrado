@@ -23,8 +23,7 @@ RUN poetry install --no-dev --no-interaction --no-ansi
 
 # Copy the project files into the working directory
 COPY ./app /app
-COPY ./scripts/create_user.py .
-COPY ./scripts/database_initial_data.py .
+COPY ./scripts .
 COPY ./migrations /migrations
 COPY ./compose-entrypoint.sh /compose-entrypoint.sh
 
