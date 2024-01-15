@@ -8,7 +8,7 @@ from app.dependencies import get_current_active_user
 from app.models import User
 from app.utils import password_hash
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/users", tags=["Usuários"])
 
 UserCreateInput = pydantic_model_creator(
     User, name="UserCreateInput", exclude=["id", "is_active", "created_at", "updated_at"]

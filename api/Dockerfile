@@ -18,13 +18,15 @@ RUN pip install --no-cache-dir -U poetry && \
 
 # Copy the poetry.lock and pyproject.toml files
 # and install dependencies
-WORKDIR /tmp
 COPY poetry.lock pyproject.toml ./
 RUN poetry install --no-dev --no-interaction --no-ansi
 
 # Copy the project files into the working directory
-WORKDIR /app
-COPY . .
+COPY ./app /app
+COPY ./scripts/create_user.py .
+COPY ./scripts/database_initial_data.py .
+COPY ./migrations /migrations
+COPY ./compose-entrypoint.sh /compose-entrypoint.sh
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+# Inicializa banco, roda migrations e sobe servidor
+CMD ["./compose-entrypoint.sh"]

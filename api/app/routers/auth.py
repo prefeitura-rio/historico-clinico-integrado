@@ -10,7 +10,7 @@ from app.models import User
 from app.pydantic_models import Token
 from app.utils import authenticate_user, create_access_token
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
 
 @router.post("/token", response_model=Token)

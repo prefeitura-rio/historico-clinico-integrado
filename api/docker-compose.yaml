@@ -20,7 +20,6 @@ services:
       INFISICAL_TOKEN: st-1234567890
     ports:
       - "8000:80"
-    entrypoint: ["/app/compose-entrypoint.sh"]
 
 volumes:
   postgres-data:
