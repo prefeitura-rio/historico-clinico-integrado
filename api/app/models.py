@@ -85,9 +85,10 @@ class DataSource(Model):
 
 
 class ConditionCode(Model):
-    id      = fields.UUIDField(pk=True)
-    type    = fields.CharEnumField(enum_type=ConditionCodeTypeEnum)
-    value   = fields.CharField(max_length=4)
+    id          = fields.UUIDField(pk=True)
+    type        = fields.CharEnumField(enum_type=ConditionCodeTypeEnum, null=False)
+    value       = fields.CharField(max_length=5, null=False)
+    description = fields.CharField(max_length=512)
 
 
 class City(Model):
@@ -185,6 +186,7 @@ class PatientCondition(Model):
     category        = fields.CharEnumField(enum_type=CategoryEnum, max_length=32)
     date            = fields.DatetimeField()
     created_at      = fields.DatetimeField(auto_now_add=True)
+    updated_at      = fields.DatetimeField(auto_now=True)
 
 
 class User(Model):
