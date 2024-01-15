@@ -29,10 +29,8 @@ async def run():
     await Tortoise.generate_schemas()
 
     cids = pd.read_csv(
-        "./data/CID10CSV/CID-10-SUBCATEGORIAS.CSV",
-        header=0,
-        sep=";",
-        encoding='latin-1'
+        "./data/cid_categorias.csv",
+        header=0
     )
 
     cids_to_create = []
