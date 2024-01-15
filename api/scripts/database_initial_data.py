@@ -11,58 +11,95 @@ from app.models import (
     Nationality,
     Race,
     State,
+    ConditionCode
 )
 
+import pandas as pd
+import numpy as np
+
+
+def create_states(country, states):
+    pass
+
+def create_cities(state, cities):
+    pass
 
 async def run():
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
-    data_sources = []
-    for data_source_data in [{"system": "vitacare","cnes":"999999","description":"Teste 1"}]:
-        data_sources.append(DataSource(**data_source_data))
-    await DataSource.bulk_create(data_sources)
+    cids = pd.read_csv(
+        "./data/CID10CSV/CID-10-SUBCATEGORIAS.CSV",
+        header=0,
+        sep=";",
+        encoding='latin-1'
+    )
+
+    cids_to_create = []
+    for _, cid in cids.iterrows():
+        cids_to_create.append(
+            ConditionCode(
+                type = 'cid',
+                value = cid['SUBCAT'],
+                description = cid['DESCRICAO']
+            )
+        )
+    await ConditionCode.bulk_create(cids_to_create, ignore_conflicts=True)
+    logger.info("CID created successfully")
+
+    await DataSource.bulk_create([
+        DataSource(system = "vitacare", cnes = "999992", description = "Teste 1")
+    ], ignore_conflicts=True)
     logger.info("Data sources created successfully")
 
-    genders = []
-    for gender_data in [{"slug": "male", "name": "Masculino"}]:
-        genders.append(Gender(**gender_data))
-    await Gender.bulk_create(genders)
+    await Gender.bulk_create([
+        Gender(slug= "male", name = "Masculino"),
+        Gender(slug= "female", name = "Feminino"),
+        Gender(slug= "unknown", name = "Outro"),
+    ], ignore_conflicts=True)
     logger.info("Genders created successfully")
 
-    races = []
-    for race_data in [{"slug": "parda", "name": "Parda"}]:
-        races.append(Race(**race_data))
-    await Race.bulk_create(races)
+    await Race.bulk_create([
+        Race(slug = "parda", name = "Parda"),
+        Race(slug = "branca", name = "Branca"),
+        Race(slug = "preta", name = "Preta"),
+        Race(slug = "amarela", name = "Amarela"),
+    ], ignore_conflicts=True)
     logger.info("Races created successfully")
 
-    nationalities = []
-    for nationality_data in [{"slug": "B", "name": "Brasileiro"}]:
-        nationalities.append(Nationality(**nationality_data))
-    await Nationality.bulk_create(nationalities)
+    await Nationality.bulk_create([
+        Nationality(slug = "B", name = "Brasileiro"),
+        Nationality(slug = "N", name = "Naturalizado"),
+        Nationality(slug = "E", name = "Estrangeiro"),
+    ], ignore_conflicts=True)
     logger.info("Nationality created successfully")
 
-    countries = []
-    for country_data in [{"name": "Brasil", "code":"00001"}]:
-        countries.append(Country(**country_data))
-    await Country.bulk_create(countries)
+    brasil, _ = await Country.get_or_create(
+        code="1", name="Brasil"
+    )
     logger.info("Countries created successfully")
 
-    states = []
-    for state_data in [
-        {"name": "Rio de Janeiro",  "code":"00001", "country": await Country.get_or_none(name="Brasil")}
-    ]:
-        states.append(State(**state_data))
-    await State.bulk_create(states)
-    logger.info("States created successfully")
+    relacao_estado_municipio = pd.read_csv(
+        "./data/brasil_estados_municipios.csv",
+        header=0
+    )
+    estados     = relacao_estado_municipio[['UF','Nome_UF']].drop_duplicates()
+    municipios  = relacao_estado_municipio[['UF','Nome_Município','Código Município Completo']]
 
-    cities = []
-    for city_data in [
-        {"name": "Rio de Janeiro", "code":"00001", "state": await State.get_or_none(name="Rio de Janeiro")}
-    ]:
-        cities.append(City(**city_data))
-    await City.bulk_create(cities)
-    logger.info("Cities created successfully")
+    for _, estado in estados.iterrows():
+        state, _ = await State.get_or_create(
+            country=brasil,
+            code=estado['UF'],
+            name=estado['Nome_UF']
+        )
+
+        for _, municipio in municipios[municipios['UF'] == estado['UF']].iterrows():
+            await City.create(
+                state=state,
+                code=municipio['Código Município Completo'],
+                name=municipio['Nome_Município']
+            )
+    logger.info("States and Cities created successfully")
 
     await Tortoise.close_connections()
 
