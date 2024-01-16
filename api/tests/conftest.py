@@ -8,7 +8,7 @@ from tortoise import Tortoise
 from app.db import TORTOISE_ORM
 from app.main import app
 from app.models import City, Country, DataSource, State, User, Gender, Patient, \
-    ConditionCode, PatientCondition, Cns, Race, Nationality, Address, Telecom, \
+    ConditionCode, PatientCondition, PatientCns, Race, Nationality, PatientAddress, PatientTelecom, \
     RawPatientRecord, RawPatientCondition
 from app.utils import password_hash
 
@@ -50,9 +50,9 @@ async def initialize_tests(patient_cpf: str):
     await Patient.all().delete()
     await ConditionCode.all().delete()
     await PatientCondition.all().delete()
-    await Cns.all().delete()
-    await Address.all().delete()
-    await Telecom.all().delete()
+    await PatientCns.all().delete()
+    await PatientAddress.all().delete()
+    await PatientTelecom.all().delete()
 
     datasource  = await DataSource.create(
         description="test_datasource",
@@ -84,18 +84,17 @@ async def initialize_tests(patient_cpf: str):
         deceased_date=None,
         mother_name="Maria",
         father_name="João",
-        naturalization="",
         nationality=nationality,
         race=race,
         birth_city=city,
         gender=gender
     )
-    await Cns.create(
+    await PatientCns.create(
         value="123456789012345",
         patient=patient,
         is_main=True,
     )
-    await Address.create(
+    await PatientAddress.create(
         patient=patient,
         city=city,
         state=state,
@@ -106,7 +105,7 @@ async def initialize_tests(patient_cpf: str):
         use="home",
         period_start="2021-01-01"
     )
-    await Telecom.create(
+    await PatientTelecom.create(
         patient=patient,
         system="phone",
         use="home",
@@ -115,7 +114,8 @@ async def initialize_tests(patient_cpf: str):
     )
     code = await ConditionCode.create(
         value="A001",
-        type="cid"
+        type="cid",
+        description="Teste"
     )
     await PatientCondition.create(
         patient=patient,

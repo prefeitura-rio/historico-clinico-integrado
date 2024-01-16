@@ -10,7 +10,7 @@ class RawPatientRecord(Model):
     id          = fields.UUIDField(pk=True)
     patient_cpf = fields.CharField(max_length=11)
     data        = fields.JSONField()
-    data_source = fields.ForeignKeyField("app.DataSource", related_name="raw_record_data_source")
+    creator     = fields.ForeignKeyField("app.User", related_name="raw_record_creator", null=False)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -23,7 +23,7 @@ class RawPatientCondition(Model):
     id          = fields.UUIDField(pk=True)
     patient_cpf = fields.CharField(max_length=11)
     data        = fields.JSONField()
-    data_source = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_data_source")
+    creator     = fields.ForeignKeyField("app.User", related_name="raw_condition_creator", null=False)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -46,11 +46,10 @@ class StandardizedPatientRecord(Model):
     father_name         = fields.CharField(max_length=512, null=True)
     mother_name         = fields.CharField(max_length=512, null=True)
     name                = fields.CharField(max_length=512)
-    naturalization      = fields.CharField(max_length=32, null=True)
     race                = fields.CharEnumField(enum_type=RaceEnum)
     gender              = fields.CharEnumField(enum_type=GenderEnum)
     nationality         = fields.CharEnumField(enum_type=NationalityEnum)
-    raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw")
+    raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw", null=False)
     cns_list            = fields.JSONField(null=True)
     address_list        = fields.JSONField(null=True)
     telecom_list        = fields.JSONField(null=True)
@@ -69,7 +68,7 @@ class StandardizedPatientCondition(Model):
     clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, max_length=32)
     category        = fields.CharEnumField(enum_type=CategoryEnum, max_length=32)
     date            = fields.DatetimeField()
-    raw_source      = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw")
+    raw_source      = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False)
     created_at      = fields.DatetimeField(auto_now_add=True)
     updated_at      = fields.DatetimeField(auto_now=True)
 
@@ -85,27 +84,28 @@ class DataSource(Model):
 
 
 class ConditionCode(Model):
-    id      = fields.UUIDField(pk=True)
-    type    = fields.CharEnumField(enum_type=ConditionCodeTypeEnum)
-    value   = fields.CharField(max_length=4)
+    id          = fields.UUIDField(pk=True)
+    type        = fields.CharEnumField(enum_type=ConditionCodeTypeEnum, null=False)
+    value       = fields.CharField(max_length=5, null=False)
+    description = fields.CharField(max_length=512)
 
 
 class City(Model):
     id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10)
+    code    = fields.CharField(max_length=10, unique=True)
     name    = fields.CharField(max_length=512)
     state   = fields.ForeignKeyField("app.State", related_name="cities")
 
 
 class Country(Model):
     id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10)
+    code    = fields.CharField(max_length=10, unique=True)
     name    = fields.CharField(max_length=512)
 
 
 class State(Model):
     id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10)
+    code    = fields.CharField(max_length=10, unique=True)
     name    = fields.CharField(max_length=512)
     country = fields.ForeignKeyField("app.Country", related_name="states")
 
@@ -128,7 +128,7 @@ class Nationality(Model):
     name    = fields.CharField(max_length=512)
 
 
-class Address(Model):
+class PatientAddress(Model):
     id              = fields.UUIDField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="address_patient_periods")
     use             = fields.CharField(max_length=32)
@@ -140,7 +140,7 @@ class Address(Model):
     period_end      = fields.DateField(null=True)
 
 
-class Telecom(Model):
+class PatientTelecom(Model):
     id              = fields.UUIDField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="telecom_patient_periods")
     system          = fields.CharField(max_length=32)
@@ -151,9 +151,9 @@ class Telecom(Model):
     period_end      = fields.DateField(null=True)
 
 
-class Cns(Model):
+class PatientCns(Model):
     id          = fields.UUIDField(pk=True)
-    patient     = fields.ForeignKeyField("app.Patient", related_name="cnss")
+    patient     = fields.ForeignKeyField("app.Patient", related_name="patient_cns")
     value       = fields.CharField(max_length=16, unique=True)
     is_main     = fields.BooleanField(default=False)
 
@@ -169,7 +169,6 @@ class Patient(Model):
     father_name         = fields.CharField(max_length=512, null=True)
     mother_name         = fields.CharField(max_length=512, null=True)
     name                = fields.CharField(max_length=512)
-    naturalization      = fields.CharField(max_length=512, null=True)
     race                = fields.ForeignKeyField("app.Race", related_name="patient_race")
     gender              = fields.ForeignKeyField("app.Gender", related_name="patient_gender")
     nationality         = fields.ForeignKeyField("app.Nationality", related_name="patient_nationality")
@@ -185,6 +184,7 @@ class PatientCondition(Model):
     category        = fields.CharEnumField(enum_type=CategoryEnum, max_length=32)
     date            = fields.DatetimeField()
     created_at      = fields.DatetimeField(auto_now_add=True)
+    updated_at      = fields.DatetimeField(auto_now=True)
 
 
 class User(Model):
