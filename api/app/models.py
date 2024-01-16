@@ -10,7 +10,7 @@ class RawPatientRecord(Model):
     id          = fields.UUIDField(pk=True)
     patient_cpf = fields.CharField(max_length=11)
     data        = fields.JSONField()
-    data_source = fields.ForeignKeyField("app.DataSource", related_name="raw_record_data_source")
+    creator     = fields.ForeignKeyField("app.User", related_name="raw_record_creator", null=False)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -23,7 +23,7 @@ class RawPatientCondition(Model):
     id          = fields.UUIDField(pk=True)
     patient_cpf = fields.CharField(max_length=11)
     data        = fields.JSONField()
-    data_source = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_data_source")
+    creator     = fields.ForeignKeyField("app.User", related_name="raw_condition_creator", null=False)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -50,7 +50,7 @@ class StandardizedPatientRecord(Model):
     race                = fields.CharEnumField(enum_type=RaceEnum)
     gender              = fields.CharEnumField(enum_type=GenderEnum)
     nationality         = fields.CharEnumField(enum_type=NationalityEnum)
-    raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw")
+    raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw", null=False)
     cns_list            = fields.JSONField(null=True)
     address_list        = fields.JSONField(null=True)
     telecom_list        = fields.JSONField(null=True)
@@ -69,7 +69,7 @@ class StandardizedPatientCondition(Model):
     clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, max_length=32)
     category        = fields.CharEnumField(enum_type=CategoryEnum, max_length=32)
     date            = fields.DatetimeField()
-    raw_source      = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw")
+    raw_source      = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False)
     created_at      = fields.DatetimeField(auto_now_add=True)
     updated_at      = fields.DatetimeField(auto_now=True)
 

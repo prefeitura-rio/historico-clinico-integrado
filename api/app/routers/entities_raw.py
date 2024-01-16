@@ -43,9 +43,8 @@ async def get_raw_patientrecords(
             created_at__lt=end_date
         ))
 
-    user_data_source = await current_user.data_source
     return await RawPatientRecordOutput.from_queryset(RawPatientRecord.filter(
-        data_source=user_data_source,
+        creator=current_user,
         created_at__gte=start_date,
         created_at__lt=end_date
     ))
@@ -56,12 +55,11 @@ async def create_raw_patientrecord(
     current_user: Annotated[User, Depends(get_current_active_user)],
     record: RawPatientRecordInput,
 ) -> RawPatientRecordOutput:
-    user_datasource = await current_user.data_source
 
     record_instance = await RawPatientRecord.create(
         patient_cpf     = record.patient_cpf,
         data            = record.data,
-        data_source     = user_datasource
+        creator         = current_user
     )
     return await RawPatientRecordOutput.from_tortoise_orm(record_instance)
 
@@ -78,9 +76,8 @@ async def get_raw_patientconditions(
             created_at__lt=end_date
         ))
 
-    user_data_source = await current_user.data_source
     return await RawPatientConditionOutput.from_queryset(RawPatientCondition.filter(
-        data_source=user_data_source,
+        creator=current_user,
         created_at__gte=start_date,
         created_at__lt=end_date
     ))
@@ -91,11 +88,10 @@ async def create_raw_patientondition(
     current_user: Annotated[User, Depends(get_current_active_user)],
     condition: RawPatientConditionInput,
 ) -> RawPatientConditionOutput:
-    user_datasource = await current_user.data_source
 
     condition_instance = await RawPatientCondition.create(
         patient_cpf     = condition.patient_cpf,
         data            = condition.data,
-        data_source     = user_datasource
+        creator         = current_user
     )
     return await RawPatientConditionOutput.from_tortoise_orm(condition_instance)

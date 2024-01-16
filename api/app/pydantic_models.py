@@ -81,9 +81,9 @@ class PatientModel(BaseModel):
     patient_cpf: str
     deceased: Optional[bool]
     deceased_date: Optional[date]
-    father: Optional[str]
+    father_name: Optional[str]
     gender: str
-    mother: Optional[str]
+    mother_name: Optional[str]
     name: str
     nationality: Optional[str]
     naturalization: Optional[str]
