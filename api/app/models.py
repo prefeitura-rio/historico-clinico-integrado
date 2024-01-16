@@ -128,7 +128,7 @@ class Nationality(Model):
     name    = fields.CharField(max_length=512)
 
 
-class Address(Model):
+class PatientAddress(Model):
     id              = fields.UUIDField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="address_patient_periods")
     use             = fields.CharField(max_length=32)
@@ -140,7 +140,7 @@ class Address(Model):
     period_end      = fields.DateField(null=True)
 
 
-class Telecom(Model):
+class PatientTelecom(Model):
     id              = fields.UUIDField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="telecom_patient_periods")
     system          = fields.CharField(max_length=32)
@@ -151,9 +151,9 @@ class Telecom(Model):
     period_end      = fields.DateField(null=True)
 
 
-class Cns(Model):
+class PatientCns(Model):
     id          = fields.UUIDField(pk=True)
-    patient     = fields.ForeignKeyField("app.Patient", related_name="cnss")
+    patient     = fields.ForeignKeyField("app.Patient", related_name="patient_cns")
     value       = fields.CharField(max_length=16, unique=True)
     is_main     = fields.BooleanField(default=False)
 

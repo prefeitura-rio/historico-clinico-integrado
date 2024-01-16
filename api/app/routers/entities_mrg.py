@@ -7,8 +7,8 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 from app.dependencies import get_current_active_user
 from app.pydantic_models import PatientModel, PatientConditionListModel, CompletePatientModel
 from app.models import (
-    User, Patient, City, Race, Gender, Nationality, Address,
-    Telecom, PatientCondition, ConditionCode, Cns
+    User, Patient, City, Race, Gender, Nationality, PatientAddress,
+    PatientTelecom, PatientCondition, ConditionCode, PatientCns
 )
 
 PatientOutput = pydantic_model_creator(Patient, name="PatientOutput")
@@ -48,7 +48,7 @@ async def create_or_update_patient(
 
     patient = await Patient.get_or_none(
         patient_cpf = patient_data.get('patient_cpf')
-    ).prefetch_related('address_patient_periods','telecom_patient_periods')
+    ).prefetch_related('address_patient_periods','telecom_patient_periods', 'patient_cns')
 
     if patient is not None:
         await patient.update_from_dict(new_data).save()
@@ -66,21 +66,21 @@ async def create_or_update_patient(
         )
         address['patient']  = patient
         address['city']     = address_city
-        await Address.create(**address)
+        await PatientAddress.create(**address)
 
     # Reset de Telecom
     for instance in patient.telecom_patient_periods.related_objects:
         await instance.delete()
     for telecom in patient_data.get("telecom_list"):
         telecom['patient']  = patient
-        await Telecom.create(**telecom)
+        await PatientTelecom.create(**telecom)
 
     # Reset de CNS
-    for instance in patient.cnss.related_objects:
+    for instance in patient.patient_cns.related_objects:
         await instance.delete()
     for cns in patient_data.get("cns_list"):
         cns['patient']  = patient
-        await Cns.create(**cns)
+        await PatientCns.create(**cns)
 
     return await PatientOutput.from_tortoise_orm(patient)
 
@@ -127,7 +127,7 @@ async def get_patient(
 ) -> list[CompletePatientModel]:
 
     patient = await Patient.get_or_none(patient_cpf=patient_cpf).prefetch_related(
-        'race','nationality','gender','cnss',
+        'race','nationality','gender','patient_cns',
         'birth_city__state__country',
         'telecom_patient_periods',
         'address_patient_periods__city__state__country',
@@ -154,7 +154,7 @@ async def get_patient(
         condition_list.append(condition_data)
 
     cns_list = []
-    for cns in patient.cnss.related_objects:
+    for cns in patient.patient_cns.related_objects:
         cns_data = dict(cns)
         cns_list.append(cns_data)
 
