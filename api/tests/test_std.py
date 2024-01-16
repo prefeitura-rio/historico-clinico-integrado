@@ -27,7 +27,6 @@ async def test_post_stdpatientrecord(client: AsyncClient, token: str, patient_cp
             "mother_name": "Gabriela Marques da Cunha",
             "name": "Fernando Marques Farias",
             "nationality": "B",
-            "naturalization": "n",
             "protected_person": False,
             "race": "parda",
             "cns_list": [

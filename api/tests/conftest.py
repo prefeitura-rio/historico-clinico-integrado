@@ -84,7 +84,6 @@ async def initialize_tests(patient_cpf: str):
         deceased_date=None,
         mother_name="Maria",
         father_name="João",
-        naturalization="",
         nationality=nationality,
         race=race,
         birth_city=city,

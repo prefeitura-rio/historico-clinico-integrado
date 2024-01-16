@@ -66,7 +66,6 @@ async def test_put_mrgpatient(client: AsyncClient, token: str, patient_cpf : str
             "mother_name": "Gabriela Marques da Cunha",
             "name": "Fernando Marques Farias",
             "nationality": "B",
-            "naturalization": "n",
             "protected_person": False,
             "race": "parda",
             "cns_list": [

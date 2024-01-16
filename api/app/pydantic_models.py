@@ -26,6 +26,26 @@ class TelecomModel(BaseModel):
     period_end: Optional[date]
 
 
+class DataSourceModel(BaseModel):
+    system: str
+    cnes: str
+    description: str
+
+
+class UserRegisterInputModel(BaseModel):
+    username: str
+    password: str
+    email: str
+    is_superuser: bool
+    data_source: DataSourceModel
+
+
+class UserRegisterOutputModel(BaseModel):
+    username: str
+    is_superuser: bool
+    data_source: DataSourceModel
+
+
 class CnsModel(BaseModel):
     value: str
     is_main: bool
@@ -61,12 +81,11 @@ class PatientModel(BaseModel):
     patient_cpf: str
     deceased: Optional[bool]
     deceased_date: Optional[date]
-    father: Optional[str]
+    father_name: Optional[str]
     gender: str
-    mother: Optional[str]
+    mother_name: Optional[str]
     name: str
     nationality: Optional[str]
-    naturalization: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
     cns_list: List[CnsModel]
@@ -92,7 +111,6 @@ class CompletePatientModel(BaseModel):
     father_name: Optional[str]
     mother_name: Optional[str]
     nationality: Optional[str]
-    naturalization: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
 
@@ -132,7 +150,6 @@ class StandardizedPatientRecordModel(BaseModel):
     mother_name: Optional[str]
     name: str
     nationality: Optional[str]
-    naturalization: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
     cns_list: Optional[List[CnsModel]]
