@@ -84,7 +84,7 @@ async def run():
     estados     = relacao_estado_municipio[['UF','Nome_UF']].drop_duplicates()
     municipios  = relacao_estado_municipio[['UF','Nome_Município','Código Município Completo']]
 
-    municipios_para_criar = []
+    cities_to_create = []
     for _, estado in estados.iterrows():
         state, _ = await State.get_or_create(
             country=brasil,
@@ -93,14 +93,14 @@ async def run():
         )
 
         for _, municipio in municipios[municipios['UF'] == estado['UF']].iterrows():
-            municipios_para_criar.append(
+            cities_to_create.append(
                 City(
                     state=state,
                     code=municipio['Código Município Completo'],
                     name=municipio['Nome_Município']
                 )
             )
-    City.bulk_create(municipios_para_criar, ignore_conflicts=True)
+    City.bulk_create(cities_to_create, ignore_conflicts=True)
     logger.info("States and Cities created successfully")
 
     await Tortoise.close_connections()
