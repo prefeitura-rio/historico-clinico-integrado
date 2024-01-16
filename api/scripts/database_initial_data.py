@@ -99,7 +99,7 @@ async def run():
                     name=municipio['Nome_Município']
                 )
             )
-    City.bulk_create(cities_to_create, ignore_conflicts=True)
+    await City.bulk_create(cities_to_create, ignore_conflicts=True)
     logger.info("States and Cities created successfully")
 
     await Tortoise.close_connections()
