@@ -40,7 +40,6 @@ async def create_or_update_patient(
         'name'                  : patient_data.get('name'),
         'mother_name'           : patient_data.get('mother_name'),
         'father_name'           : patient_data.get('father_name'),
-        'naturalization'        : patient_data.get('naturalization'),
         'birth_city'            : birth_city,
         'race'                  : await Race.get_or_none(slug = patient_data['race']),
         'gender'                : await Gender.get_or_none(slug = patient_data['gender']),

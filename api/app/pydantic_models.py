@@ -86,7 +86,6 @@ class PatientModel(BaseModel):
     mother_name: Optional[str]
     name: str
     nationality: Optional[str]
-    naturalization: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
     cns_list: List[CnsModel]
@@ -112,7 +111,6 @@ class CompletePatientModel(BaseModel):
     father_name: Optional[str]
     mother_name: Optional[str]
     nationality: Optional[str]
-    naturalization: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
 
@@ -152,7 +150,6 @@ class StandardizedPatientRecordModel(BaseModel):
     mother_name: Optional[str]
     name: str
     nationality: Optional[str]
-    naturalization: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
     cns_list: Optional[List[CnsModel]]
