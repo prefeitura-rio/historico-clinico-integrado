@@ -29,7 +29,7 @@ async def run():
     await Tortoise.generate_schemas()
 
     cids = pd.read_csv(
-        "./data/cid_categorias.csv",
+        "./data/cid_subcategorias.csv",
         header=0
     )
 
@@ -92,7 +92,7 @@ async def run():
         )
 
         for _, municipio in municipios[municipios['UF'] == estado['UF']].iterrows():
-            await City.create(
+            await City.get_or_create(
                 state=state,
                 code=municipio['Código Município Completo'],
                 name=municipio['Nome_Município']

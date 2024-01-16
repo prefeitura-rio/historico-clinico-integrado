@@ -24,6 +24,7 @@ RUN poetry install --no-dev --no-interaction --no-ansi
 # Copy the project files into the working directory
 COPY ./app /app
 COPY ./scripts .
+COPY ./data /data
 COPY ./migrations /migrations
 COPY ./compose-entrypoint.sh /compose-entrypoint.sh
 

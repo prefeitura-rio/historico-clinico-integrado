@@ -93,20 +93,20 @@ class ConditionCode(Model):
 
 class City(Model):
     id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10)
+    code    = fields.CharField(max_length=10, unique=True)
     name    = fields.CharField(max_length=512)
     state   = fields.ForeignKeyField("app.State", related_name="cities")
 
 
 class Country(Model):
     id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10)
+    code    = fields.CharField(max_length=10, unique=True)
     name    = fields.CharField(max_length=512)
 
 
 class State(Model):
     id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10)
+    code    = fields.CharField(max_length=10, unique=True)
     name    = fields.CharField(max_length=512)
     country = fields.ForeignKeyField("app.Country", related_name="states")
 
