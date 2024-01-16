@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS "patient" (
     "nationality_id" UUID NOT NULL REFERENCES "nationality" ("id") ON DELETE CASCADE,
     "race_id" UUID NOT NULL REFERENCES "race" ("id") ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS "address" (
+CREATE TABLE IF NOT EXISTS "patientaddress" (
     "id" UUID NOT NULL  PRIMARY KEY,
     "use" VARCHAR(32) NOT NULL,
     "type" VARCHAR(32) NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "address" (
     "city_id" UUID NOT NULL REFERENCES "city" ("id") ON DELETE CASCADE,
     "patient_id" UUID NOT NULL REFERENCES "patient" ("id") ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS "cns" (
+CREATE TABLE IF NOT EXISTS "patientcns" (
     "id" UUID NOT NULL  PRIMARY KEY,
     "value" VARCHAR(16) NOT NULL UNIQUE,
     "is_main" BOOL NOT NULL  DEFAULT False,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS "patientcondition" (
 );
 COMMENT ON COLUMN "patientcondition"."clinical_status" IS 'RESOLVED: resolved\nRESOLVING: resolving\nNOT_RESOLVED: not_resolved';
 COMMENT ON COLUMN "patientcondition"."category" IS 'PROBLEM_LIST_ITEM: problem-list-item\nENCOUTER_DIAGNOSIS: encounter-diagnosis';
-CREATE TABLE IF NOT EXISTS "telecom" (
+CREATE TABLE IF NOT EXISTS "patienttelecom" (
     "id" UUID NOT NULL  PRIMARY KEY,
     "system" VARCHAR(32) NOT NULL,
     "use" VARCHAR(32) NOT NULL,
