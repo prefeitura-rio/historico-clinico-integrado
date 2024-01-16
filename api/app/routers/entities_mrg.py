@@ -8,7 +8,7 @@ from app.dependencies import get_current_active_user
 from app.pydantic_models import PatientModel, PatientConditionListModel, CompletePatientModel
 from app.models import (
     User, Patient, City, Race, Gender, Nationality, Address,
-    Telecom, PatientCondition, ConditionCode
+    Telecom, PatientCondition, ConditionCode, Cns
 )
 
 PatientOutput = pydantic_model_creator(Patient, name="PatientOutput")
@@ -74,6 +74,13 @@ async def create_or_update_patient(
     for telecom in patient_data.get("telecom_list"):
         telecom['patient']  = patient
         await Telecom.create(**telecom)
+
+    # Reset de CNS
+    for instance in patient.cnss.related_objects:
+        await instance.delete()
+    for cns in patient_data.get("cns_list"):
+        cns['patient']  = patient
+        await Cns.create(**cns)
 
     return await PatientOutput.from_tortoise_orm(patient)
 
