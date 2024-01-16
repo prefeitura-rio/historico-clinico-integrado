@@ -13,13 +13,20 @@ async def run(username: str, password: str, is_admin: bool):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
-    await User.create(
-        username=username,
-        email=f"{username}@example.com",
-        password=password_hash(password),
-        is_active=True,
-        is_superuser=is_admin,
-    )
+    user = await User.get_or_none(username=username)
+
+    if user is None:
+        await User.create(
+            username=username,
+            email=f"{username}@example.com",
+            password=password_hash(password),
+            is_active=True,
+            is_superuser=is_admin,
+        )
+        logger.info("User created")
+    else:
+        logger.info("User already exist")
+
     await Tortoise.close_connections()
 
 

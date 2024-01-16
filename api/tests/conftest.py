@@ -115,7 +115,8 @@ async def initialize_tests(patient_cpf: str):
     )
     code = await ConditionCode.create(
         value="A001",
-        type="cid"
+        type="cid",
+        description="Teste"
     )
     await PatientCondition.create(
         patient=patient,

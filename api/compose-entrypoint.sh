@@ -6,14 +6,15 @@ if [ ! -d "./migrations/app/" ]; then
     echo "Running aerich init-db to create initial migration"
     aerich init-db || true
 
-    echo "Creating first user"
-    poetry run python create_user.py --username pedro --password senha --admin True
-
-    echo "Initializing Database Data"
-    poetry run python database_initial_data.py
 else
     echo "./migrations/app/ folder exist, skipping initialization"
 fi
+
+echo "Atempt to create user"
+poetry run python create_user.py --username pedro --password senha --admin True
+
+echo "Initializing Database Data"
+poetry run python database_initial_data.py
 
 # Run migrations
 aerich upgrade
