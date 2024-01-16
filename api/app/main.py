@@ -9,7 +9,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from app import config
 from app.db import TORTOISE_ORM
-from app.routers import auth, entities_mrg, entities_raw, entities_std, users, entities
+from app.routers import auth, entities_mrg, entities_raw, entities_std, entities
 
 logger.remove()
 logger.add(sys.stdout, level=config.LOG_LEVEL)
