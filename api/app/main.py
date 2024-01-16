@@ -9,7 +9,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from app import config
 from app.db import TORTOISE_ORM
-from app.routers import auth, entities, entities_raw, entities_std, users
+from app.routers import auth, entities_mrg, entities_raw, entities_std, users, entities
 
 logger.remove()
 logger.add(sys.stdout, level=config.LOG_LEVEL)
@@ -44,9 +44,10 @@ app.add_middleware(
 
 app.include_router(entities_raw.router)
 app.include_router(entities_std.router)
+app.include_router(entities_mrg.router)
 app.include_router(entities.router)
 app.include_router(auth.router)
-app.include_router(users.router)
+# app.include_router(users.router)
 
 register_tortoise(
     app,

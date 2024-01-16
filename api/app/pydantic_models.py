@@ -26,6 +26,26 @@ class TelecomModel(BaseModel):
     period_end: Optional[date]
 
 
+class DataSourceModel(BaseModel):
+    system: str
+    cnes: str
+    description: str
+
+
+class UserRegisterInputModel(BaseModel):
+    username: str
+    password: str
+    email: str
+    is_superuser: bool
+    data_source: DataSourceModel
+
+
+class UserRegisterOutputModel(BaseModel):
+    username: str
+    is_superuser: bool
+    data_source: DataSourceModel
+
+
 class CnsModel(BaseModel):
     value: str
     is_main: bool
