@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Annotated, Optional, List
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
@@ -7,7 +7,7 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 from app.dependencies import get_current_active_user
 from app.pydantic_models import (
     StandardizedPatientRecordModel, StandardizedPatientConditionModel,
-    BulkInsertOutputModel, StandardizedPatientRecordListModel, StandardizedPatientConditionListModel
+    BulkInsertOutputModel
 )
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
