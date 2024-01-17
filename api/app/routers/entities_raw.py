@@ -7,9 +7,9 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
 from app.models import (
-    User, RawPatientRecord, RawPatientCondition
+    User, RawPatientRecord, RawPatientCondition, DataSource
 )
-
+from app.pydantic_models import ( RawDataListModel, BulkInsertOutputModel )
 
 RawPatientConditionInput = pydantic_model_creator(
     RawPatientCondition, name="RawPatientConditionInput",
@@ -36,32 +36,46 @@ async def get_raw_patientrecords(
     current_user: Annotated[User, Depends(get_current_active_user)],
     start_date: datetime.date = datetime.date.today(),
     end_date: datetime.date = datetime.date.today() + datetime.timedelta(days=1),
+    datasource_system: str = None,
 ) -> list[RawPatientRecordOutput]:
-    if current_user.is_superuser:
-        return await RawPatientRecordOutput.from_queryset(RawPatientRecord.filter(
-            created_at__gte=start_date,
-            created_at__lt=end_date
-        ))
 
-    return await RawPatientRecordOutput.from_queryset(RawPatientRecord.filter(
-        creator=current_user,
+    filtered = RawPatientRecord.filter(
         created_at__gte=start_date,
         created_at__lt=end_date
-    ))
-
-
-@router.post("/patientrecord", response_model=RawPatientRecordOutput, status_code=201)
-async def create_raw_patientrecord(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    record: RawPatientRecordInput,
-) -> RawPatientRecordOutput:
-
-    record_instance = await RawPatientRecord.create(
-        patient_cpf     = record.patient_cpf,
-        data            = record.data,
-        creator         = current_user
     )
-    return await RawPatientRecordOutput.from_tortoise_orm(record_instance)
+
+    if datasource_system is not None:
+        filtered = filtered.filter(
+            data_source__system=datasource_system
+        )
+    return await RawPatientRecordOutput.from_queryset(filtered)
+
+
+@router.post("/patientrecords", response_model=BulkInsertOutputModel, status_code=201)
+async def create_raw_patientrecords(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    raw_data: RawDataListModel,
+) -> BulkInsertOutputModel:
+    raw_data = raw_data.dict()
+    cnes = raw_data.pop("cnes")
+    records = raw_data.pop("data_list")
+
+    data_source = await DataSource.get(cnes=cnes)
+
+    records_to_create = []
+    for record in records:
+        records_to_create.append(
+            RawPatientRecord(
+                patient_cpf     = record.get('patient_cpf'),
+                data            = record.get('data'),
+                data_source     = data_source
+            )
+        )
+
+    new_records = await RawPatientRecord.bulk_create(records_to_create)
+    return {
+        'count': len(new_records)
+    }
 
 
 @router.get("/patientconditions", response_model=list[RawPatientConditionOutput])
@@ -69,29 +83,43 @@ async def get_raw_patientconditions(
     current_user: Annotated[User, Depends(get_current_active_user)],
     start_date: datetime.date = datetime.date.today(),
     end_date: datetime.date = datetime.date.today() + datetime.timedelta(days=1),
+    datasource_system: str = None,
 ) -> list[RawPatientConditionOutput]:
-    if current_user.is_superuser:
-        return await RawPatientConditionOutput.from_queryset(RawPatientCondition.filter(
-            created_at__gte=start_date,
-            created_at__lt=end_date
-        ))
 
-    return await RawPatientConditionOutput.from_queryset(RawPatientCondition.filter(
-        creator=current_user,
+    filtered = RawPatientCondition.filter(
         created_at__gte=start_date,
         created_at__lt=end_date
-    ))
-
-
-@router.post("/patientcondition", response_model=RawPatientConditionOutput, status_code=201)
-async def create_raw_patientondition(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    condition: RawPatientConditionInput,
-) -> RawPatientConditionOutput:
-
-    condition_instance = await RawPatientCondition.create(
-        patient_cpf     = condition.patient_cpf,
-        data            = condition.data,
-        creator         = current_user
     )
-    return await RawPatientConditionOutput.from_tortoise_orm(condition_instance)
+
+    if datasource_system is not None:
+        filtered = filtered.filter(
+            data_source__system=datasource_system
+        )
+    return await RawPatientConditionOutput.from_queryset(filtered)
+
+
+@router.post("/patientconditions", response_model=BulkInsertOutputModel, status_code=201)
+async def create_raw_patientonditions(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    raw_data: RawDataListModel,
+) -> BulkInsertOutputModel:
+    raw_data = raw_data.dict()
+    cnes = raw_data.pop("cnes")
+    conditions = raw_data.pop("data_list")
+
+    data_source = await DataSource.get(cnes=cnes)
+
+    conditions_to_create = []
+    for condition in conditions:
+        conditions_to_create.append(
+            RawPatientCondition(
+                patient_cpf     = condition.get('patient_cpf'),
+                data            = condition.get('data'),
+                data_source     = data_source
+            )
+        )
+
+    new_conditions = await RawPatientCondition.bulk_create(conditions_to_create)
+    return {
+        'count': len(new_conditions)
+    }
