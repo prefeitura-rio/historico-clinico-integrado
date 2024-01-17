@@ -174,6 +174,7 @@ class Patient(Model):
     nationality         = fields.ForeignKeyField("app.Nationality", related_name="patient_nationality")
     birth_city          = fields.ForeignKeyField("app.City", related_name="birth_patients", null=True)
     created_at          = fields.DatetimeField(auto_now_add=True)
+    updated_at          = fields.DatetimeField(auto_now=True)
 
 
 class PatientCondition(Model):

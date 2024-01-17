@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS "patient" (
     "mother_name" VARCHAR(512),
     "name" VARCHAR(512) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "birth_city_id" UUID REFERENCES "city" ("id") ON DELETE CASCADE,
     "gender_id" UUID NOT NULL REFERENCES "gender" ("id") ON DELETE CASCADE,
     "nationality_id" UUID NOT NULL REFERENCES "nationality" ("id") ON DELETE CASCADE,
