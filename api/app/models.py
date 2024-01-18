@@ -3,12 +3,12 @@ from tortoise import fields
 from tortoise.models import Model
 
 from app.enums import RaceEnum, GenderEnum, NationalityEnum, ConditionCodeTypeEnum, CategoryEnum, ClinicalStatusEnum, SystemEnum
-
+from app.validators import CPFValidator
 
 
 class RawPatientRecord(Model):
     id              = fields.UUIDField(pk=True)
-    patient_cpf     = fields.CharField(max_length=11)
+    patient_cpf     = fields.CharField(max_length=11, validators=[CPFValidator()])
     data            = fields.JSONField()
     data_source     = fields.ForeignKeyField("app.DataSource", related_name="raw_record_creator", null=False)
 
@@ -21,7 +21,7 @@ class RawPatientRecord(Model):
 
 class RawPatientCondition(Model):
     id          = fields.UUIDField(pk=True)
-    patient_cpf = fields.CharField(max_length=11)
+    patient_cpf = fields.CharField(max_length=11, validators=[CPFValidator()])
     data        = fields.JSONField()
     data_source = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_creator", null=False)
 
@@ -34,7 +34,7 @@ class RawPatientCondition(Model):
 
 class StandardizedPatientRecord(Model):
     id                  = fields.UUIDField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11)
+    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()])
     birth_city          = fields.ForeignKeyField("app.City", related_name="birthcity_stdpatients", null=True)
     birth_state         = fields.ForeignKeyField("app.State", related_name="birthstate_stdpatients", null=True)
     birth_country       = fields.ForeignKeyField("app.Country", related_name="birthcountry_stdpatients", null=True)
@@ -62,7 +62,7 @@ class StandardizedPatientRecord(Model):
 
 class StandardizedPatientCondition(Model):
     id              = fields.UUIDField(pk=True)
-    patient_cpf     = fields.CharField(max_length=11)
+    patient_cpf     = fields.CharField(max_length=11, validators=[CPFValidator()])
     cid             = fields.CharField(max_length=4)
     ciap            = fields.CharField(max_length=4, null=True)
     clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, max_length=32)
@@ -156,7 +156,7 @@ class PatientCns(Model):
 
 class Patient(Model):
     id                  = fields.UUIDField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11, unique=True)
+    patient_cpf         = fields.CharField(max_length=11, unique=True, validators=[CPFValidator()])
     birth_date          = fields.DateField()
     active              = fields.BooleanField(default=True)
     protected_person    = fields.BooleanField(null=True)

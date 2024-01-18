@@ -18,11 +18,12 @@ DataSourceOutput = pydantic_model_creator(DataSource, name="DataSourceOutput")
 router = APIRouter(prefix="/outros", tags=["Outras Entidades"])
 
 
-@router.post("/user", response_model=UserRegisterOutputModel, status_code=200)
+@router.post("/user", status_code=200)
 async def create_user(
-    _: Annotated[User, Depends(get_current_active_user)],
-    user: UserRegisterInputModel,
+    _       : Annotated[User, Depends(get_current_active_user)],
+    user    : UserRegisterInputModel,
 ) -> UserRegisterOutputModel:
+
     user_data = user.dict()
     datasource_data = user_data.pop('data_source')
 
@@ -32,12 +33,10 @@ async def create_user(
         description = datasource_data['description']
     )
 
-    user_data['password'] = password_hash(user_data['password'])
-    user_data['data_source'] = datasource_instance
+    user_data['password']       = password_hash(user_data['password'])
+    user_data['data_source']    = datasource_instance
 
-    user_instance = await User.create(
-        **user_data
-    )
+    user_instance = await User.create(**user_data)
 
     output = {
         **dict(user_instance),

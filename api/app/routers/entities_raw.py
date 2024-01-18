@@ -3,13 +3,20 @@ import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from tortoise.contrib.pydantic import pydantic_model_creator
+from fastapi.responses import HTMLResponse
 
+from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.exceptions import ValidationError
+
+from app.pydantic_models import ( RawDataListModel, BulkInsertOutputModel )
 from app.dependencies import get_current_active_user
 from app.models import (
     User, RawPatientRecord, RawPatientCondition, DataSource
 )
-from app.pydantic_models import ( RawDataListModel, BulkInsertOutputModel )
+
+
+router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
+
 
 RawPatientConditionInput = pydantic_model_creator(
     RawPatientCondition, name="RawPatientConditionInput",
@@ -28,15 +35,12 @@ RawPatientRecordOutput = pydantic_model_creator(
 )
 
 
-router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
-
-
-@router.get("/patientrecords", response_model=list[RawPatientRecordOutput])
+@router.get("/patientrecords")
 async def get_raw_patientrecords(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    start_date: datetime.date = datetime.date.today(),
-    end_date: datetime.date = datetime.date.today() + datetime.timedelta(days=1),
-    datasource_system: str = None,
+    _                   : Annotated[User, Depends(get_current_active_user)],
+    start_date          : datetime.date = datetime.date.today(),
+    end_date            : datetime.date = datetime.date.today() + datetime.timedelta(days=1),
+    datasource_system   : str = None,
 ) -> list[RawPatientRecordOutput]:
 
     filtered = RawPatientRecord.filter(
@@ -51,26 +55,29 @@ async def get_raw_patientrecords(
     return await RawPatientRecordOutput.from_queryset(filtered)
 
 
-@router.post("/patientrecords", response_model=BulkInsertOutputModel, status_code=201)
+@router.post("/patientrecords", status_code=201)
 async def create_raw_patientrecords(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    raw_data: RawDataListModel,
+    _           : Annotated[User, Depends(get_current_active_user)],
+    raw_data    : RawDataListModel,
 ) -> BulkInsertOutputModel:
+
     raw_data = raw_data.dict()
-    cnes = raw_data.pop("cnes")
-    records = raw_data.pop("data_list")
 
-    data_source = await DataSource.get(cnes=cnes)
+    cnes        = raw_data.pop("cnes")
+    records     = raw_data.pop("data_list")
 
-    records_to_create = []
-    for record in records:
-        records_to_create.append(
-            RawPatientRecord(
-                patient_cpf     = record.get('patient_cpf'),
-                data            = record.get('data'),
-                data_source     = data_source
-            )
-        )
+    try:
+        records_to_create = []
+        for record in records:
+                records_to_create.append(
+                    RawPatientRecord(
+                        patient_cpf     = record.get('patient_cpf'),
+                        data            = record.get('data'),
+                        data_source     = await DataSource.get(cnes=cnes)
+                    )
+                )
+    except ValidationError as e:
+        return HTMLResponse(status_code=400, content=str(e))
 
     new_records = await RawPatientRecord.bulk_create(records_to_create)
     return {
@@ -78,12 +85,12 @@ async def create_raw_patientrecords(
     }
 
 
-@router.get("/patientconditions", response_model=list[RawPatientConditionOutput])
+@router.get("/patientconditions")
 async def get_raw_patientconditions(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    start_date: datetime.date = datetime.date.today(),
-    end_date: datetime.date = datetime.date.today() + datetime.timedelta(days=1),
-    datasource_system: str = None,
+    _                   : Annotated[User, Depends(get_current_active_user)],
+    start_date          : datetime.date = datetime.date.today(),
+    end_date            : datetime.date = datetime.date.today() + datetime.timedelta(days=1),
+    datasource_system   : str = None,
 ) -> list[RawPatientConditionOutput]:
 
     filtered = RawPatientCondition.filter(
@@ -98,26 +105,28 @@ async def get_raw_patientconditions(
     return await RawPatientConditionOutput.from_queryset(filtered)
 
 
-@router.post("/patientconditions", response_model=BulkInsertOutputModel, status_code=201)
-async def create_raw_patientonditions(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    raw_data: RawDataListModel,
+@router.post("/patientconditions", status_code=201)
+async def create_raw_patientconditions(
+    _           : Annotated[User, Depends(get_current_active_user)],
+    raw_data    : RawDataListModel,
 ) -> BulkInsertOutputModel:
     raw_data = raw_data.dict()
-    cnes = raw_data.pop("cnes")
-    conditions = raw_data.pop("data_list")
 
-    data_source = await DataSource.get(cnes=cnes)
+    cnes        = raw_data.pop("cnes")
+    conditions  = raw_data.pop("data_list")
 
-    conditions_to_create = []
-    for condition in conditions:
-        conditions_to_create.append(
-            RawPatientCondition(
-                patient_cpf     = condition.get('patient_cpf'),
-                data            = condition.get('data'),
-                data_source     = data_source
-            )
-        )
+    try:
+        conditions_to_create = []
+        for condition in conditions:
+                conditions_to_create.append(
+                    RawPatientCondition(
+                        patient_cpf     = condition.get('patient_cpf'),
+                        data            = condition.get('data'),
+                        data_source     = await DataSource.get(cnes=cnes)
+                    )
+                )
+    except ValidationError as e:
+        return HTMLResponse(status_code=400, content=str(e))
 
     new_conditions = await RawPatientCondition.bulk_create(conditions_to_create)
     return {

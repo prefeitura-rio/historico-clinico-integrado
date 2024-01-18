@@ -144,7 +144,7 @@ async def password():
 
 @pytest.fixture(scope="session")
 async def patient_cpf():
-    yield "1111111111"
+    yield "38965996074"
 
 @pytest.fixture(scope="session")
 async def token(client: AsyncClient, username: str, password: str):
