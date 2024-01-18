@@ -1805,6 +1805,17 @@ docs = ["Sphinx (>=4.1.2,<4.2.0)", "sphinx-rtd-theme (>=0.5.2,<0.6.0)", "sphinxc
 test = ["Cython (>=0.29.36,<0.30.0)", "aiohttp (==3.9.0b0)", "aiohttp (>=3.8.1)", "flake8 (>=5.0,<6.0)", "mypy (>=0.800)", "psutil", "pyOpenSSL (>=23.0.0,<23.1.0)", "pycodestyle (>=2.9.0,<2.10.0)"]
 
 [[package]]
+name = "validdocbr"
+version = "1.2.2"
+description = "Brazilian document validator using the check digit"
+optional = false
+python-versions = "*"
+files = [
+    {file = "validdocbr-1.2.2-py3-none-any.whl", hash = "sha256:2305ff5677d39968d313b4a89a5f805f70d53ab9dcba252f0952e44080a1af4e"},
+    {file = "validdocbr-1.2.2.tar.gz", hash = "sha256:b1df22281e3a414428f4ffecc7d5c97b01ed6ce24da7e8e415a04f026479b99e"},
+]
+
+[[package]]
 name = "virtualenv"
 version = "20.24.7"
 description = "Virtual Python Environment builder"
@@ -2009,4 +2020,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "3b37b97629da2c5f690386ce421161ba5bb62901cda60223827344f15d033c74"
+content-hash = "fe46b8f0d3535ed199cbd44d704115e6f64a9d80ae93886e70a6eec1ffcb8e15"
