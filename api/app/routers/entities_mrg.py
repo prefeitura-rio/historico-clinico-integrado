@@ -55,9 +55,12 @@ async def create_or_update_patient(
         'nationality'           : await Nationality.get_or_none(slug = patient_data['nationality']),
     }
 
-    patient = await Patient.get_or_none(
-        patient_cpf = patient_data.get('patient_cpf')
-    ).prefetch_related('address_patient_periods','telecom_patient_periods', 'patient_cns')
+    try:
+        patient = await Patient.get_or_none(
+            patient_cpf = patient_data.get('patient_cpf')
+        ).prefetch_related('address_patient_periods','telecom_patient_periods', 'patient_cns')
+    except ValidationError as e:
+        return HTMLResponse(status_code=400, content=str(e))
 
     if patient is not None:
         await patient.update_from_dict(new_data).save()
@@ -105,9 +108,12 @@ async def create_or_update_patientcondition(
 
     patient_data = patientcondition.dict()
 
-    patient = await Patient.get_or_none(
-        patient_cpf=patient_data.get('patient_cpf')
-    ).prefetch_related('patientconditions')
+    try:
+        patient = await Patient.get_or_none(
+            patient_cpf=patient_data.get('patient_cpf')
+        ).prefetch_related('patientconditions')
+    except ValidationError as e:
+        return HTMLResponse(status_code=400, content=str(e))
 
     if patient is None:
         return HTMLResponse(status_code=400, content="Patient doesn't exist")
