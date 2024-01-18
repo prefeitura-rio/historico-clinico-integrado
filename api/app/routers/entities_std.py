@@ -5,10 +5,13 @@ from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
-from app.pydantic_models import StandardizedPatientRecordModel, StandardizedPatientConditionModel
+from app.pydantic_models import (
+    StandardizedPatientRecordModel, StandardizedPatientConditionModel,
+    BulkInsertOutputModel
+)
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
-    RawPatientCondition, RawPatientRecord
+    RawPatientCondition, RawPatientRecord, City, Country, State
 )
 
 StandardizedPatientRecordOutput = pydantic_model_creator(
@@ -42,20 +45,33 @@ async def get_standardized_patientrecords(
     return await StandardizedPatientRecordOutput.from_queryset(queryset)
 
 
-@router.post("/patientrecord", response_model=StandardizedPatientRecordOutput,
+@router.post("/patientrecords", response_model=BulkInsertOutputModel,
              status_code=201)
-async def create_standardized_patientrecord(
+async def create_standardized_patientrecords(
     _: Annotated[User, Depends(get_current_active_user)],
-    record: StandardizedPatientRecordModel,
-) -> StandardizedPatientRecordOutput:
+    records: list[StandardizedPatientRecordModel],
+) -> BulkInsertOutputModel:
+    records_to_create = []
+    for record in records:
+        record = record.dict(exclude_unset=True)
 
-    raw_source = await RawPatientRecord.get(id=record.raw_source_id)
+        raw_source = await RawPatientRecord.get(id=record['raw_source_id'])
+        birth_city = await City.get(code=record['birth_city_cod'])
+        birth_state = await State.get(code=record['birth_state_cod'])
+        birth_country = await Country.get(code=record['birth_country_cod'])
 
-    input_dict = record.dict(exclude_unset=True)
-    input_dict['raw_source'] = raw_source
+        record['raw_source'] = raw_source
+        record['birth_city'] = birth_city
+        record['birth_state'] = birth_state
+        record['birth_country'] = birth_country
 
-    record_instance = await StandardizedPatientRecord.create(**input_dict)
-    return await StandardizedPatientRecordOutput.from_tortoise_orm(record_instance)
+        records_to_create.append( StandardizedPatientRecord(**record) )
+
+    new_records = await StandardizedPatientRecord.bulk_create(records_to_create)
+
+    return {
+        'count': len(new_records)
+    }
 
 
 @router.get("/patientconditions", response_model=list[StandardizedPatientConditionOutput])
@@ -77,17 +93,25 @@ async def get_standardized_patientconditions(
 
     return await StandardizedPatientConditionOutput.from_queryset(queryset)
 
-@router.post("/patientcondition", response_model=StandardizedPatientConditionOutput,
+@router.post("/patientconditions", response_model=BulkInsertOutputModel,
              status_code=201)
-async def create_standardized_patientcondition(
+async def create_standardized_patientconditions(
     _: Annotated[User, Depends(get_current_active_user)],
-    condition: StandardizedPatientConditionModel,
-) -> StandardizedPatientConditionOutput:
+    conditions: list[StandardizedPatientConditionModel],
+) -> BulkInsertOutputModel:
 
-    raw_source = await RawPatientCondition.get(id=condition.raw_source_id)
+    conditions_to_create = []
+    for condition in conditions:
+        condition = condition.dict(exclude_unset=True)
 
-    input_dict = condition.dict(exclude_unset=True)
-    input_dict['raw_source'] = raw_source
+        raw_source = await RawPatientCondition.get(id=condition['raw_source_id'])
 
-    condition_instance = await StandardizedPatientCondition.create(**input_dict)
-    return await StandardizedPatientConditionOutput.from_tortoise_orm(condition_instance)
+        condition['raw_source'] = raw_source
+
+        conditions_to_create.append( StandardizedPatientCondition(**condition) )
+
+    new_conditions = await StandardizedPatientCondition.bulk_create(conditions_to_create)
+
+    return {
+        'count': len(new_conditions)
+    }

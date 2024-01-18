@@ -11,19 +11,21 @@ sys.path.insert(0, "../")
 @pytest.mark.run(order=1)
 async def test_post_rawpatientrecord(client: AsyncClient, token: str, patient_cpf: str):
     response = await client.post(
-        "/raw/patientrecord",
+        "/raw/patientrecords",
         headers={"Authorization": f"Bearer {token}"},
         json={
-            "patient_cpf": patient_cpf,
-            "data": {
-                "name" : "Teste",
-                "address": "Rua 1, 3000, 22222222, Rio de Janeiro, RJ, Brasil"
-            }
+            "data_list": [
+                {
+                    "patient_cpf": patient_cpf,
+                    "data": {"name":"Teste"}
+                }
+            ],
+            "cnes": "1234567"
         }
     )
 
     assert response.status_code == 201
-    assert 'id' in response.json()
+    assert response.json()['count'] == 1
 
 
 @pytest.mark.anyio
@@ -44,19 +46,21 @@ async def test_get_rawpatientrecords(client: AsyncClient, token: str):
 @pytest.mark.run(order=1)
 async def test_post_rawpatientcondition(client: AsyncClient, token: str, patient_cpf: str):
     response = await client.post(
-        "/raw/patientcondition",
+        "/raw/patientconditions",
         headers={"Authorization": f"Bearer {token}"},
         json={
-            "patient_cpf": patient_cpf,
-            "data": {
-                "code" : "A001",
-                "status": "resolved"
-            }
+            "data_list": [
+                {
+                    "patient_cpf": patient_cpf,
+                    "data": {"name":"Teste"}
+                }
+            ],
+            "cnes": "1234567"
         }
     )
 
     assert response.status_code == 201
-    assert 'id' in response.json()
+    assert response.json()['count'] == 1
 
 @pytest.mark.anyio
 @pytest.mark.run(order=2)

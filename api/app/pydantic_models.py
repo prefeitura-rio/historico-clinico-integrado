@@ -60,6 +60,19 @@ class TokenData(BaseModel):
     username: Optional[str]
 
 
+class RawDataModel(BaseModel):
+    patient_cpf: str
+    data: dict
+
+
+class RawDataListModel(BaseModel):
+    data_list: List[RawDataModel]
+    cnes: str
+
+class BulkInsertOutputModel(BaseModel):
+    count: int
+
+
 class ConditionListModel(BaseModel):
     code: str
     clinical_status: str
@@ -138,9 +151,9 @@ class StandardizedTelecomModel(BaseModel):
 
 class StandardizedPatientRecordModel(BaseModel):
     active: Optional[bool] = True
-    birth_city: Optional[str]
-    birth_state: Optional[str]
-    birth_country: Optional[str]
+    birth_city_cod: Optional[str]
+    birth_state_cod: Optional[str]
+    birth_country_cod: Optional[str]
     birth_date: date
     patient_cpf: str
     deceased: Optional[bool] = False
@@ -166,3 +179,11 @@ class StandardizedPatientConditionModel(BaseModel):
     category: str
     date: datetime
     raw_source_id: Optional[str]
+
+
+class StandardizedPatientRecordListModel(BaseModel):
+    records: List[StandardizedPatientRecordModel]
+
+
+class StandardizedPatientConditionListModel(BaseModel):
+    conditions: List[StandardizedPatientConditionModel]

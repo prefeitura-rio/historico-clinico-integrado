@@ -7,10 +7,10 @@ from app.enums import RaceEnum, GenderEnum, NationalityEnum, ConditionCodeTypeEn
 
 
 class RawPatientRecord(Model):
-    id          = fields.UUIDField(pk=True)
-    patient_cpf = fields.CharField(max_length=11)
-    data        = fields.JSONField()
-    creator     = fields.ForeignKeyField("app.User", related_name="raw_record_creator", null=False)
+    id              = fields.UUIDField(pk=True)
+    patient_cpf     = fields.CharField(max_length=11)
+    data            = fields.JSONField()
+    data_source     = fields.ForeignKeyField("app.DataSource", related_name="raw_record_creator", null=False)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -23,7 +23,7 @@ class RawPatientCondition(Model):
     id          = fields.UUIDField(pk=True)
     patient_cpf = fields.CharField(max_length=11)
     data        = fields.JSONField()
-    creator     = fields.ForeignKeyField("app.User", related_name="raw_condition_creator", null=False)
+    data_source = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_creator", null=False)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -35,9 +35,9 @@ class RawPatientCondition(Model):
 class StandardizedPatientRecord(Model):
     id                  = fields.UUIDField(pk=True)
     patient_cpf         = fields.CharField(max_length=11)
-    birth_city          = fields.CharField(max_length=32)
-    birth_state         = fields.CharField(max_length=32)
-    birth_country       = fields.CharField(max_length=32)
+    birth_city          = fields.ForeignKeyField("app.City", related_name="birthcity_stdpatients", null=True)
+    birth_state         = fields.ForeignKeyField("app.State", related_name="birthstate_stdpatients", null=True)
+    birth_country       = fields.ForeignKeyField("app.Country", related_name="birthcountry_stdpatients", null=True)
     birth_date          = fields.DateField()
     active              = fields.BooleanField(default=True,null=True)
     protected_person    = fields.BooleanField(null=True)
@@ -77,9 +77,8 @@ class StandardizedPatientCondition(Model):
 
 
 class DataSource(Model):
-    id          = fields.UUIDField(pk=True)
+    cnes        = fields.CharField(max_length=50, unique=True, pk=True)
     system      = fields.CharEnumField(SystemEnum)
-    cnes        = fields.CharField(max_length=50, unique=True)
     description = fields.CharField(max_length=512)
 
 
@@ -91,21 +90,18 @@ class ConditionCode(Model):
 
 
 class City(Model):
-    id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10, unique=True)
+    code    = fields.CharField(max_length=10, pk=True)
     name    = fields.CharField(max_length=512)
     state   = fields.ForeignKeyField("app.State", related_name="cities")
 
 
 class Country(Model):
-    id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10, unique=True)
+    code    = fields.CharField(max_length=10, pk=True)
     name    = fields.CharField(max_length=512)
 
 
 class State(Model):
-    id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10, unique=True)
+    code    = fields.CharField(max_length=10, pk=True)
     name    = fields.CharField(max_length=512)
     country = fields.ForeignKeyField("app.Country", related_name="states")
 
@@ -174,6 +170,7 @@ class Patient(Model):
     nationality         = fields.ForeignKeyField("app.Nationality", related_name="patient_nationality")
     birth_city          = fields.ForeignKeyField("app.City", related_name="birth_patients", null=True)
     created_at          = fields.DatetimeField(auto_now_add=True)
+    updated_at          = fields.DatetimeField(auto_now=True)
 
 
 class PatientCondition(Model):
