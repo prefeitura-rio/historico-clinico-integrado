@@ -35,9 +35,9 @@ class RawPatientCondition(Model):
 class StandardizedPatientRecord(Model):
     id                  = fields.UUIDField(pk=True)
     patient_cpf         = fields.CharField(max_length=11)
-    birth_city          = fields.CharField(max_length=32)
-    birth_state         = fields.CharField(max_length=32)
-    birth_country       = fields.CharField(max_length=32)
+    birth_city          = fields.ForeignKeyField("app.City", related_name="birthcity_stdpatients", null=True)
+    birth_state         = fields.ForeignKeyField("app.State", related_name="birthstate_stdpatients", null=True)
+    birth_country       = fields.ForeignKeyField("app.Country", related_name="birthcountry_stdpatients", null=True)
     birth_date          = fields.DateField()
     active              = fields.BooleanField(default=True,null=True)
     protected_person    = fields.BooleanField(null=True)

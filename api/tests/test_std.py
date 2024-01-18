@@ -9,16 +9,16 @@ from httpx import AsyncClient  # noqa
 
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
-async def test_post_stdpatientrecord(client: AsyncClient, token: str, patient_cpf : str, patientrecord_raw_source: str):
+async def test_post_stdpatientrecords(client: AsyncClient, token: str, patient_cpf : str, patientrecord_raw_source: str):
     response = await client.post(
         "/std/patientrecords",
         headers={"Authorization": f"Bearer {token}"},
         json=[
                 {
                     "active": True,
-                    "birth_city": "Rio de Janeiro",
-                    "birth_state": "Rio de Janeiro",
-                    "birth_country": "Brasil",
+                    "birth_city_cod": "00001",
+                    "birth_state_cod": "00001",
+                    "birth_country_cod": "00001",
                     "birth_date": "2000-01-11",
                     "patient_cpf": patient_cpf,
                     "deceased": False,

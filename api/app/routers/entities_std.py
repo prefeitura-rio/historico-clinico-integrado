@@ -11,7 +11,7 @@ from app.pydantic_models import (
 )
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
-    RawPatientCondition, RawPatientRecord
+    RawPatientCondition, RawPatientRecord, City, Country, State
 )
 
 StandardizedPatientRecordOutput = pydantic_model_creator(
@@ -56,8 +56,14 @@ async def create_standardized_patientrecords(
         record = record.dict(exclude_unset=True)
 
         raw_source = await RawPatientRecord.get(id=record['raw_source_id'])
+        birth_city = await City.get(code=record['birth_city_cod'])
+        birth_state = await State.get(code=record['birth_state_cod'])
+        birth_country = await Country.get(code=record['birth_country_cod'])
 
         record['raw_source'] = raw_source
+        record['birth_city'] = birth_city
+        record['birth_state'] = birth_state
+        record['birth_country'] = birth_country
 
         records_to_create.append( StandardizedPatientRecord(**record) )
 

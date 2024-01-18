@@ -75,33 +75,6 @@ CREATE TABLE IF NOT EXISTS "std__patientcondition" (
 );
 COMMENT ON COLUMN "std__patientcondition"."clinical_status" IS 'RESOLVED: resolved\nRESOLVING: resolving\nNOT_RESOLVED: not_resolved';
 COMMENT ON COLUMN "std__patientcondition"."category" IS 'PROBLEM_LIST_ITEM: problem-list-item\nENCOUTER_DIAGNOSIS: encounter-diagnosis';
-CREATE TABLE IF NOT EXISTS "std__patientrecord" (
-    "id" UUID NOT NULL  PRIMARY KEY,
-    "patient_cpf" VARCHAR(11) NOT NULL,
-    "birth_city" VARCHAR(32) NOT NULL,
-    "birth_state" VARCHAR(32) NOT NULL,
-    "birth_country" VARCHAR(32) NOT NULL,
-    "birth_date" DATE NOT NULL,
-    "active" BOOL   DEFAULT True,
-    "protected_person" BOOL,
-    "deceased" BOOL   DEFAULT False,
-    "deceased_date" DATE,
-    "father_name" VARCHAR(512),
-    "mother_name" VARCHAR(512),
-    "name" VARCHAR(512) NOT NULL,
-    "race" VARCHAR(8) NOT NULL,
-    "gender" VARCHAR(7) NOT NULL,
-    "nationality" VARCHAR(1) NOT NULL,
-    "cns_list" JSONB,
-    "address_list" JSONB,
-    "telecom_list" JSONB,
-    "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-    "raw_source_id" UUID NOT NULL REFERENCES "raw__patientrecord" ("id") ON DELETE CASCADE
-);
-COMMENT ON COLUMN "std__patientrecord"."race" IS 'BRANCA: branca\nPRETA: preta\nPARDA: parda\nAMARELA: amarela\nINDIGENA: indigena';
-COMMENT ON COLUMN "std__patientrecord"."gender" IS 'MALE: male\nFEMALE: female\nUNKNOWN: unknown';
-COMMENT ON COLUMN "std__patientrecord"."nationality" IS 'BRASILEIRO: B\nESTRANGEIRO: E\nNATURALIZADO: N';
 CREATE TABLE IF NOT EXISTS "state" (
     "code" VARCHAR(10) NOT NULL  PRIMARY KEY,
     "name" VARCHAR(512) NOT NULL,
@@ -169,6 +142,33 @@ CREATE TABLE IF NOT EXISTS "patienttelecom" (
     "period_end" DATE,
     "patient_id" UUID NOT NULL REFERENCES "patient" ("id") ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS "std__patientrecord" (
+    "id" UUID NOT NULL  PRIMARY KEY,
+    "patient_cpf" VARCHAR(11) NOT NULL,
+    "birth_date" DATE NOT NULL,
+    "active" BOOL   DEFAULT True,
+    "protected_person" BOOL,
+    "deceased" BOOL   DEFAULT False,
+    "deceased_date" DATE,
+    "father_name" VARCHAR(512),
+    "mother_name" VARCHAR(512),
+    "name" VARCHAR(512) NOT NULL,
+    "race" VARCHAR(8) NOT NULL,
+    "gender" VARCHAR(7) NOT NULL,
+    "nationality" VARCHAR(1) NOT NULL,
+    "cns_list" JSONB,
+    "address_list" JSONB,
+    "telecom_list" JSONB,
+    "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    "birth_city_id" VARCHAR(10) REFERENCES "city" ("code") ON DELETE CASCADE,
+    "birth_country_id" VARCHAR(10) REFERENCES "country" ("code") ON DELETE CASCADE,
+    "birth_state_id" VARCHAR(10) REFERENCES "state" ("code") ON DELETE CASCADE,
+    "raw_source_id" UUID NOT NULL REFERENCES "raw__patientrecord" ("id") ON DELETE CASCADE
+);
+COMMENT ON COLUMN "std__patientrecord"."race" IS 'BRANCA: branca\nPRETA: preta\nPARDA: parda\nAMARELA: amarela\nINDIGENA: indigena';
+COMMENT ON COLUMN "std__patientrecord"."gender" IS 'MALE: male\nFEMALE: female\nUNKNOWN: unknown';
+COMMENT ON COLUMN "std__patientrecord"."nationality" IS 'BRASILEIRO: B\nESTRANGEIRO: E\nNATURALIZADO: N';
 CREATE TABLE IF NOT EXISTS "user" (
     "id" UUID NOT NULL  PRIMARY KEY,
     "username" VARCHAR(255) NOT NULL UNIQUE,
