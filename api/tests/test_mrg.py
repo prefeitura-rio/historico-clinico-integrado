@@ -6,8 +6,6 @@ sys.path.insert(0, "../")
 import pytest  # noqa
 from httpx import AsyncClient  # noqa
 
-from .utils import generate_cns, generate_cpf  # noqa
-
 
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
@@ -25,6 +23,7 @@ async def test_auth(client: AsyncClient, username: str, password: str):
     assert "access_token" in result_body.keys()
 
     return result_body.get("access_token")
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=20)
@@ -46,9 +45,15 @@ async def test_get_patient(client: AsyncClient, token: str, patient_cpf : str):
     assert 'condition_list' in response.json()
     assert 'cns_list' in response.json()
 
+
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
-async def test_put_mrgpatient(client: AsyncClient, token: str, patient_cpf : str):
+async def test_create_or_update_mrgpatient_all_fields(
+    client: AsyncClient,
+    token: str,
+    patient_cpf : str
+):
+
     response = await client.put(
         "/mrg/patient",
         headers={"Authorization": f"Bearer {token}"},
@@ -101,6 +106,37 @@ async def test_put_mrgpatient(client: AsyncClient, token: str, patient_cpf : str
 
     assert response.status_code == 200
     assert 'id' in response.json()
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_or_update_mrgpatient_mandatory_fields(
+    client: AsyncClient,
+    token: str,
+    patient_cpf : str
+):
+
+    response = await client.put(
+        "/mrg/patient",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "birth_city": "00001",
+            "birth_state": "00001",
+            "birth_country": "00001",
+            "birth_date": "2000-01-11",
+            "patient_cpf": patient_cpf,
+            "gender": "male",
+            "mother_name": "Gabriela Marques da Cunha",
+            "name": "Fernando Marques Farias",
+            "race": "parda",
+            "cns_list": [],
+            "telecom_list": [],
+            "address_list": []
+        }
+    )
+
+    assert response.status_code == 200
+    assert 'id' in response.json()
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=11)

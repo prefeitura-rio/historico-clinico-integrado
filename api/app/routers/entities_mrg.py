@@ -175,14 +175,18 @@ async def get_patient(
 
     patient_data = dict(patient)
     patient_data['gender']          = patient.gender.slug
-    patient_data['nationality']     = patient.nationality.slug
     patient_data['race']            = patient.race.slug
-    patient_data['birth_city']      = patient.birth_city.code
-    patient_data['birth_state']     = patient.birth_city.state.code
-    patient_data['birth_country']   = patient.birth_city.state.country.code
     patient_data['address_list']    = address_list
     patient_data['telecom_list']    = telecom_list
     patient_data['condition_list']  = condition_list
     patient_data['cns_list']        = cns_list
+
+    if patient.nationality is not None:
+        patient_data['nationality']= patient.nationality.slug
+
+    if patient.birth_city is not None:
+        patient_data['birth_city']      = patient.birth_city.code
+        patient_data['birth_state']     = patient.birth_city.state.code
+        patient_data['birth_country']   = patient.birth_city.state.country.code
 
     return patient_data

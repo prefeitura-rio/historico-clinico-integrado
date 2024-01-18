@@ -9,7 +9,13 @@ from httpx import AsyncClient  # noqa
 
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
-async def test_post_stdpatientrecords(client: AsyncClient, token: str, patient_cpf : str, patientrecord_raw_source: str):
+async def test_create_stdpatientrecords_all_fields(
+    client                      : AsyncClient,
+    token                       : str,
+    patient_cpf                 : str,
+    patientrecord_raw_source    : str
+):
+
     response = await client.post(
         "/std/patientrecords",
         headers={"Authorization": f"Bearer {token}"},
@@ -67,10 +73,90 @@ async def test_post_stdpatientrecords(client: AsyncClient, token: str, patient_c
     assert response.json()['count'] == 1
 
 @pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_stdpatientrecords_mandatory_fields(
+    client                      : AsyncClient,
+    token                       : str,
+    patient_cpf                 : str,
+    patientrecord_raw_source    : str
+):
+
+    response = await client.post(
+        "/std/patientrecords",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[
+                {
+                    "active": True,
+                    "birth_city_cod": "00001",
+                    "birth_state_cod": "00001",
+                    "birth_country_cod": "00001",
+                    "birth_date": "2000-01-11",
+                    "patient_cpf": patient_cpf,
+                    "gender": "male",
+                    "mother_name": "Gabriela Marques da Cunha",
+                    "name": "Fernando Marques Farias",
+                    "nationality": "B",
+                    "race": "parda",
+                    "cns_list": [],
+                    "address_list": [],
+                    "telecom_list": [],
+                    "raw_source_id": patientrecord_raw_source
+                }
+            ]
+    )
+
+    assert response.status_code == 201
+    assert response.json()['count'] == 1
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_stdpatientrecords_invalid_cpf(
+    client                      : AsyncClient,
+    token                       : str,
+    patient_invalid_cpf         : str,
+    patientrecord_raw_source    : str
+):
+
+    response = await client.post(
+        "/std/patientrecords",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[
+                {
+                    "active": True,
+                    "birth_city_cod": "00001",
+                    "birth_state_cod": "00001",
+                    "birth_country_cod": "00001",
+                    "birth_date": "2000-01-11",
+                    "patient_cpf": patient_invalid_cpf,
+                    "deceased": False,
+                    "deceased_date": "2024-01-11",
+                    "father_name": "João Cardoso Farias",
+                    "gender": "male",
+                    "mother_name": "Gabriela Marques da Cunha",
+                    "name": "Fernando Marques Farias",
+                    "nationality": "B",
+                    "protected_person": False,
+                    "race": "parda",
+                    "cns_list": [],
+                    "address_list": [],
+                    "telecom_list": [],
+                    "raw_source_id": patientrecord_raw_source
+                }
+            ]
+    )
+
+    assert response.status_code == 400
+
+@pytest.mark.anyio
 @pytest.mark.run(order=11)
-async def test_get_stdpatientrecords(client: AsyncClient, token: str):
+async def test_get_stdpatientrecords(
+    client      : AsyncClient,
+    token       : str,
+    patient_cpf : str
+):
     response = await client.get(
-        "/raw/patientrecords",
+        f"/std/patientrecords?patient_cpf={patient_cpf}",
         headers={"Authorization": f"Bearer {token}"}
     )
 
@@ -81,7 +167,12 @@ async def test_get_stdpatientrecords(client: AsyncClient, token: str):
 
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
-async def test_post_stdpatientcondition(client: AsyncClient, token: str, patient_cpf : str, patientcondition_raw_source: str):
+async def test_create_stdpatientcondition_all_fields(
+    client                      : AsyncClient,
+    token                       : str,
+    patient_cpf                 : str,
+    patientcondition_raw_source : str
+):
     response = await client.post(
         "/std/patientconditions",
         headers={"Authorization": f"Bearer {token}"},
@@ -93,18 +184,54 @@ async def test_post_stdpatientcondition(client: AsyncClient, token: str, patient
                     "category": "encounter-diagnosis",
                     "date": "2024-01-11T16:20:09.832Z",
                     "raw_source_id": patientcondition_raw_source
+                },
+                {
+                    "patient_cpf": patient_cpf,
+                    "cid": "B041",
+                    "clinical_status": "resolved",
+                    "category": "encounter-diagnosis",
+                    "date": "2024-01-11T16:20:09.832Z",
+                    "raw_source_id": patientcondition_raw_source
                 }
             ]
     )
 
     assert response.status_code == 201
-    assert response.json()['count'] == 1
+    assert response.json()['count'] == 2
+
+
+@pytest.mark.run(order=10)
+async def test_create_stdpatientcondition_mandatory_fields(
+    client                      : AsyncClient,
+    token                       : str,
+    patient_cpf                 : str,
+    patientcondition_raw_source : str
+):
+    response = await client.post(
+        "/std/patientconditions",
+        headers={"Authorization": f"Bearer {token}"},
+        json = [
+                {
+                    "patient_cpf": patient_cpf,
+                    "cid": "A001",
+                    "date": "2024-01-11T16:20:09.832Z",
+                    "raw_source_id": patientcondition_raw_source
+                }
+            ]
+    )
+
+    assert response.status_code == 201
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
-async def test_get_stdpatientconditions(client: AsyncClient, token: str):
+async def test_get_stdpatientconditions(
+    client      : AsyncClient,
+    token       : str,
+    patient_cpf : str
+):
     response = await client.get(
-        "/raw/patientconditions",
+        f"/std/patientconditions?patient_cpf={patient_cpf}",
         headers={"Authorization": f"Bearer {token}"}
     )
 
