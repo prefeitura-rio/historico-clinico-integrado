@@ -18,7 +18,7 @@ DataSourceOutput = pydantic_model_creator(DataSource, name="DataSourceOutput")
 router = APIRouter(prefix="/outros", tags=["Outras Entidades"])
 
 
-@router.post("/user", status_code=200)
+@router.post("/user", status_code=201)
 async def create_user(
     _       : Annotated[User, Depends(get_current_active_user)],
     user    : UserRegisterInputModel,

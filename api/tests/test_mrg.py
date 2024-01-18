@@ -254,3 +254,30 @@ async def test_create_or_update_mrgpatientcondition_invalid_cpf(
     )
 
     assert response.status_code == 400
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=1)
+async def test_create_user(
+    client  : AsyncClient,
+    token   : str,
+):
+    response = await client.post(
+        "/outros/user",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "username": "testuser12",
+            "password": "password_test",
+            "email": "test12@email.com.br",
+            "is_superuser": False,
+            "data_source": {
+                "system": "vitacare",
+                "cnes": "11111111",
+                "description": "Test Description"
+            }
+        }
+    )
+    print(response.json())
+
+    status_code = response.status_code
+    assert status_code == 201
