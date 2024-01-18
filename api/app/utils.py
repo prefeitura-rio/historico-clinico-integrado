@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 
-from validdocbr import validdocbr
+from validate_docbr import CPF
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -86,4 +86,4 @@ def is_valid_cpf(cpf: str) -> bool:
     Returns:
         bool: True if the CPF is valid, False otherwise.
     """
-    return validdocbr().cpf(cpf)
+    return CPF().validate(cpf)
