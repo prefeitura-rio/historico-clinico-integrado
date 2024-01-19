@@ -14,7 +14,7 @@ from app.pydantic_models import (
 )
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
-    RawPatientCondition, RawPatientRecord, City, Country, State
+    RawPatientCondition, RawPatientRecord, City, ConditionCode
 )
 
 
@@ -55,7 +55,16 @@ async def create_standardized_patientrecords(
         try:
             raw_source = await RawPatientRecord.get(id=record['raw_source_id'])
         except DoesNotExist as e:
-            return HTMLResponse(status_code=404, content=f"Raw Source {record['raw_source_id']}: {e}")
+            return HTMLResponse(
+                status_code=404, 
+                content=f"Raw Source {record['raw_source_id']}: {e}"
+            )
+        
+        if raw_source.patient_cpf != record['patient_cpf']:
+            return HTMLResponse(
+                status_code=400, 
+                content=f"Raw Source: CPF mismatch {raw_source.patient_cpf} != {record['patient_cpf']}"
+            )
         
         try:
             birth_city = await City.get(
@@ -119,9 +128,25 @@ async def create_standardized_patientconditions(
         try:
             raw_source = await RawPatientCondition.get(id=condition['raw_source_id'])
         except DoesNotExist as e:
-            return HTMLResponse(status_code=404, content=f"Raw Source {condition['raw_source_id']}: {e}")
+            return HTMLResponse(
+                status_code=404, 
+                content=f"Raw Source {condition['raw_source_id']}: {e}"
+            )
+        
+        if raw_source.patient_cpf != condition['patient_cpf']:
+            return HTMLResponse(
+                status_code=400, 
+                content=f"Raw Source: CPF mismatch {raw_source.patient_cpf} != {condition['patient_cpf']}"
+            )
         
         condition['raw_source'] = raw_source
+
+        code = condition['cid'] if condition['cid'] else condition['ciap']
+        if not await ConditionCode.exists(value=code):
+            return HTMLResponse(
+                status_code=404, 
+                content=f"Condition Code {code} not found"
+            )
 
         try:
             conditions_to_create.append( StandardizedPatientCondition(**condition) )
