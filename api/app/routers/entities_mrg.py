@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from fastapi.responses import HTMLResponse
+
 from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.exceptions import ValidationError
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import PatientModel, PatientConditionListModel, CompletePatientModel
@@ -11,18 +14,24 @@ from app.models import (
     PatientTelecom, PatientCondition, ConditionCode, PatientCns
 )
 
-PatientOutput = pydantic_model_creator(Patient, name="PatientOutput")
-PatientConditionOutput = pydantic_model_creator(PatientCondition, name="PatientConditionOutput")
-
 
 router = APIRouter(prefix="/mrg", tags=["Entidades MRG (Formato Merged/Fundido)"])
 
 
-@router.put("/patient", response_model=PatientOutput, status_code=200)
+PatientOutput = pydantic_model_creator(
+    Patient, name="PatientOutput"
+)
+PatientConditionOutput = pydantic_model_creator(
+    PatientCondition, name="PatientConditionOutput"
+)
+
+
+@router.put("/patient")
 async def create_or_update_patient(
-    _: Annotated[User, Depends(get_current_active_user)],
-    patient: PatientModel,
+    _           : Annotated[User, Depends(get_current_active_user)],
+    patient     : PatientModel,
 ) -> PatientOutput:
+
     patient_data = patient.dict()
 
     birth_city = await City.get_or_none(
@@ -46,14 +55,20 @@ async def create_or_update_patient(
         'nationality'           : await Nationality.get_or_none(slug = patient_data['nationality']),
     }
 
-    patient = await Patient.get_or_none(
-        patient_cpf = patient_data.get('patient_cpf')
-    ).prefetch_related('address_patient_periods','telecom_patient_periods', 'patient_cns')
+    try:
+        patient = await Patient.get_or_none(
+            patient_cpf = patient_data.get('patient_cpf')
+        ).prefetch_related('address_patient_periods','telecom_patient_periods', 'patient_cns')
+    except ValidationError as e:
+        return HTMLResponse(status_code=400, content=str(e))
 
     if patient is not None:
         await patient.update_from_dict(new_data).save()
     else:
-        patient = await Patient.create(**new_data)
+        try:
+            patient = await Patient.create(**new_data)
+        except ValidationError as e:
+            return HTMLResponse(status_code=400, content=str(e))
 
     # Reset de Address
     for instance in patient.address_patient_periods.related_objects:
@@ -85,19 +100,23 @@ async def create_or_update_patient(
     return await PatientOutput.from_tortoise_orm(patient)
 
 
-@router.put("/patientcondition", response_model=list[PatientConditionOutput], status_code=200)
+@router.put("/patientcondition")
 async def create_or_update_patientcondition(
-    _: Annotated[User, Depends(get_current_active_user)],
-    patientcondition: PatientConditionListModel,
+    _                   : Annotated[User, Depends(get_current_active_user)],
+    patientcondition    : PatientConditionListModel,
 ) -> list[PatientConditionOutput]:
+
     patient_data = patientcondition.dict()
 
-    patient = await Patient.get_or_none(
-        patient_cpf=patient_data.get('patient_cpf')
-    ).prefetch_related('patientconditions')
+    try:
+        patient = await Patient.get_or_none(
+            patient_cpf=patient_data.get('patient_cpf')
+        ).prefetch_related('patientconditions')
+    except ValidationError as e:
+        return HTMLResponse(status_code=400, content=str(e))
 
     if patient is None:
-        raise HTTPException(status_code=400, detail="Patient don't exist")
+        return HTMLResponse(status_code=400, content="Patient doesn't exist")
 
     # Reset Patient Conditions
     for instance in patient.patientconditions.related_objects:
@@ -109,9 +128,9 @@ async def create_or_update_patientcondition(
             value=condition.get('code')
         )
         if condition_code is None:
-            raise HTTPException(
+            return HTMLResponse(
                 status_code=400,
-                detail=f"Condition Code {condition.get('code')} don't exist"
+                content=f"Condition Code {condition.get('code')} doesn't exist"
             )
         condition['patient'] = patient
         condition['condition_code'] = condition_code
@@ -120,13 +139,15 @@ async def create_or_update_patientcondition(
 
     return conditions
 
-@router.get("/patient/{patient_cpf}", response_model=CompletePatientModel)
+@router.get("/patient/{patient_cpf}")
 async def get_patient(
+    _           : Annotated[User, Depends(get_current_active_user)],
     patient_cpf : int,
-    _: Annotated[User, Depends(get_current_active_user)],
-) -> list[CompletePatientModel]:
+) -> CompletePatientModel:
 
-    patient = await Patient.get_or_none(patient_cpf=patient_cpf).prefetch_related(
+    patient = await Patient.get_or_none(
+        patient_cpf=patient_cpf
+    ).prefetch_related(
         'race','nationality','gender','patient_cns',
         'birth_city__state__country',
         'telecom_patient_periods',
@@ -137,8 +158,8 @@ async def get_patient(
     address_list = []
     for address in patient.address_patient_periods.related_objects:
         address_data = dict(address)
-        address_data['city'] = address.city.code
-        address_data['state'] = address.city.state.code
+        address_data['city']    = address.city.code
+        address_data['state']   = address.city.state.code
         address_data['country'] = address.city.state.country.code
         address_list.append(address_data)
 
@@ -159,15 +180,19 @@ async def get_patient(
         cns_list.append(cns_data)
 
     patient_data = dict(patient)
-    patient_data['gender'] = patient.gender.slug
-    patient_data['nationality'] = patient.nationality.slug
-    patient_data['race'] = patient.race.slug
-    patient_data['birth_city'] = patient.birth_city.code
-    patient_data['birth_state'] = patient.birth_city.state.code
-    patient_data['birth_country'] = patient.birth_city.state.country.code
-    patient_data['address_list'] = address_list
-    patient_data['telecom_list'] = telecom_list
-    patient_data['condition_list'] = condition_list
-    patient_data['cns_list'] = cns_list
+    patient_data['gender']          = patient.gender.slug
+    patient_data['race']            = patient.race.slug
+    patient_data['address_list']    = address_list
+    patient_data['telecom_list']    = telecom_list
+    patient_data['condition_list']  = condition_list
+    patient_data['cns_list']        = cns_list
+
+    if patient.nationality is not None:
+        patient_data['nationality']= patient.nationality.slug
+
+    if patient.birth_city is not None:
+        patient_data['birth_city']      = patient.birth_city.code
+        patient_data['birth_state']     = patient.birth_city.state.code
+        patient_data['birth_country']   = patient.birth_city.state.country.code
 
     return patient_data

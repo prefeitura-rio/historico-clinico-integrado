@@ -66,8 +66,8 @@ CREATE TABLE IF NOT EXISTS "std__patientcondition" (
     "patient_cpf" VARCHAR(11) NOT NULL,
     "cid" VARCHAR(4) NOT NULL,
     "ciap" VARCHAR(4),
-    "clinical_status" VARCHAR(32) NOT NULL,
-    "category" VARCHAR(32) NOT NULL,
+    "clinical_status" VARCHAR(12),
+    "category" VARCHAR(19),
     "date" TIMESTAMPTZ NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS "patient" (
     "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "birth_city_id" VARCHAR(10) REFERENCES "city" ("code") ON DELETE CASCADE,
     "gender_id" UUID NOT NULL REFERENCES "gender" ("id") ON DELETE CASCADE,
-    "nationality_id" UUID NOT NULL REFERENCES "nationality" ("id") ON DELETE CASCADE,
+    "nationality_id" UUID REFERENCES "nationality" ("id") ON DELETE CASCADE,
     "race_id" UUID NOT NULL REFERENCES "race" ("id") ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS "patientaddress" (
@@ -122,8 +122,8 @@ CREATE TABLE IF NOT EXISTS "patientcns" (
 );
 CREATE TABLE IF NOT EXISTS "patientcondition" (
     "id" UUID NOT NULL  PRIMARY KEY,
-    "clinical_status" VARCHAR(32) NOT NULL,
-    "category" VARCHAR(32) NOT NULL,
+    "clinical_status" VARCHAR(12),
+    "category" VARCHAR(19),
     "date" TIMESTAMPTZ NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS "std__patientrecord" (
     "name" VARCHAR(512) NOT NULL,
     "race" VARCHAR(8) NOT NULL,
     "gender" VARCHAR(7) NOT NULL,
-    "nationality" VARCHAR(1) NOT NULL,
+    "nationality" VARCHAR(1),
     "cns_list" JSONB,
     "address_list" JSONB,
     "telecom_list" JSONB,

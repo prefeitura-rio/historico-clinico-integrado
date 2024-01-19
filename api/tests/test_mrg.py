@@ -6,8 +6,6 @@ sys.path.insert(0, "../")
 import pytest  # noqa
 from httpx import AsyncClient  # noqa
 
-from .utils import generate_cns, generate_cpf  # noqa
-
 
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
@@ -27,8 +25,21 @@ async def test_auth(client: AsyncClient, username: str, password: str):
     return result_body.get("access_token")
 
 @pytest.mark.anyio
+@pytest.mark.run(order=1)
+async def test_auth_invalid(client: AsyncClient, username: str):
+    response = await client.post(
+        "/auth/token",
+        headers={"content-type": "application/x-www-form-urlencoded"},
+        data={"username": username, "password": "error"},
+    )
+
+    status_code = response.status_code
+    assert status_code == 401
+
+
+@pytest.mark.anyio
 @pytest.mark.run(order=20)
-async def test_get_patient(client: AsyncClient, token: str, patient_cpf : str):
+async def test_read_patient(client: AsyncClient, token: str, patient_cpf : str):
     response = await client.get(
         f"/mrg/patient/{patient_cpf}",
         headers={"Authorization": f"Bearer {token}"}
@@ -46,9 +57,15 @@ async def test_get_patient(client: AsyncClient, token: str, patient_cpf : str):
     assert 'condition_list' in response.json()
     assert 'cns_list' in response.json()
 
+
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
-async def test_put_mrgpatient(client: AsyncClient, token: str, patient_cpf : str):
+async def test_create_or_update_mrgpatient_all_fields(
+    client: AsyncClient,
+    token: str,
+    patient_cpf : str
+):
+
     response = await client.put(
         "/mrg/patient",
         headers={"Authorization": f"Bearer {token}"},
@@ -103,8 +120,69 @@ async def test_put_mrgpatient(client: AsyncClient, token: str, patient_cpf : str
     assert 'id' in response.json()
 
 @pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_or_update_mrgpatient_mandatory_fields(
+    client: AsyncClient,
+    token: str,
+    patient_cpf : str
+):
+
+    response = await client.put(
+        "/mrg/patient",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "birth_city": "00001",
+            "birth_state": "00001",
+            "birth_country": "00001",
+            "birth_date": "2000-01-11",
+            "patient_cpf": patient_cpf,
+            "gender": "male",
+            "mother_name": "Gabriela Marques da Cunha",
+            "name": "Fernando Marques Farias",
+            "race": "parda",
+            "cns_list": [],
+            "telecom_list": [],
+            "address_list": []
+        }
+    )
+
+    assert response.status_code == 200
+    assert 'id' in response.json()
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_or_update_mrgpatient_invalid_cpf(
+    client              : AsyncClient,
+    token               : str,
+    patient_invalid_cpf : str
+):
+
+    response = await client.put(
+        "/mrg/patient",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "birth_city": "00001",
+            "birth_state": "00001",
+            "birth_country": "00001",
+            "birth_date": "2000-01-11",
+            "patient_cpf": patient_invalid_cpf,
+            "gender": "male",
+            "mother_name": "Gabriela Marques da Cunha",
+            "name": "Fernando Marques Farias",
+            "race": "parda",
+            "cns_list": [],
+            "telecom_list": [],
+            "address_list": []
+        }
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.anyio
 @pytest.mark.run(order=11)
-async def test_put_mrgpatientcondition(client: AsyncClient, token: str, patient_cpf : str):
+async def test_create_or_update_mrgpatientcondition_all_fields(client: AsyncClient, token: str, patient_cpf : str):
     response = await client.put(
         "/mrg/patientcondition",
         headers={"Authorization": f"Bearer {token}"},
@@ -130,3 +208,76 @@ async def test_put_mrgpatientcondition(client: AsyncClient, token: str, patient_
     assert response.status_code == 200
     assert len(response.json()) == 2
     assert 'id' in response.json()[0]
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=11)
+async def test_create_or_update_mrgpatientcondition_mandatory_fields(client: AsyncClient, token: str, patient_cpf : str):
+    response = await client.put(
+        "/mrg/patientcondition",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "patient_cpf": patient_cpf,
+            "conditions": [
+                {
+                "code": "A001",
+                "date": "2024-01-11T17:38:15.850Z"
+                }
+            ]
+        }
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert 'id' in response.json()[0]
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=11)
+async def test_create_or_update_mrgpatientcondition_invalid_cpf(
+    client              : AsyncClient,
+    token               : str,
+    patient_invalid_cpf : str
+):
+    response = await client.put(
+        "/mrg/patientcondition",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "patient_cpf": patient_invalid_cpf,
+            "conditions": [
+                {
+                "code": "A001",
+                "date": "2024-01-11T17:38:15.850Z"
+                }
+            ]
+        }
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=1)
+async def test_create_user(
+    client  : AsyncClient,
+    token   : str,
+):
+    response = await client.post(
+        "/outros/user",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "username": "testuser12",
+            "password": "password_test",
+            "email": "test12@email.com.br",
+            "is_superuser": False,
+            "data_source": {
+                "system": "vitacare",
+                "cnes": "11111111",
+                "description": "Test Description"
+            }
+        }
+    )
+    print(response.json())
+
+    status_code = response.status_code
+    assert status_code == 201

@@ -75,8 +75,8 @@ class BulkInsertOutputModel(BaseModel):
 
 class ConditionListModel(BaseModel):
     code: str
-    clinical_status: str
-    category: str
+    clinical_status: Optional[str]
+    category: Optional[str]
     date: datetime
 
 
@@ -86,13 +86,13 @@ class PatientConditionListModel(BaseModel):
 
 
 class PatientModel(BaseModel):
-    active: Optional[bool]
+    active: Optional[bool] = True
     birth_city: Optional[str]
     birth_state: Optional[str]
     birth_country: Optional[str]
     birth_date: date
     patient_cpf: str
-    deceased: Optional[bool]
+    deceased: Optional[bool] = False
     deceased_date: Optional[date]
     father_name: Optional[str]
     gender: str
@@ -115,11 +115,11 @@ class CompletePatientModel(BaseModel):
     telecom_list: List[TelecomModel]
     address_list: List[AddressModel]
     condition_list: List[ConditionListModel]
-    active: Optional[bool]
+    active: Optional[bool] = True
     birth_city: Optional[str]
     birth_state: Optional[str]
     birth_country: Optional[str]
-    deceased: Optional[bool]
+    deceased: Optional[bool] = False
     deceased_date: Optional[date]
     father_name: Optional[str]
     mother_name: Optional[str]
@@ -175,8 +175,8 @@ class StandardizedPatientConditionModel(BaseModel):
     patient_cpf : str
     cid : str
     ciap: Optional[str]
-    clinical_status: str
-    category: str
+    clinical_status: Optional[str]
+    category: Optional[str]
     date: datetime
     raw_source_id: Optional[str]
 
