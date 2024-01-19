@@ -143,6 +143,41 @@ async def test_create_stdpatientrecords_invalid_raw_source(
 
     assert response.status_code == 404
 
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_stdpatientrecords_cpf_mismatch(
+    client                          : AsyncClient,
+    token                           : str,
+    patient_cpf                     : str,
+    other_patientrecord_raw_source  : str
+):
+
+    response = await client.post(
+        "/std/patientrecords",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[
+                {
+                    "active": True,
+                    "birth_city_cod": "00001",
+                    "birth_state_cod": "00001",
+                    "birth_country_cod": "00001",
+                    "birth_date": "2000-01-11",
+                    "patient_cpf": patient_cpf,
+                    "gender": "male",
+                    "mother_name": "Gabriela Marques da Cunha",
+                    "name": "Fernando Marques Farias",
+                    "nationality": "B",
+                    "race": "parda",
+                    "cns_list": [],
+                    "address_list": [],
+                    "telecom_list": [],
+                    "raw_source_id": other_patientrecord_raw_source
+                }
+            ]
+    )
+
+    assert response.status_code == 400
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
@@ -186,7 +221,7 @@ async def test_create_stdpatientrecords_invalid_cpf(
 
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
-async def test_get_stdpatientrecords(
+async def test_read_stdpatientrecords(
     client      : AsyncClient,
     token       : str,
     patient_cpf : str
@@ -283,6 +318,29 @@ async def test_create_stdpatientcondition_invalid_raw_source(
 
     assert response.status_code == 404
 
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_stdpatientcondition_cpfmismatch(
+    client                              : AsyncClient,
+    token                               : str,
+    patient_cpf                         : str,
+    other_patientcondition_raw_source   : str
+):
+    response = await client.post(
+        "/std/patientconditions",
+        headers={"Authorization": f"Bearer {token}"},
+        json = [
+                {
+                    "patient_cpf": patient_cpf,
+                    "cid": "A001",
+                    "date": "2024-01-11T16:20:09.832Z",
+                    "raw_source_id": other_patientcondition_raw_source
+                }
+            ]
+    )
+
+    assert response.status_code == 400
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
@@ -309,7 +367,7 @@ async def test_create_stdpatientcondition_invalid_conditioncode(
 
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
-async def test_get_stdpatientconditions(
+async def test_read_stdpatientconditions(
     client      : AsyncClient,
     token       : str,
     patient_cpf : str
