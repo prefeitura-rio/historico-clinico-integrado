@@ -60,10 +60,12 @@ async def create_standardized_patientrecords(
                 content=f"Raw Source {record['raw_source_id']}: {e}"
             )
         
-        if raw_source.patient_cpf != record['patient_cpf']:
+        record_cpf = record['patient_cpf']
+        source_cpf = raw_source.patient_cpf
+        if record_cpf != source_cpf:
             return HTMLResponse(
                 status_code=400, 
-                content=f"Raw Source: CPF mismatch {raw_source.patient_cpf} != {record['patient_cpf']}"
+                content=f"Raw Source: CPF mismatch {source_cpf} != {record_cpf}"
             )
         
         try:
@@ -133,10 +135,12 @@ async def create_standardized_patientconditions(
                 content=f"Raw Source {condition['raw_source_id']}: {e}"
             )
         
-        if raw_source.patient_cpf != condition['patient_cpf']:
+        condition_cpf = condition['patient_cpf']
+        source_cpf = raw_source.patient_cpf
+        if condition_cpf != source_cpf:
             return HTMLResponse(
                 status_code=400, 
-                content=f"Raw Source: CPF mismatch {raw_source.patient_cpf} != {condition['patient_cpf']}"
+                content=f"Raw Source: CPF mismatch {source_cpf} != {condition_cpf}"
             )
         
         condition['raw_source'] = raw_source
