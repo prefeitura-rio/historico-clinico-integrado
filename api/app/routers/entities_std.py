@@ -56,34 +56,34 @@ async def create_standardized_patientrecords(
             raw_source = await RawPatientRecord.get(id=record['raw_source_id'])
         except DoesNotExist as e:
             return HTMLResponse(
-                status_code=404, 
+                status_code=404,
                 content=f"Raw Source {record['raw_source_id']}: {e}"
             )
-        
+
         record_cpf = record['patient_cpf']
         source_cpf = raw_source.patient_cpf
         if record_cpf != source_cpf:
             return HTMLResponse(
-                status_code=400, 
+                status_code=400,
                 content=f"Raw Source: CPF mismatch {source_cpf} != {record_cpf}"
             )
-        
+
         try:
             birth_city = await City.get(
                 code=record['birth_city_cod']
             ).prefetch_related('state__country')
         except DoesNotExist as e:
             return HTMLResponse(status_code=404, content=f"Birth City: {e}")
-        
+
         if birth_city.state.code != record['birth_state_cod']:
             return HTMLResponse(
-                status_code=400, 
+                status_code=400,
                 content="Birth State is not compatible with Birth City"
             )
-        
+
         if birth_city.state.country.code != record['birth_country_cod']:
             return HTMLResponse(
-                status_code=400, 
+                status_code=400,
                 content="Birth Country is not compatible with Birth City"
             )
 
@@ -131,24 +131,24 @@ async def create_standardized_patientconditions(
             raw_source = await RawPatientCondition.get(id=condition['raw_source_id'])
         except DoesNotExist as e:
             return HTMLResponse(
-                status_code=404, 
+                status_code=404,
                 content=f"Raw Source {condition['raw_source_id']}: {e}"
             )
-        
+
         condition_cpf = condition['patient_cpf']
         source_cpf = raw_source.patient_cpf
         if condition_cpf != source_cpf:
             return HTMLResponse(
-                status_code=400, 
+                status_code=400,
                 content=f"Raw Source: CPF mismatch {source_cpf} != {condition_cpf}"
             )
-        
+
         condition['raw_source'] = raw_source
 
         code = condition['cid'] if condition['cid'] else condition['ciap']
         if not await ConditionCode.exists(value=code):
             return HTMLResponse(
-                status_code=404, 
+                status_code=404,
                 content=f"Condition Code {code} not found"
             )
 
