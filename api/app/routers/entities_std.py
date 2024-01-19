@@ -55,7 +55,7 @@ async def create_standardized_patientrecords(
         try:
             raw_source = await RawPatientRecord.get(id=record['raw_source_id'])
         except DoesNotExist as e:
-            return HTMLResponse(status_code=404, content=f"Raw Source: {e}")
+            return HTMLResponse(status_code=404, content=f"Raw Source {record['raw_source_id']}: {e}")
         
         try:
             birth_city = await City.get(
@@ -116,7 +116,11 @@ async def create_standardized_patientconditions(
     for condition in conditions:
         condition = condition.dict(exclude_unset=True)
 
-        raw_source = await RawPatientCondition.get(id=condition['raw_source_id'])
+        try:
+            raw_source = await RawPatientCondition.get(id=condition['raw_source_id'])
+        except DoesNotExist as e:
+            return HTMLResponse(status_code=404, content=f"Raw Source {condition['raw_source_id']}: {e}")
+        
         condition['raw_source'] = raw_source
 
         try:

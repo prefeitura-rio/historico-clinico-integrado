@@ -183,6 +183,7 @@ async def test_create_stdpatientrecords_invalid_cpf(
 
     assert response.status_code == 400
 
+
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
 async def test_get_stdpatientrecords(
@@ -199,6 +200,7 @@ async def test_get_stdpatientrecords(
 
     json_response = response.json()
     assert len(json_response) > 0
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
@@ -235,6 +237,7 @@ async def test_create_stdpatientcondition_all_fields(
     assert response.json()['count'] == 2
 
 
+@pytest.mark.anyio
 @pytest.mark.run(order=10)
 async def test_create_stdpatientcondition_mandatory_fields(
     client                      : AsyncClient,
@@ -256,6 +259,29 @@ async def test_create_stdpatientcondition_mandatory_fields(
     )
 
     assert response.status_code == 201
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_stdpatientcondition_invalid_raw_source(
+    client                      : AsyncClient,
+    token                       : str,
+    patient_cpf                 : str
+):
+    response = await client.post(
+        "/std/patientconditions",
+        headers={"Authorization": f"Bearer {token}"},
+        json = [
+                {
+                    "patient_cpf": patient_cpf,
+                    "cid": "A001",
+                    "date": "2024-01-11T16:20:09.832Z",
+                    "raw_source_id": "407a48a7-fc53-4ab1-8e18-dbd5c9ebfdbe"
+                }
+            ]
+    )
+
+    assert response.status_code == 404
 
 
 @pytest.mark.anyio
