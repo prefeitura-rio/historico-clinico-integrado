@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 
+from validate_docbr import CPF
+
 from jose import jwt
 from passlib.context import CryptContext
 
 from app import config
 from app.models import User
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -72,3 +75,15 @@ def password_verify(password: str, hashed: str) -> bool:
         bool: True if the password matches the hash, False otherwise.
     """
     return pwd_context.verify(password, hashed)
+
+
+def is_valid_cpf(cpf: str) -> bool:
+    """Validate a CPF.
+
+    Args:
+        cpf (str): The CPF to validate. Without spaces or any formatting
+
+    Returns:
+        bool: True if the CPF is valid, False otherwise.
+    """
+    return CPF().validate(cpf)

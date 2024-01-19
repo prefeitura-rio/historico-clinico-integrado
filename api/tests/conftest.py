@@ -35,7 +35,7 @@ async def client():
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def initialize_tests(patient_cpf: str):
+async def initialize_tests(patient_cpf: str, other_patient_cpf:str):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
@@ -124,6 +124,16 @@ async def initialize_tests(patient_cpf: str):
         category="encounter-diagnosis",
         date="2021-01-01"
     )
+    await RawPatientRecord.create(
+        patient_cpf=other_patient_cpf,
+        data={"name": "Maria"},
+        data_source=datasource
+    )
+    await RawPatientCondition.create(
+        patient_cpf=other_patient_cpf,
+        data={"cid": "A001"},
+        data_source=datasource
+    )
     yield
     await Tortoise.close_connections()
 
@@ -144,7 +154,15 @@ async def password():
 
 @pytest.fixture(scope="session")
 async def patient_cpf():
-    yield "1111111111"
+    yield "38965996074"
+
+@pytest.fixture(scope="session")
+async def other_patient_cpf():
+    yield "74663240020"
+
+@pytest.fixture(scope="session")
+async def patient_invalid_cpf():
+    yield "11111111111"
 
 @pytest.fixture(scope="session")
 async def token(client: AsyncClient, username: str, password: str):
@@ -156,19 +174,44 @@ async def token(client: AsyncClient, username: str, password: str):
     yield response.json().get("access_token")
 
 @pytest.fixture(scope="session")
-async def patientrecord_raw_source():
+async def patientrecord_raw_source(patient_cpf:str):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
-    raw_patientrecord = await RawPatientRecord.first()
+    raw_patientrecord = await RawPatientRecord.get(
+        patient_cpf = patient_cpf
+    ).first()
 
     yield str(raw_patientrecord.id)
 
 @pytest.fixture(scope="session")
-async def patientcondition_raw_source():
+async def patientcondition_raw_source(patient_cpf:str):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
-    raw_patientcondition = await RawPatientCondition.first()
+    raw_patientcondition = await RawPatientCondition.get(
+        patient_cpf = patient_cpf
+    ).first()
+    yield str(raw_patientcondition.id)
+
+@pytest.fixture(scope="session")
+async def other_patientrecord_raw_source(other_patient_cpf:str):
+    await Tortoise.init(config=TORTOISE_ORM)
+    await Tortoise.generate_schemas()
+
+    raw_patientrecord = await RawPatientRecord.get(
+        patient_cpf = other_patient_cpf
+    ).first()
+
+    yield str(raw_patientrecord.id)
+
+@pytest.fixture(scope="session")
+async def other_patientcondition_raw_source(other_patient_cpf:str):
+    await Tortoise.init(config=TORTOISE_ORM)
+    await Tortoise.generate_schemas()
+
+    raw_patientcondition = await RawPatientCondition.get(
+        patient_cpf = other_patient_cpf
+    ).first()
 
     yield str(raw_patientcondition.id)

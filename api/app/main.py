@@ -47,7 +47,6 @@ app.include_router(entities_std.router)
 app.include_router(entities_mrg.router)
 app.include_router(entities.router)
 app.include_router(auth.router)
-# app.include_router(users.router)
 
 register_tortoise(
     app,

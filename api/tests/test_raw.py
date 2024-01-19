@@ -9,26 +9,64 @@ sys.path.insert(0, "../")
 
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
-async def test_post_rawpatientrecord(client: AsyncClient, token: str, patient_cpf: str):
+async def test_create_rawpatientrecord(
+    client              : AsyncClient,
+    token               : str,
+    patient_cpf         : str,
+):
     response = await client.post(
-        "/raw/patientrecord",
+        "/raw/patientrecords",
         headers={"Authorization": f"Bearer {token}"},
         json={
-            "patient_cpf": patient_cpf,
-            "data": {
-                "name" : "Teste",
-                "address": "Rua 1, 3000, 22222222, Rio de Janeiro, RJ, Brasil"
-            }
+            "data_list": [
+                {
+                    "patient_cpf": patient_cpf,
+                    "data": {"name":"Teste"}
+                },
+                {
+                    "patient_cpf": patient_cpf,
+                    "data": {"name":"Teste"}
+                }
+            ],
+            "cnes": "1234567"
         }
     )
 
     assert response.status_code == 201
-    assert 'id' in response.json()
+    assert response.json()['count'] == 2
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=1)
+async def test_create_rawpatientrecord_invalid_cpf(
+    client                      : AsyncClient,
+    token                       : str,
+    patient_invalid_cpf         : str
+):
+    response = await client.post(
+        "/raw/patientrecords",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "data_list": [
+                {
+                    "patient_cpf": patient_invalid_cpf,
+                    "data": {"name":"Teste"}
+                }
+            ],
+            "cnes": "1234567"
+        }
+    )
+
+    assert response.status_code == 400
+
 
 
 @pytest.mark.anyio
 @pytest.mark.run(order=2)
-async def test_get_rawpatientrecords(client: AsyncClient, token: str):
+async def test_read_rawpatientrecords(
+    client: AsyncClient,
+    token: str
+):
     response = await client.get(
         "/raw/patientrecords",
         headers={"Authorization": f"Bearer {token}"}
@@ -42,25 +80,68 @@ async def test_get_rawpatientrecords(client: AsyncClient, token: str):
 
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
-async def test_post_rawpatientcondition(client: AsyncClient, token: str, patient_cpf: str):
+async def test_create_rawpatientcondition(
+    client      : AsyncClient,
+    token       : str,
+    patient_cpf : str
+):
     response = await client.post(
-        "/raw/patientcondition",
+        "/raw/patientconditions",
         headers={"Authorization": f"Bearer {token}"},
         json={
-            "patient_cpf": patient_cpf,
-            "data": {
-                "code" : "A001",
-                "status": "resolved"
-            }
+            "data_list": [
+                {
+                    "patient_cpf": patient_cpf,
+                    "data": {"name":"Teste"}
+                },
+                {
+                    "patient_cpf": patient_cpf,
+                    "data": {"name":"Teste"}
+                }
+            ],
+            "cnes": "1234567"
         }
     )
 
     assert response.status_code == 201
-    assert 'id' in response.json()
+    assert response.json()['count'] == 2
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=1)
+async def test_create_rawpatientcondition_invalid_cpf(
+    client                      : AsyncClient,
+    token                       : str,
+    patient_invalid_cpf         : str,
+    patient_cpf                 : str
+):
+    response = await client.post(
+        "/raw/patientconditions",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "data_list": [
+                {
+                    "patient_cpf": patient_invalid_cpf,
+                    "data": {"name":"Teste"}
+                },
+                {
+                    "patient_cpf": patient_cpf,
+                    "data": {"name":"Teste"}
+                }
+            ],
+            "cnes": "1234567"
+        }
+    )
+
+    assert response.status_code == 400
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=2)
-async def test_get_rawpatientconditions(client: AsyncClient, token: str):
+async def test_read_rawpatientconditions(
+    client  : AsyncClient,
+    token   : str
+):
     response = await client.get(
         "/raw/patientconditions",
         headers={"Authorization": f"Bearer {token}"}

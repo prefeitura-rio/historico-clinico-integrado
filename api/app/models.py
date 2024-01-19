@@ -3,14 +3,14 @@ from tortoise import fields
 from tortoise.models import Model
 
 from app.enums import RaceEnum, GenderEnum, NationalityEnum, ConditionCodeTypeEnum, CategoryEnum, ClinicalStatusEnum, SystemEnum
-
+from app.validators import CPFValidator
 
 
 class RawPatientRecord(Model):
-    id          = fields.UUIDField(pk=True)
-    patient_cpf = fields.CharField(max_length=11)
-    data        = fields.JSONField()
-    creator     = fields.ForeignKeyField("app.User", related_name="raw_record_creator", null=False)
+    id              = fields.UUIDField(pk=True)
+    patient_cpf     = fields.CharField(max_length=11, validators=[CPFValidator()])
+    data            = fields.JSONField()
+    data_source     = fields.ForeignKeyField("app.DataSource", related_name="raw_record_creator", null=False)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -21,9 +21,9 @@ class RawPatientRecord(Model):
 
 class RawPatientCondition(Model):
     id          = fields.UUIDField(pk=True)
-    patient_cpf = fields.CharField(max_length=11)
+    patient_cpf = fields.CharField(max_length=11, validators=[CPFValidator()])
     data        = fields.JSONField()
-    creator     = fields.ForeignKeyField("app.User", related_name="raw_condition_creator", null=False)
+    data_source = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_creator", null=False)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -34,10 +34,10 @@ class RawPatientCondition(Model):
 
 class StandardizedPatientRecord(Model):
     id                  = fields.UUIDField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11)
-    birth_city          = fields.CharField(max_length=32)
-    birth_state         = fields.CharField(max_length=32)
-    birth_country       = fields.CharField(max_length=32)
+    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()])
+    birth_city          = fields.ForeignKeyField("app.City", related_name="birthcity_stdpatients", null=True)
+    birth_state         = fields.ForeignKeyField("app.State", related_name="birthstate_stdpatients", null=True)
+    birth_country       = fields.ForeignKeyField("app.Country", related_name="birthcountry_stdpatients", null=True)
     birth_date          = fields.DateField()
     active              = fields.BooleanField(default=True,null=True)
     protected_person    = fields.BooleanField(null=True)
@@ -48,7 +48,7 @@ class StandardizedPatientRecord(Model):
     name                = fields.CharField(max_length=512)
     race                = fields.CharEnumField(enum_type=RaceEnum)
     gender              = fields.CharEnumField(enum_type=GenderEnum)
-    nationality         = fields.CharEnumField(enum_type=NationalityEnum)
+    nationality         = fields.CharEnumField(enum_type=NationalityEnum, null=True)
     raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw", null=False)
     cns_list            = fields.JSONField(null=True)
     address_list        = fields.JSONField(null=True)
@@ -62,11 +62,11 @@ class StandardizedPatientRecord(Model):
 
 class StandardizedPatientCondition(Model):
     id              = fields.UUIDField(pk=True)
-    patient_cpf     = fields.CharField(max_length=11)
+    patient_cpf     = fields.CharField(max_length=11, validators=[CPFValidator()])
     cid             = fields.CharField(max_length=4)
     ciap            = fields.CharField(max_length=4, null=True)
-    clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, max_length=32)
-    category        = fields.CharEnumField(enum_type=CategoryEnum, max_length=32)
+    clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, null=True)
+    category        = fields.CharEnumField(enum_type=CategoryEnum, null=True)
     date            = fields.DatetimeField()
     raw_source      = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False)
     created_at      = fields.DatetimeField(auto_now_add=True)
@@ -77,9 +77,8 @@ class StandardizedPatientCondition(Model):
 
 
 class DataSource(Model):
-    id          = fields.UUIDField(pk=True)
+    cnes        = fields.CharField(max_length=50, unique=True, pk=True)
     system      = fields.CharEnumField(SystemEnum)
-    cnes        = fields.CharField(max_length=50, unique=True)
     description = fields.CharField(max_length=512)
 
 
@@ -91,21 +90,18 @@ class ConditionCode(Model):
 
 
 class City(Model):
-    id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10, unique=True)
+    code    = fields.CharField(max_length=10, pk=True)
     name    = fields.CharField(max_length=512)
     state   = fields.ForeignKeyField("app.State", related_name="cities")
 
 
 class Country(Model):
-    id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10, unique=True)
+    code    = fields.CharField(max_length=10, pk=True)
     name    = fields.CharField(max_length=512)
 
 
 class State(Model):
-    id      = fields.UUIDField(pk=True)
-    code    = fields.CharField(max_length=10, unique=True)
+    code    = fields.CharField(max_length=10, pk=True)
     name    = fields.CharField(max_length=512)
     country = fields.ForeignKeyField("app.Country", related_name="states")
 
@@ -160,7 +156,7 @@ class PatientCns(Model):
 
 class Patient(Model):
     id                  = fields.UUIDField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11, unique=True)
+    patient_cpf         = fields.CharField(max_length=11, unique=True, validators=[CPFValidator()])
     birth_date          = fields.DateField()
     active              = fields.BooleanField(default=True)
     protected_person    = fields.BooleanField(null=True)
@@ -171,17 +167,18 @@ class Patient(Model):
     name                = fields.CharField(max_length=512)
     race                = fields.ForeignKeyField("app.Race", related_name="patient_race")
     gender              = fields.ForeignKeyField("app.Gender", related_name="patient_gender")
-    nationality         = fields.ForeignKeyField("app.Nationality", related_name="patient_nationality")
+    nationality         = fields.ForeignKeyField("app.Nationality", related_name="patient_nationality", null=True)
     birth_city          = fields.ForeignKeyField("app.City", related_name="birth_patients", null=True)
     created_at          = fields.DatetimeField(auto_now_add=True)
+    updated_at          = fields.DatetimeField(auto_now=True)
 
 
 class PatientCondition(Model):
     id              = fields.UUIDField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="patientconditions")
     condition_code  = fields.ForeignKeyField("app.ConditionCode", related_name="codes")
-    clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, max_length=32)
-    category        = fields.CharEnumField(enum_type=CategoryEnum, max_length=32)
+    clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, null=True)
+    category        = fields.CharEnumField(enum_type=CategoryEnum, null=True)
     date            = fields.DatetimeField()
     created_at      = fields.DatetimeField(auto_now_add=True)
     updated_at      = fields.DatetimeField(auto_now=True)
