@@ -1,0 +1,12 @@
+name: Auto approve dev PRs for core maintainers
+
+on: pull_request_target
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    if: github.actor == 'TanookiVerde' && github.event.pull_request.base.ref == 'development'
+    steps:
+      - uses: hmarr/auto-approve-action@v3
