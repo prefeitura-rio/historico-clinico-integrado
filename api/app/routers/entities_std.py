@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
 from tortoise.contrib.pydantic import pydantic_model_creator
-from tortoise.exceptions import ValidationError
+from tortoise.exceptions import ValidationError, DoesNotExist
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import (
@@ -52,15 +52,34 @@ async def create_standardized_patientrecords(
     for record in records:
         record = record.dict(exclude_unset=True)
 
-        raw_source = await RawPatientRecord.get(id=record['raw_source_id'])
-        birth_city = await City.get(code=record['birth_city_cod'])
-        birth_state = await State.get(code=record['birth_state_cod'])
-        birth_country = await Country.get(code=record['birth_country_cod'])
+        try:
+            raw_source = await RawPatientRecord.get(id=record['raw_source_id'])
+        except DoesNotExist as e:
+            return HTMLResponse(status_code=404, content=f"Raw Source: {e}")
+        
+        try:
+            birth_city = await City.get(
+                code=record['birth_city_cod']
+            ).prefetch_related('state__country')
+        except DoesNotExist as e:
+            return HTMLResponse(status_code=404, content=f"Birth City: {e}")
+        
+        if birth_city.state.code != record['birth_state_cod']:
+            return HTMLResponse(
+                status_code=400, 
+                content="Birth State is not compatible with Birth City"
+            )
+        
+        if birth_city.state.country.code != record['birth_country_cod']:
+            return HTMLResponse(
+                status_code=400, 
+                content="Birth Country is not compatible with Birth City"
+            )
 
         record['raw_source']    = raw_source
         record['birth_city']    = birth_city
-        record['birth_state']   = birth_state
-        record['birth_country'] = birth_country
+        record['birth_state']   = birth_city.state
+        record['birth_country'] = birth_city.state.country
 
         try:
             records_to_create.append( StandardizedPatientRecord(**record) )
