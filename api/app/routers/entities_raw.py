@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
+import tortoise.timezone
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError
 
@@ -38,8 +39,8 @@ RawPatientRecordOutput = pydantic_model_creator(
 @router.get("/patientrecords")
 async def get_raw_patientrecords(
     _                   : Annotated[User, Depends(get_current_active_user)],
-    start_date          : datetime.date = datetime.date.today(),
-    end_date            : datetime.date = datetime.date.today() + datetime.timedelta(days=1),
+    start_date          : datetime.date = tortoise.timezone.now().date(),
+    end_date            : datetime.date = tortoise.timezone.now().date() + datetime.timedelta(days=1),
     datasource_system   : str = None,
 ) -> list[RawPatientRecordOutput]:
 
