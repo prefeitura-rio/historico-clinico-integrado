@@ -45,7 +45,7 @@ async def run():
     logger.info("CID created successfully")
 
     datasources = pd.read_csv(
-        "./data/cid_subcategorias.csv",
+        "./data/datasources.csv",
         header=0
     )
 
