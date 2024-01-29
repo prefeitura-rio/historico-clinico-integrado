@@ -11,6 +11,5 @@ TORTOISE_ORM = {
             ],
             "default_connection": "default",
         },
-    },
-    'timezone': 'America/Sao_Paulo'
+    }
 }
