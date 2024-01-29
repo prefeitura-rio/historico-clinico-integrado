@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from validate_docbr import CPF
 
-from jose import jwt
+import jwt
 from passlib.context import CryptContext
 
 from app import config
