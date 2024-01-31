@@ -136,7 +136,7 @@ class StandardizedAddressModel(BaseModel):
     country: str
     state: str
     postal_code: Optional[str]
-    start: str
+    start: Optional[str]
     end: Optional[str]
 
 
@@ -145,7 +145,7 @@ class StandardizedTelecomModel(BaseModel):
     use: Optional[str]
     value: str
     rank: Optional[int]
-    start: str
+    start: Optional[str]
     end: Optional[str]
 
 
