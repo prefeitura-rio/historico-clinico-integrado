@@ -96,6 +96,8 @@ async def create_standardized_patientrecords(
             records_to_create.append( StandardizedPatientRecord(**record) )
         except ValidationError as e:
             return HTMLResponse(status_code=400, content=str(e))
+        except ValueError as e:
+            return HTMLResponse(status_code=400, content=str(e))
 
     new_records = await StandardizedPatientRecord.bulk_create(records_to_create)
 
@@ -155,6 +157,8 @@ async def create_standardized_patientconditions(
         try:
             conditions_to_create.append( StandardizedPatientCondition(**condition) )
         except ValidationError as e:
+            return HTMLResponse(status_code=400, content=str(e))
+        except ValueError as e:
             return HTMLResponse(status_code=400, content=str(e))
 
     new_conditions = await StandardizedPatientCondition.bulk_create(conditions_to_create)
