@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from httpx import AsyncClient  # noqa
 import pytest  # noqa
-
+import datetime
 import sys
 sys.path.insert(0, "../")
 
@@ -67,9 +67,14 @@ async def test_read_rawpatientrecords(
     client: AsyncClient,
     token: str
 ):
+
     response = await client.get(
         "/raw/patientrecords",
-        headers={"Authorization": f"Bearer {token}"}
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            'start_datetime':datetime.datetime.now() - datetime.timedelta(hours=24),
+            'end_datetime':datetime.datetime.now() + datetime.timedelta(hours=24)
+        }
     )
 
     assert response.status_code == 200
@@ -144,7 +149,11 @@ async def test_read_rawpatientconditions(
 ):
     response = await client.get(
         "/raw/patientconditions",
-        headers={"Authorization": f"Bearer {token}"}
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            'start_datetime':datetime.datetime.now() - datetime.timedelta(hours=24),
+            'end_datetime':datetime.datetime.now() + datetime.timedelta(hours=24)
+        }
     )
 
     assert response.status_code == 200
