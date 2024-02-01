@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
 
 from app import config
 from app.models import User
@@ -24,8 +24,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
+    except Exception as exc:
+        raise credentials_exception from exc
     user = await User.get_or_none(username=token_data.username)
     if user is None:
         raise credentials_exception

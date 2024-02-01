@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from validate_docbr import CPF
 
-from jose import jwt
+import jwt
 from passlib.context import CryptContext
 
 from app import config
@@ -37,7 +37,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
     Args:
         data (dict): The data to encode into the token.
-        expires_delta (timedelta, optional): The expiry time of the token. Defaults to None.
+        expires_delta (timedelta, optional): The expiry time of the token.
 
     Returns:
         str: The encoded token.

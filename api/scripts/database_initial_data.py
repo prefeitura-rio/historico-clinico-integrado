@@ -44,9 +44,21 @@ async def run():
     await ConditionCode.bulk_create(cids_to_create, ignore_conflicts=True)
     logger.info("CID created successfully")
 
-    await DataSource.bulk_create([
-        DataSource(system = "vitacare", cnes = "999992", description = "Teste 1")
-    ], ignore_conflicts=True)
+    datasources = pd.read_csv(
+        "./data/datasources.csv",
+        header=0
+    )
+
+    datasources_to_create = []
+    for _, datasource in datasources.iterrows():
+        datasources_to_create.append(
+            DataSource(
+                system = datasource['tipo'],
+                cnes = datasource['cnes'],
+                description = datasource['descricao']
+            )
+        )
+    await DataSource.bulk_create(datasources_to_create, ignore_conflicts=True)
     logger.info("Data sources created successfully")
 
     await Gender.bulk_create([
