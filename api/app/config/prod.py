@@ -6,7 +6,11 @@ from .base import *  # noqa: F401, F403
 LOG_LEVEL = getenv_or_action("LOG_LEVEL", action="ignore", default="INFO")
 
 # Database configuration
-DATABASE_URL = getenv_or_action("DATABASE_URL", action="raise")
+DATABASE_HOST = getenv_or_action("DATABASE_HOST", action="raise")
+DATABASE_PORT = getenv_or_action("DATABASE_PORT", action="raise")
+DATABASE_USER = getenv_or_action("DATABASE_USER", action="raise")
+DATABASE_PASSWORD = getenv_or_action("DATABASE_PASSWORD", action="raise")
+DATABASE_NAME = getenv_or_action("DATABASE_NAME", action="raise")
 
 # JWT configuration
 if getenv_or_action("JWT_ALGORITHM", action="ignore"):
@@ -34,7 +38,7 @@ ALLOWED_HEADERS = getenv_list_or_action("ALLOWED_HEADERS", action="raise")
 ALLOW_CREDENTIALS = getenv_or_action("ALLOW_CREDENTIALS", action="raise").lower() == "true"
 
 # Sentry
-SENTRY_ENABLE = getenv_or_action("SENTRY_ENABLE", action="ignore").lower() == "false"
+SENTRY_ENABLE = getenv_or_action("SENTRY_ENABLE", action="ignore").lower() == "true"
 if SENTRY_ENABLE:
     SENTRY_DSN = getenv_or_action("SENTRY_DSN", action="raise")
     SENTRY_ENVIRONMENT = getenv_or_action("SENTRY_ENVIRONMENT", action="raise")
