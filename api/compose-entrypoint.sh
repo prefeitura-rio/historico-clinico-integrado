@@ -14,7 +14,7 @@ echo "Running Migrations"
 aerich upgrade
 
 echo "Atempt to create user"
-poetry run python create_user.py --username pedro --password senha --admin True
+poetry run python create_user.py --create-admin
 
 echo "Initializing Database Data"
 poetry run python database_initial_data.py

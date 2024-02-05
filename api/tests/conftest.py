@@ -67,15 +67,15 @@ async def initialize_tests(patient_cpf: str, other_patient_cpf:str):
     nationality = await Nationality.create(slug="B", name="B")
 
     await User.create(
-        username="pedro",
-        email="pedro@example.com",
-        password=password_hash("senha"),
+        username="test",
+        email="test@example.com",
+        password=password_hash("testpassword"),
         is_active=True,
-        is_superuser=True,
+        is_superuser=False,
         data_source=datasource,
     )
     patient = await Patient.create(
-        name="Pedro",
+        name="João da Silva",
         patient_cpf=patient_cpf,
         birth_date="2021-01-01",
         active=True,
@@ -140,17 +140,17 @@ async def initialize_tests(patient_cpf: str, other_patient_cpf:str):
 
 @pytest.fixture(scope="session")
 async def username():
-    yield "pedro"
+    yield "test"
 
 
 @pytest.fixture(scope="session")
 async def email():
-    yield "pedro@example.com"
+    yield "test@example.com"
 
 
 @pytest.fixture(scope="session")
 async def password():
-    yield "senha"
+    yield "testpassword"
 
 @pytest.fixture(scope="session")
 async def patient_cpf():
