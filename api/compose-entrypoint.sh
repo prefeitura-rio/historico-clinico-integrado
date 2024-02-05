@@ -14,10 +14,10 @@ echo "Running Migrations"
 aerich upgrade
 
 echo "Atempt to create user"
-poetry run python create_user.py --create-admin
+python create_user.py --create-admin
 
 echo "Initializing Database Data"
-poetry run python database_initial_data.py
+python database_initial_data.py
 
 # Start server
 uvicorn app.main:app --host 0.0.0.0 --port 80
