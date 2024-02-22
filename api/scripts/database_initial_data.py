@@ -17,19 +17,14 @@ from app.models import (
 import pandas as pd
 
 
-def create_states(country, states):
-    pass
-
-def create_cities(state, cities):
-    pass
-
 async def run():
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
     cids = pd.read_csv(
         "./data/cid_subcategorias.csv",
-        header=0
+        header=0,
+        dtype=str
     )
 
     cids_to_create = []
@@ -46,7 +41,8 @@ async def run():
 
     datasources = pd.read_csv(
         "./data/datasources.csv",
-        header=0
+        header=0,
+        dtype=str
     )
 
     datasources_to_create = []
@@ -90,7 +86,8 @@ async def run():
 
     relacao_estado_municipio = pd.read_csv(
         "./data/brasil_estados_municipios.csv",
-        header=0
+        header=0,
+        dtype=str
     )
     estados     = relacao_estado_municipio[['UF','Nome_UF']].drop_duplicates()
     municipios  = relacao_estado_municipio[['UF','Nome_Município','Código Município Completo']]
