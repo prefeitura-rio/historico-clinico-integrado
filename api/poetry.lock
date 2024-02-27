@@ -704,13 +704,13 @@ files = [
 
 [[package]]
 name = "infisical"
-version = "1.6.0"
+version = "1.5.0"
 description = "Official Infisical SDK for Python"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "infisical-1.6.0-py3-none-any.whl", hash = "sha256:26ff100ac153375ffef8cbaff182c93971050857d412fe45c9547dc6892003e6"},
-    {file = "infisical-1.6.0.tar.gz", hash = "sha256:eac29785452eb8cf136a7031aca7812b4c71e1a3d55d451448c461652bcf4054"},
+    {file = "infisical-1.5.0-py3-none-any.whl", hash = "sha256:c69cf4c1875c9b417dee5c84dd7befd64f0b593a7939f35d9633a4a13820bdf5"},
+    {file = "infisical-1.5.0.tar.gz", hash = "sha256:8d3eec128081cd4c4ab5260e78f66fc600bdffd795ec95f32f02041e32a23ced"},
 ]
 
 [package.dependencies]
@@ -1932,4 +1932,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8f41e6ea80ea9ac718b225c7ee05644d5f38d70d21b2a3dff6cd445002a7ee96"
+content-hash = "0a34c7c6fab839385afd8113a964ca1c6b220d338a6476b87101c5566efe2d93"
