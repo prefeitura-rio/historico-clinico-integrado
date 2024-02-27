@@ -72,30 +72,20 @@ async def create_standardized_patientrecords(
                 status_code=400,
                 content=f"Raw Source: CPF mismatch {source_cpf} != {record_cpf}"
             )
+        
+        if 'birth_city_cod' in record:
+            try:
+                birth_city = await City.get(
+                    code=record['birth_city_cod']
+                ).prefetch_related('state__country')
+            except DoesNotExist as e:
+                return HTMLResponse(status_code=404, content=f"Birth City: {e}")
 
-        try:
-            birth_city = await City.get(
-                code=record['birth_city_cod']
-            ).prefetch_related('state__country')
-        except DoesNotExist as e:
-            return HTMLResponse(status_code=404, content=f"Birth City: {e}")
+            record['birth_city']    = birth_city
+            record['birth_state']   = birth_city.state
+            record['birth_country'] = birth_city.state.country
 
-        if birth_city.state.code != record['birth_state_cod']:
-            return HTMLResponse(
-                status_code=400,
-                content="Birth State is not compatible with Birth City"
-            )
-
-        if birth_city.state.country.code != record['birth_country_cod']:
-            return HTMLResponse(
-                status_code=400,
-                content="Birth Country is not compatible with Birth City"
-            )
-
-        record['raw_source']    = raw_source
-        record['birth_city']    = birth_city
-        record['birth_state']   = birth_city.state
-        record['birth_country'] = birth_city.state.country
+        record['raw_source'] = raw_source
 
         try:
             records_to_create.append( StandardizedPatientRecord(**record) )
@@ -107,6 +97,9 @@ async def create_standardized_patientrecords(
     new_records = await StandardizedPatientRecord.bulk_create(records_to_create)
 
     return {
+                    "cns_list": [],
+                    "address_list": [],
+                    "telecom_list": [],
         'count': len(new_records)
     }
 
