@@ -11,6 +11,15 @@ class CPFValidator(Validator):
     """
     def __call__(self, value: str):
 
-        is_valid = CPF().validate(value)
-        if not is_valid:
+        validator = CPF()
+        value_digits_str = validator._only_digits(value)
+
+        forbidden_list = [
+            '01234567890'
+        ]
+
+        if not validator.validate(value_digits_str):
             raise ValidationError(f"Value '{value}' is not a CPF")
+
+        if value_digits_str in forbidden_list:
+            raise ValidationError(f"Value '{value}' is forbidden")

@@ -14,6 +14,7 @@ python = "^3.10"
 loguru = ">=0.6"
 xmltodict = "^0.13.0"
 google-api-python-client = "^2.95.0"
+urllib3 = "1.26.18"
 
 [tool.poetry.scripts]
 docs = "scripts.docs:main"
