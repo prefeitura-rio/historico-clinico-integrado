@@ -72,7 +72,7 @@ async def create_standardized_patientrecords(
                 status_code=400,
                 content=f"Raw Source: CPF mismatch {source_cpf} != {record_cpf}"
             )
-        
+
         if 'birth_city_cod' in record:
             try:
                 birth_city = await City.get(
