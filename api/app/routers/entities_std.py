@@ -97,9 +97,9 @@ async def create_standardized_patientrecords(
     new_records = await StandardizedPatientRecord.bulk_create(records_to_create)
 
     return {
-                    "cns_list": [],
-                    "address_list": [],
-                    "telecom_list": [],
+        "cns_list": [],
+        "address_list": [],
+        "telecom_list": [],
         'count': len(new_records)
     }
 
