@@ -59,10 +59,10 @@ async def create_standardized_patientrecords(
                 status_code=404,
                 content=f"Raw Source {record['raw_source_id']}: {e}"
             )
-        except KeyError as e:
+        except KeyError:
             return HTMLResponse(
                 status_code=400,
-                content=f"raw_source_id Field Must be Informed"
+                content="raw_source_id Field Must be Informed"
             )
 
         record_cpf = record['patient_cpf']
@@ -141,10 +141,10 @@ async def create_standardized_patientconditions(
                 status_code=404,
                 content=f"Raw Source {condition['raw_source_id']}: {e}"
             )
-        except KeyError as e:
+        except KeyError:
             return HTMLResponse(
                 status_code=400,
-                content=f"raw_source_id Field Must be Informed"
+                content="raw_source_id Field Must be Informed"
             )
 
         condition_cpf = condition['patient_cpf']
