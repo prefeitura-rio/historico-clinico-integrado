@@ -76,6 +76,7 @@ async def initialize_tests(patient_cpf: str, other_patient_cpf:str):
     )
     patient = await Patient.create(
         name="João da Silva",
+        patient_code=f"{patient_cpf}.19970607",
         patient_cpf=patient_cpf,
         birth_date="2021-01-01",
         active=True,
@@ -126,11 +127,13 @@ async def initialize_tests(patient_cpf: str, other_patient_cpf:str):
     )
     await RawPatientRecord.create(
         patient_cpf=other_patient_cpf,
+        patient_code=f"{patient_cpf}.19970607",
         data={"name": "Maria"},
         data_source=datasource
     )
     await RawPatientCondition.create(
         patient_cpf=other_patient_cpf,
+        patient_code=f"{patient_cpf}.19970607",
         data={"cid": "A001"},
         data_source=datasource
     )

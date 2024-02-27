@@ -20,10 +20,12 @@ async def test_create_rawpatientrecord(
         json={
             "data_list": [
                 {
+                    "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
                     "data": {"name":"Teste"}
                 },
                 {
+                    "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
                     "data": {"name":"Teste"}
                 }

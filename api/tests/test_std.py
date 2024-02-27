@@ -27,6 +27,7 @@ async def test_create_stdpatientrecords_all_fields(
                     "birth_country_cod": "00001",
                     "birth_date": "2000-01-11",
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.19970607",
                     "deceased": False,
                     "deceased_date": "2024-01-11",
                     "father_name": "João Cardoso Farias",

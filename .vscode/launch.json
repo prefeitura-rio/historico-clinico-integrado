@@ -19,7 +19,9 @@
             "jinja": true,
             "justMyCode": true,
             "env": {
-                "ENVIRONMENT": "dev"
+                "ENVIRONMENT": "dev",
+                "INFISICAL_ADDRESS":"https://infisical.dados.rio/",
+                "INFISICAL_TOKEN":"st.659c4ad59546aeb962f98ce3.63c642e06384e62a34ce8e79f1e9ae71.23454574c5cd743f49033fa38d2f3296"
             }
         },
         {
@@ -37,7 +39,9 @@
             "jinja": true,
             "justMyCode": true,
             "env": {
-                "ENVIRONMENT": "dev"
+                "ENVIRONMENT": "dev",
+                "INFISICAL_ADDRESS":"https://infisical.dados.rio/",
+                "INFISICAL_TOKEN":"st.659c4ad59546aeb962f98ce3.63c642e06384e62a34ce8e79f1e9ae71.23454574c5cd743f49033fa38d2f3296"
             }
         }
     ]

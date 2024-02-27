@@ -62,6 +62,7 @@ class TokenData(BaseModel):
 
 class RawDataModel(BaseModel):
     patient_cpf: str
+    patient_code: str
     data: dict
 
 
@@ -82,6 +83,7 @@ class ConditionListModel(BaseModel):
 
 class PatientConditionListModel(BaseModel):
     patient_cpf: str
+    patient_code: str
     conditions: List[ConditionListModel]
 
 
@@ -92,6 +94,7 @@ class PatientModel(BaseModel):
     birth_country: Optional[str]
     birth_date: date
     patient_cpf: str
+    patient_code: str
     deceased: Optional[bool] = False
     deceased_date: Optional[date]
     father_name: Optional[str]
@@ -109,6 +112,7 @@ class PatientModel(BaseModel):
 class CompletePatientModel(BaseModel):
     birth_date: date
     patient_cpf: str
+    patient_code: str
     gender: str
     name: str
     cns_list: List[CnsModel]
@@ -156,6 +160,7 @@ class StandardizedPatientRecordModel(BaseModel):
     birth_country_cod: Optional[str]
     birth_date: date
     patient_cpf: str
+    patient_code: str
     deceased: Optional[bool] = False
     deceased_date: Optional[date]
     father_name: Optional[str]
@@ -173,6 +178,7 @@ class StandardizedPatientRecordModel(BaseModel):
 
 class StandardizedPatientConditionModel(BaseModel):
     patient_cpf : str
+    patient_code: str
     cid : str
     ciap: Optional[str]
     clinical_status: Optional[str]
