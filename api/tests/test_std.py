@@ -88,19 +88,10 @@ async def test_create_stdpatientrecords_mandatory_fields(
         json=[
                 {
                     "active": True,
-                    "birth_city_cod": "00001",
-                    "birth_state_cod": "00001",
-                    "birth_country_cod": "00001",
                     "birth_date": "2000-01-11",
                     "patient_cpf": patient_cpf,
                     "gender": "male",
-                    "mother_name": "Gabriela Marques da Cunha",
                     "name": "Fernando Marques Farias",
-                    "nationality": "B",
-                    "race": "parda",
-                    "cns_list": [],
-                    "address_list": [],
-                    "telecom_list": [],
                     "raw_source_id": patientrecord_raw_source
                 }
             ]
