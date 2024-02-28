@@ -92,7 +92,7 @@ async def test_create_stdpatientrecords_mandatory_fields(
                     "patient_code": f"{patient_cpf}.20000111",
                     "patient_cpf": patient_cpf,
                     "gender": "male",
-                    "race":"parda",
+                    #"race":"parda",
                     "name": "Fernando Marques Farias",
                     "raw_source_id": patientrecord_raw_source
                 }
