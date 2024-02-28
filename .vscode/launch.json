@@ -19,7 +19,8 @@
             "jinja": true,
             "justMyCode": true,
             "env": {
-                "ENVIRONMENT": "dev"
+                "ENVIRONMENT": "dev",
+                "DEBUGGING": "true"
             }
         },
         {
@@ -37,7 +38,8 @@
             "jinja": true,
             "justMyCode": true,
             "env": {
-                "ENVIRONMENT": "dev"
+                "ENVIRONMENT": "dev",
+                "DEBUGGING": "true"
             }
         }
     ]
