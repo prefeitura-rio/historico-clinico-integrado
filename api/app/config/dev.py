@@ -3,10 +3,13 @@ from . import getenv_list_or_action, getenv_or_action
 from .base import *  # noqa: F401, F403
 
 
-DEBUG = getenv_or_action("DEBUGGING", default=False).lower() == "true"
+IN_CONTAINER = getenv_or_action("IN_CONTAINER", default="false").lower() == "true"
 
 # Database configuration
-DATABASE_HOST = "localhost" if DEBUG else getenv_or_action("DATABASE_HOST", default="localhost")
+if IN_CONTAINER:
+    DATABASE_HOST = getenv_or_action("DATABASE_HOST", default="localhost")
+else:
+    DATABASE_HOST = "localhost"
 DATABASE_PORT = getenv_or_action("DATABASE_PORT", default="5432")
 DATABASE_USER = getenv_or_action("DATABASE_USER", default="postgres")
 DATABASE_PASSWORD = getenv_or_action("DATABASE_PASSWORD", default="postgres")
