@@ -16,8 +16,8 @@ services:
       - db
     environment:
       ENVIRONMENT: dev
-      INFISICAL_ADDRESS: https://infisical.example.com/
-      INFISICAL_TOKEN: st-1234567890
+      INFISICAL_ADDRESS: ${INFISICAL_ADDRESS}
+      INFISICAL_TOKEN: ${INFISICAL_TOKEN}
     ports:
       - "8000:80"
 
