@@ -168,7 +168,7 @@ class StandardizedPatientRecordModel(BaseModel):
     cns_list: Optional[List[CnsModel]]
     address_list: Optional[List[StandardizedAddressModel]]
     telecom_list: Optional[List[StandardizedTelecomModel]]
-    raw_source_id: Optional[str]
+    raw_source_id: str
 
 
 class StandardizedPatientConditionModel(BaseModel):
@@ -178,7 +178,7 @@ class StandardizedPatientConditionModel(BaseModel):
     clinical_status: Optional[str]
     category: Optional[str]
     date: datetime
-    raw_source_id: Optional[str]
+    raw_source_id: str
 
 
 class StandardizedPatientRecordListModel(BaseModel):
