@@ -73,6 +73,7 @@ async def create_raw_patientrecords(
             records_to_create.append(
                 RawPatientRecord(
                     patient_cpf=record.get('patient_cpf'),
+                    patient_code=record.get('patient_code'),
                     data=record.get('data'),
                     data_source=await DataSource.get(cnes=cnes)
                 )
@@ -123,6 +124,7 @@ async def create_raw_patientconditions(
             conditions_to_create.append(
                 RawPatientCondition(
                     patient_cpf=condition.get('patient_cpf'),
+                    patient_code=condition.get('patient_code'),
                     data=condition.get('data'),
                     data_source=await DataSource.get(cnes=cnes)
                 )

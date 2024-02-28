@@ -89,8 +89,10 @@ async def test_create_stdpatientrecords_mandatory_fields(
                 {
                     "active": True,
                     "birth_date": "2000-01-11",
+                    "patient_code": f"{patient_cpf}.20000111",
                     "patient_cpf": patient_cpf,
                     "gender": "male",
+                    "race":"parda",
                     "name": "Fernando Marques Farias",
                     "raw_source_id": patientrecord_raw_source
                 }
@@ -120,6 +122,7 @@ async def test_create_stdpatientrecords_invalid_raw_source(
                     "birth_country_cod": "00001",
                     "birth_date": "2000-01-11",
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.20000111",
                     "gender": "male",
                     "mother_name": "Gabriela Marques da Cunha",
                     "name": "Fernando Marques Farias",
@@ -155,6 +158,7 @@ async def test_create_stdpatientrecords_cpf_mismatch(
                     "birth_country_cod": "00001",
                     "birth_date": "2000-01-11",
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.20000111",
                     "gender": "male",
                     "mother_name": "Gabriela Marques da Cunha",
                     "name": "Fernando Marques Farias",
@@ -191,6 +195,7 @@ async def test_create_stdpatientrecords_invalid_cpf(
                     "birth_country_cod": "00001",
                     "birth_date": "2000-01-11",
                     "patient_cpf": patient_invalid_cpf,
+                    "patient_code": f"{patient_invalid_cpf}.20000111",
                     "deceased": False,
                     "deceased_date": "2024-01-11",
                     "father_name": "João Cardoso Farias",
@@ -243,6 +248,7 @@ async def test_create_stdpatientcondition_all_fields(
         json = [
                 {
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.20000111",
                     "cid": "A001",
                     "clinical_status": "resolved",
                     "category": "encounter-diagnosis",
@@ -251,6 +257,7 @@ async def test_create_stdpatientcondition_all_fields(
                 },
                 {
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.20000111",
                     "cid": "A001",
                     "clinical_status": "not_resolved",
                     "category": "encounter-diagnosis",
@@ -278,6 +285,7 @@ async def test_create_stdpatientcondition_mandatory_fields(
         json = [
                 {
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.20000111",
                     "cid": "A001",
                     "date": "2024-01-11T16:20:09.832Z",
                     "raw_source_id": patientcondition_raw_source
@@ -301,6 +309,7 @@ async def test_create_stdpatientcondition_invalid_raw_source(
         json = [
                 {
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.20000111",
                     "cid": "A001",
                     "date": "2024-01-11T16:20:09.832Z",
                     "raw_source_id": "407a48a7-fc53-4ab1-8e18-dbd5c9ebfdbe"
@@ -324,6 +333,7 @@ async def test_create_stdpatientcondition_cpfmismatch(
         json = [
                 {
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.20000111",
                     "cid": "A001",
                     "date": "2024-01-11T16:20:09.832Z",
                     "raw_source_id": other_patientcondition_raw_source
@@ -348,6 +358,7 @@ async def test_create_stdpatientcondition_invalid_conditioncode(
         json = [
                 {
                     "patient_cpf": patient_cpf,
+                    "patient_code": f"{patient_cpf}.20000111",
                     "cid": "ERROR",
                     "date": "2024-01-11T16:20:09.832Z",
                     "raw_source_id": patientcondition_raw_source

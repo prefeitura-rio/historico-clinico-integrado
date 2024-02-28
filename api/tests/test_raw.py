@@ -51,6 +51,7 @@ async def test_create_rawpatientrecord_invalid_cpf(
         json={
             "data_list": [
                 {
+                    "patient_code": f"{patient_invalid_cpf}.19970607",
                     "patient_cpf": patient_invalid_cpf,
                     "data": {"name":"Teste"}
                 }
@@ -98,10 +99,12 @@ async def test_create_rawpatientcondition(
         json={
             "data_list": [
                 {
+                    "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
                     "data": {"name":"Teste"}
                 },
                 {
+                    "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
                     "data": {"name":"Teste"}
                 }
@@ -128,10 +131,12 @@ async def test_create_rawpatientcondition_invalid_cpf(
         json={
             "data_list": [
                 {
+                    "patient_code": f"{patient_invalid_cpf}.19970607",
                     "patient_cpf": patient_invalid_cpf,
                     "data": {"name":"Teste"}
                 },
                 {
+                    "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
                     "data": {"name":"Teste"}
                 }
