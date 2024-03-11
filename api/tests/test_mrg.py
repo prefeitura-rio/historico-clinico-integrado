@@ -76,6 +76,7 @@ async def test_create_or_update_mrgpatient_all_fields(
             "birth_country": "00001",
             "birth_date": "2000-01-11",
             "patient_cpf": patient_cpf,
+            "patient_code": f"{patient_cpf}.20000111",
             "deceased": False,
             "deceased_date": "2024-01-11",
             "father_name": "João Cardoso Farias",
@@ -136,6 +137,7 @@ async def test_create_or_update_mrgpatient_mandatory_fields(
             "birth_country": "00001",
             "birth_date": "2000-01-11",
             "patient_cpf": patient_cpf,
+            "patient_code": f"{patient_cpf}.20000111",
             "gender": "male",
             "mother_name": "Gabriela Marques da Cunha",
             "name": "Fernando Marques Farias",
@@ -167,6 +169,7 @@ async def test_create_or_update_mrgpatient_invalid_cpf(
             "birth_country": "00001",
             "birth_date": "2000-01-11",
             "patient_cpf": patient_invalid_cpf,
+            "patient_code": f"{patient_invalid_cpf}.20000111",
             "gender": "male",
             "mother_name": "Gabriela Marques da Cunha",
             "name": "Fernando Marques Farias",
@@ -188,6 +191,7 @@ async def test_create_or_update_mrgpatientcondition_all_fields(client: AsyncClie
         headers={"Authorization": f"Bearer {token}"},
         json={
             "patient_cpf": patient_cpf,
+            "patient_code": f"{patient_cpf}.20000111",
             "conditions": [
                 {
                 "code": "A001",
@@ -218,6 +222,7 @@ async def test_create_or_update_mrgpatientcondition_mandatory_fields(client: Asy
         headers={"Authorization": f"Bearer {token}"},
         json={
             "patient_cpf": patient_cpf,
+            "patient_code": f"{patient_cpf}.20000111",
             "conditions": [
                 {
                 "code": "A001",
@@ -244,6 +249,7 @@ async def test_create_or_update_mrgpatientcondition_invalid_cpf(
         headers={"Authorization": f"Bearer {token}"},
         json={
             "patient_cpf": patient_invalid_cpf,
+            "patient_code": f"{patient_invalid_cpf}.20000111",
             "conditions": [
                 {
                 "code": "A001",
