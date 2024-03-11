@@ -38,15 +38,15 @@ RawPatientRecordOutput = pydantic_model_creator(
 @router.get("/patientrecords")
 async def get_raw_patientrecords(
     _: Annotated[User, Depends(get_current_active_user)],
-    start_datetime: datetime.datetime = datetime.datetime.now() -
+    source_start_datetime: datetime.datetime = datetime.datetime.now() -
     datetime.timedelta(hours=1),
-    end_datetime: datetime.datetime = datetime.datetime.now(),
+    source_end_datetime: datetime.datetime = datetime.datetime.now(),
     datasource_system: str = None,
 ) -> list[RawPatientRecordOutput]:
 
     filtered = RawPatientRecord.filter(
-        created_at__gte=start_datetime,
-        created_at__lt=end_datetime
+        source_updated_at__gte=source_start_datetime,
+        source_updated_at__lt=source_end_datetime
     )
 
     if datasource_system is not None:
@@ -74,6 +74,7 @@ async def create_raw_patientrecords(
                 RawPatientRecord(
                     patient_cpf=record.get('patient_cpf'),
                     patient_code=record.get('patient_code'),
+                    source_updated_at=record.get('source_updated_at'),
                     data=record.get('data'),
                     data_source=await DataSource.get(cnes=cnes)
                 )
@@ -90,15 +91,15 @@ async def create_raw_patientrecords(
 @router.get("/patientconditions")
 async def get_raw_patientconditions(
     _: Annotated[User, Depends(get_current_active_user)],
-    start_datetime: datetime.datetime = datetime.datetime.now() -
+    source_start_datetime: datetime.datetime = datetime.datetime.now() -
     datetime.timedelta(hours=1),
-    end_datetime: datetime.datetime = datetime.datetime.now(),
+    source_end_datetime: datetime.datetime = datetime.datetime.now(),
     datasource_system: str = None,
 ) -> list[RawPatientConditionOutput]:
 
     filtered = RawPatientCondition.filter(
-        created_at__gte=start_datetime,
-        created_at__lt=end_datetime
+        source_updated_at__gte=source_start_datetime,
+        source_updated_at__lt=source_end_datetime
     )
 
     if datasource_system is not None:
@@ -125,6 +126,7 @@ async def create_raw_patientconditions(
                 RawPatientCondition(
                     patient_cpf=condition.get('patient_cpf'),
                     patient_code=condition.get('patient_code'),
+                    source_updated_at=condition.get('source_updated_at'),
                     data=condition.get('data'),
                     data_source=await DataSource.get(cnes=cnes)
                 )

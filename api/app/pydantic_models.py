@@ -63,12 +63,14 @@ class TokenData(BaseModel):
 class RawDataModel(BaseModel):
     patient_cpf: str
     patient_code: str
+    source_updated_at: str
     data: dict
 
 
 class RawDataListModel(BaseModel):
     data_list: List[RawDataModel]
     cnes: str
+
 
 class BulkInsertOutputModel(BaseModel):
     count: int
