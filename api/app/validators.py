@@ -24,7 +24,7 @@ class CPFValidator(Validator):
 
         if value_digits_str in forbidden_list:
             raise ValidationError(f"Value '{value}' is forbidden")
-        
+
 
 class PatientCodeValidator(CPFValidator):
     """
@@ -45,7 +45,7 @@ class PatientCodeValidator(CPFValidator):
         # Part 2 - Validate Birth Date
         if len(birth_date) != 8:
             raise ValidationError(f"Value '{value}' is not a valid patient code")
-        
+
         birth_date_as_date = datetime.datetime.strptime(birth_date, '%Y%m%d')
 
         if birth_date_as_date > datetime.datetime.now():
