@@ -22,17 +22,20 @@ async def test_create_rawpatientrecord(
                 {
                     "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
+                    "source_updated_at": "2012-04-23T18:25:43.000Z",
                     "data": {"name":"Teste"}
                 },
                 {
                     "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
+                    "source_updated_at": "2012-04-22T18:25:43.000Z",
                     "data": {"name":"Teste"}
                 }
             ],
             "cnes": "1234567"
         }
     )
+    print("SAIDA:", response.text)
 
     assert response.status_code == 201
     assert response.json()['count'] == 2
@@ -53,6 +56,7 @@ async def test_create_rawpatientrecord_invalid_cpf(
                 {
                     "patient_code": f"{patient_invalid_cpf}.19970607",
                     "patient_cpf": patient_invalid_cpf,
+                    "source_updated_at": "2012-04-26T18:25:43.000Z",
                     "data": {"name":"Teste"}
                 }
             ],
@@ -75,8 +79,8 @@ async def test_read_rawpatientrecords(
         "/raw/patientrecords",
         headers={"Authorization": f"Bearer {token}"},
         params={
-            'start_datetime':datetime.datetime.now() - datetime.timedelta(hours=24),
-            'end_datetime':datetime.datetime.now() + datetime.timedelta(hours=24)
+            'source_start_datetime':'2012-04-01T00:00:00.000Z',
+            'source_end_datetime':'2012-05-01T00:00:00.000Z'
         }
     )
 
@@ -101,11 +105,13 @@ async def test_create_rawpatientcondition(
                 {
                     "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
+                    "source_updated_at": "2012-04-13T00:00:00.000Z",
                     "data": {"name":"Teste"}
                 },
                 {
                     "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
+                    "source_updated_at": "2012-04-03T00:00:00.000Z",
                     "data": {"name":"Teste"}
                 }
             ],
@@ -133,11 +139,13 @@ async def test_create_rawpatientcondition_invalid_cpf(
                 {
                     "patient_code": f"{patient_invalid_cpf}.19970607",
                     "patient_cpf": patient_invalid_cpf,
+                    "source_updated_at": "2012-04-21T00:00:00.000Z",
                     "data": {"name":"Teste"}
                 },
                 {
                     "patient_code": f"{patient_cpf}.19970607",
                     "patient_cpf": patient_cpf,
+                    "source_updated_at": "2012-04-28T00:00:00.000Z",
                     "data": {"name":"Teste"}
                 }
             ],
@@ -158,8 +166,8 @@ async def test_read_rawpatientconditions(
         "/raw/patientconditions",
         headers={"Authorization": f"Bearer {token}"},
         params={
-            'start_datetime':datetime.datetime.now() - datetime.timedelta(hours=24),
-            'end_datetime':datetime.datetime.now() + datetime.timedelta(hours=24)
+            'source_start_datetime':'2012-04-01T00:00:00.000Z',
+            'source_end_datetime':'2012-05-01T00:00:00.000Z'
         }
     )
 
@@ -167,3 +175,23 @@ async def test_read_rawpatientconditions(
 
     json_response = response.json()
     assert len(json_response) > 0
+
+@pytest.mark.anyio
+@pytest.mark.run(order=3)
+async def test_read_rawpatientconditions_emptyinterval(
+    client  : AsyncClient,
+    token   : str
+):
+    response = await client.get(
+        "/raw/patientconditions",
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            'source_start_datetime':'2024-01-01T00:00:00.000Z',
+            'source_end_datetime':'2025-01-01T00:00:00.000Z'
+        }
+    )
+
+    assert response.status_code == 200
+
+    json_response = response.json()
+    assert len(json_response) == 0

@@ -131,7 +131,7 @@ async def test_create_stdpatientrecords_invalid_raw_source(
                     "cns_list": [],
                     "address_list": [],
                     "telecom_list": [],
-                    "raw_source_id": "407a48a7-fc53-4ab1-8e18-dbd5c9ebfdbe"
+                    "raw_source_id": "1"
                 }
             ]
     )
@@ -312,7 +312,7 @@ async def test_create_stdpatientcondition_invalid_raw_source(
                     "patient_code": f"{patient_cpf}.20000111",
                     "cid": "A001",
                     "date": "2024-01-11T16:20:09.832Z",
-                    "raw_source_id": "407a48a7-fc53-4ab1-8e18-dbd5c9ebfdbe"
+                    "raw_source_id": "1"
                 }
             ]
     )
