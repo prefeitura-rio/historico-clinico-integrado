@@ -79,9 +79,21 @@ async def run():
     ], ignore_conflicts=True)
     logger.info("Nationality created successfully")
 
-    brasil, _ = await Country.get_or_create(
-        code="1", name="Brasil"
+    countries = pd.read_csv(
+        "./data/paises.csv",
+        header=0,
+        dtype=str
     )
+    countries_to_create = []
+    for _, country in countries.iterrows():
+        countries_to_create.append(
+            Country(
+                code = country['code'],
+                name = country['country']
+            )
+        )
+    await Country.bulk_create(countries_to_create, ignore_conflicts=True)
+    brasil, _ = await Country.get_or_create(code="010")
     logger.info("Countries created successfully")
 
     relacao_estado_municipio = pd.read_csv(
