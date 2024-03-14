@@ -85,8 +85,7 @@ async def create_raw_patientrecords(
     try:
         new_records = await RawPatientRecord.bulk_create(
             records_to_create,
-            on_conflict=["patient_code", "data_source_id", "source_updated_at"],
-            update_fields=["data","updated_at"]
+            ignore_conflicts=True
         )
         return {
             'count': len(new_records)
@@ -143,8 +142,7 @@ async def create_raw_patientconditions(
     try:
         new_conditions = await RawPatientCondition.bulk_create(
             conditions_to_create,
-            on_conflict=["patient_code", "data_source_id", "source_updated_at"],
-            update_fields=["data","updated_at"]
+            ignore_conflicts=True
         )
         return {
             'count': len(new_conditions)
