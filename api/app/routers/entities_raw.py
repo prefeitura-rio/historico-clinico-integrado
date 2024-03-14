@@ -2,6 +2,7 @@
 import datetime
 from typing import Annotated
 
+import asyncpg
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
@@ -81,15 +82,17 @@ async def create_raw_patientrecords(
             )
     except ValidationError as e:
         return HTMLResponse(status_code=400, content=str(e))
-
-    new_records = await RawPatientRecord.bulk_create(
-        records_to_create,
-        on_conflict=["patient_code", "data_source_id", "source_updated_at"],
-        update_fields=["data","updated_at"]
-    )
-    return {
-        'count': len(new_records)
-    }
+    try:
+        new_records = await RawPatientRecord.bulk_create(
+            records_to_create,
+            on_conflict=["patient_code", "data_source_id", "source_updated_at"],
+            update_fields=["data","updated_at"]
+        )
+        return {
+            'count': len(new_records)
+        }
+    except asyncpg.exceptions.DeadlockDetectedError as e:
+        return HTMLResponse(status_code=400, content=str(e))
 
 
 @router.get("/patientconditions")
@@ -137,12 +140,14 @@ async def create_raw_patientconditions(
             )
     except ValidationError as e:
         return HTMLResponse(status_code=400, content=str(e))
-
-    new_conditions = await RawPatientCondition.bulk_create(
-        conditions_to_create,
-        on_conflict=["patient_code", "data_source_id", "source_updated_at"],
-        update_fields=["data","updated_at"]
-    )
-    return {
-        'count': len(new_conditions)
-    }
+    try:
+        new_conditions = await RawPatientCondition.bulk_create(
+            conditions_to_create,
+            on_conflict=["patient_code", "data_source_id", "source_updated_at"],
+            update_fields=["data","updated_at"]
+        )
+        return {
+            'count': len(new_conditions)
+        }
+    except asyncpg.exceptions.DeadlockDetectedError as e:
+        return HTMLResponse(status_code=400, content=str(e))
