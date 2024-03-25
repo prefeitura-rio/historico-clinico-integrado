@@ -36,18 +36,38 @@ RawPatientRecordOutput = pydantic_model_creator(
 )
 
 
-@router.get("/patientrecords")
-async def get_raw_patientrecords(
+@router.get("/patientrecords/fromEventDatetime")
+async def get_raw_patientrecords_from_event_datetime(
     _: Annotated[User, Depends(get_current_active_user)],
-    source_start_datetime: datetime.datetime = datetime.datetime.now() -
+    start_datetime: datetime.datetime = datetime.datetime.now() -
     datetime.timedelta(hours=1),
-    source_end_datetime: datetime.datetime = datetime.datetime.now(),
+    end_datetime: datetime.datetime = datetime.datetime.now(),
     datasource_system: str = None,
 ) -> list[RawPatientRecordOutput]:
 
     filtered = RawPatientRecord.filter(
-        source_updated_at__gte=source_start_datetime,
-        source_updated_at__lt=source_end_datetime
+        source_updated_at__gte=start_datetime,
+        source_updated_at__lt=end_datetime
+    )
+
+    if datasource_system is not None:
+        filtered = filtered.filter(
+            data_source__system=datasource_system
+        )
+    return await RawPatientRecordOutput.from_queryset(filtered)
+
+@router.get("/patientrecords/fromInsertionDatetime")
+async def get_raw_patientrecords_from_insertion_datetime(
+    _: Annotated[User, Depends(get_current_active_user)],
+    start_datetime: datetime.datetime = datetime.datetime.now() -
+    datetime.timedelta(hours=1),
+    end_datetime: datetime.datetime = datetime.datetime.now(),
+    datasource_system: str = None,
+) -> list[RawPatientRecordOutput]:
+
+    filtered = RawPatientRecord.filter(
+        updated_at__gte=start_datetime,
+        updated_at__lt=end_datetime
     )
 
     if datasource_system is not None:
@@ -94,18 +114,18 @@ async def create_raw_patientrecords(
         return HTMLResponse(status_code=400, content=str(e))
 
 
-@router.get("/patientconditions")
-async def get_raw_patientconditions(
+@router.get("/patientconditions/fromEventDatetime")
+async def get_raw_patientconditions_from_event_datetime(
     _: Annotated[User, Depends(get_current_active_user)],
-    source_start_datetime: datetime.datetime = datetime.datetime.now() -
+    start_datetime: datetime.datetime = datetime.datetime.now() -
     datetime.timedelta(hours=1),
-    source_end_datetime: datetime.datetime = datetime.datetime.now(),
+    end_datetime: datetime.datetime = datetime.datetime.now(),
     datasource_system: str = None,
 ) -> list[RawPatientConditionOutput]:
 
     filtered = RawPatientCondition.filter(
-        source_updated_at__gte=source_start_datetime,
-        source_updated_at__lt=source_end_datetime
+        source_updated_at__gte=start_datetime,
+        source_updated_at__lt=end_datetime
     )
 
     if datasource_system is not None:
@@ -113,6 +133,27 @@ async def get_raw_patientconditions(
             data_source__system=datasource_system
         )
     return await RawPatientConditionOutput.from_queryset(filtered)
+
+@router.get("/patientconditions/fromInsertionDatetime")
+async def get_raw_patientconditions_from_insertion_datetime(
+    _: Annotated[User, Depends(get_current_active_user)],
+    start_datetime: datetime.datetime = datetime.datetime.now() -
+    datetime.timedelta(hours=1),
+    end_datetime: datetime.datetime = datetime.datetime.now(),
+    datasource_system: str = None,
+) -> list[RawPatientConditionOutput]:
+
+    filtered = RawPatientCondition.filter(
+        updated_at__gte=start_datetime,
+        updated_at__lt=end_datetime
+    )
+
+    if datasource_system is not None:
+        filtered = filtered.filter(
+            data_source__system=datasource_system
+        )
+    return await RawPatientConditionOutput.from_queryset(filtered)
+
 
 
 @router.post("/patientconditions", status_code=201)
