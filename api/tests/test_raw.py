@@ -69,17 +69,17 @@ async def test_create_rawpatientrecord_invalid_cpf(
 
 @pytest.mark.anyio
 @pytest.mark.run(order=2)
-async def test_read_rawpatientrecords(
+async def test_read_rawpatientrecords_from_event_datetime(
     client: AsyncClient,
     token: str
 ):
 
     response = await client.get(
-        "/raw/patientrecords",
+        "/raw/patientrecords/fromEventDatetime",
         headers={"Authorization": f"Bearer {token}"},
         params={
-            'source_start_datetime':'2012-04-01T00:00:00.000Z',
-            'source_end_datetime':'2012-05-01T00:00:00.000Z'
+            'start_datetime':'2012-04-01T00:00:00.000Z',
+            'end_datetime':'2012-05-01T00:00:00.000Z'
         }
     )
 
@@ -157,16 +157,16 @@ async def test_create_rawpatientcondition_invalid_cpf(
 
 @pytest.mark.anyio
 @pytest.mark.run(order=2)
-async def test_read_rawpatientconditions(
+async def test_read_rawpatientconditions_from_event_datetime(
     client  : AsyncClient,
     token   : str
 ):
     response = await client.get(
-        "/raw/patientconditions",
+        "/raw/patientconditions/fromEventDatetime",
         headers={"Authorization": f"Bearer {token}"},
         params={
-            'source_start_datetime':'2012-04-01T00:00:00.000Z',
-            'source_end_datetime':'2012-05-01T00:00:00.000Z'
+            'start_datetime':'2012-04-01T00:00:00.000Z',
+            'end_datetime':'2012-05-01T00:00:00.000Z'
         }
     )
 
@@ -177,16 +177,16 @@ async def test_read_rawpatientconditions(
 
 @pytest.mark.anyio
 @pytest.mark.run(order=3)
-async def test_read_rawpatientconditions_emptyinterval(
+async def test_read_rawpatientconditions_from_event_datetime_emptyinterval(
     client  : AsyncClient,
     token   : str
 ):
     response = await client.get(
-        "/raw/patientconditions",
+        "/raw/patientconditions/fromEventDatetime",
         headers={"Authorization": f"Bearer {token}"},
         params={
-            'source_start_datetime':'2024-01-01T00:00:00.000Z',
-            'source_end_datetime':'2025-01-01T00:00:00.000Z'
+            'start_datetime':'2024-01-01T00:00:00.000Z',
+            'end_datetime':'2025-01-01T00:00:00.000Z'
         }
     )
 
