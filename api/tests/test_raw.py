@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from httpx import AsyncClient  # noqa
 import pytest  # noqa
+import datetime
+import pytz
 import sys
 sys.path.insert(0, "../")
 
@@ -88,6 +90,29 @@ async def test_read_rawpatientrecords_from_event_datetime(
     json_response = response.json()
     assert len(json_response) > 0
 
+@pytest.mark.anyio
+@pytest.mark.run(order=2)
+async def test_read_rawpatientrecords_from_insertion_datetime(
+    client  : AsyncClient,
+    token   : str
+):
+    start = datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=1)
+    end = datetime.datetime.now(pytz.utc) + datetime.timedelta(minutes=1)
+
+    response = await client.get(
+        "/raw/patientrecords/fromInsertionDatetime",
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            'start_datetime':str(start),
+            'end_datetime':str(end)
+        }
+    )
+
+    assert response.status_code == 200
+
+    json_response = response.json()
+    assert len(json_response) > 0
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
@@ -167,6 +192,29 @@ async def test_read_rawpatientconditions_from_event_datetime(
         params={
             'start_datetime':'2012-04-01T00:00:00.000Z',
             'end_datetime':'2012-05-01T00:00:00.000Z'
+        }
+    )
+
+    assert response.status_code == 200
+
+    json_response = response.json()
+    assert len(json_response) > 0
+
+@pytest.mark.anyio
+@pytest.mark.run(order=2)
+async def test_read_rawpatientconditions_from_insertion_datetime(
+    client  : AsyncClient,
+    token   : str
+):
+    start = datetime.datetime.now(pytz.utc) - datetime.timedelta(minutes=1)
+    end = datetime.datetime.now(pytz.utc) + datetime.timedelta(minutes=1)
+
+    response = await client.get(
+        "/raw/patientconditions/fromInsertionDatetime",
+        headers={"Authorization": f"Bearer {token}"},
+        params={
+            'start_datetime':str(start),
+            'end_datetime':str(end)
         }
     )
 
