@@ -47,7 +47,8 @@ async def get_raw_patientrecords_from_event_datetime(
 
     filtered = RawPatientRecord.filter(
         source_updated_at__gte=start_datetime,
-        source_updated_at__lt=end_datetime
+        source_updated_at__lt=end_datetime,
+        is_dirty__not=True
     )
 
     if datasource_system is not None:
@@ -67,7 +68,8 @@ async def get_raw_patientrecords_from_insertion_datetime(
 
     filtered = RawPatientRecord.filter(
         updated_at__gte=start_datetime,
-        updated_at__lt=end_datetime
+        updated_at__lt=end_datetime,
+        is_dirty__not=True
     )
 
     if datasource_system is not None:
@@ -125,7 +127,8 @@ async def get_raw_patientconditions_from_event_datetime(
 
     filtered = RawPatientCondition.filter(
         source_updated_at__gte=start_datetime,
-        source_updated_at__lt=end_datetime
+        source_updated_at__lt=end_datetime,
+        is_dirty__not=True
     )
 
     if datasource_system is not None:
@@ -145,7 +148,8 @@ async def get_raw_patientconditions_from_insertion_datetime(
 
     filtered = RawPatientCondition.filter(
         updated_at__gte=start_datetime,
-        updated_at__lt=end_datetime
+        updated_at__lt=end_datetime,
+        is_dirty__not=True
     )
 
     if datasource_system is not None:

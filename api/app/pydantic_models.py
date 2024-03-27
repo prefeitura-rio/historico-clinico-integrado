@@ -64,6 +64,7 @@ class RawDataModel(BaseModel):
     patient_cpf: str
     patient_code: str
     source_updated_at: str
+    is_dirty: Optional[bool]
     data: dict
 
 
@@ -176,6 +177,7 @@ class StandardizedPatientRecordModel(BaseModel):
     address_list: Optional[List[StandardizedAddressModel]]
     telecom_list: Optional[List[StandardizedTelecomModel]]
     raw_source_id: str
+    is_dirty: Optional[bool]
 
 
 class StandardizedPatientConditionModel(BaseModel):
@@ -187,6 +189,7 @@ class StandardizedPatientConditionModel(BaseModel):
     category: Optional[str]
     date: datetime
     raw_source_id: str
+    is_dirty: Optional[bool]
 
 
 class StandardizedPatientRecordListModel(BaseModel):
