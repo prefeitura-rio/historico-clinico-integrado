@@ -9,7 +9,9 @@ from fastapi.responses import HTMLResponse
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError
 
-from app.pydantic_models import (RawDataListModel, BulkInsertOutputModel)
+from app.pydantic_models import (
+    RawDataListModelInput, BulkInsertOutputModel
+)
 from app.dependencies import get_current_active_user
 from app.models import (
     User, RawPatientRecord, RawPatientCondition, DataSource
@@ -19,20 +21,14 @@ from app.models import (
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
 
-RawPatientConditionInput = pydantic_model_creator(
-    RawPatientCondition, name="RawPatientConditionInput",
-    exclude=("id", "created_at", "updated_at")
-)
 RawPatientConditionOutput = pydantic_model_creator(
-    RawPatientCondition, name="RawPatientConditionOutput"
+    RawPatientCondition, name="RawPatientConditionOutput",
+    exclude=("is_dirty",)
 )
 
-RawPatientRecordInput = pydantic_model_creator(
-    RawPatientRecord, name="RawPatientRecordInput",
-    exclude=("id", "created_at", "updated_at")
-)
 RawPatientRecordOutput = pydantic_model_creator(
-    RawPatientRecord, name="RawPatientRecordOutput"
+    RawPatientRecord, name="RawPatientRecordOutput",
+    exclude=("is_dirty",)
 )
 
 
@@ -82,7 +78,7 @@ async def get_raw_patientrecords_from_insertion_datetime(
 @router.post("/patientrecords", status_code=201)
 async def create_raw_patientrecords(
     _: Annotated[User, Depends(get_current_active_user)],
-    raw_data: RawDataListModel,
+    raw_data: RawDataListModelInput,
 ) -> BulkInsertOutputModel:
 
     raw_data = raw_data.dict()
@@ -121,13 +117,7 @@ async def set_dirty_records(
     _: Annotated[User, Depends(get_current_active_user)],
     raw_record_id_list: list[str],
 ):
-    try:
-        raw_records = await RawPatientRecord.filter(id__in=raw_record_id_list)
-        raw_records.update(is_dirty=True)
-    except ValidationError as e:
-        return HTMLResponse(status_code=400, content=str(e))
-    except asyncpg.exceptions.DeadlockDetectedError as e:
-        return HTMLResponse(status_code=400, content=str(e))
+    await RawPatientRecord.filter(id__in=raw_record_id_list).update(is_dirty=True)
 
 
 @router.get("/patientconditions/fromEventDatetime")
@@ -177,7 +167,7 @@ async def get_raw_patientconditions_from_insertion_datetime(
 @router.post("/patientconditions", status_code=201)
 async def create_raw_patientconditions(
     _: Annotated[User, Depends(get_current_active_user)],
-    raw_data: RawDataListModel,
+    raw_data: RawDataListModelInput,
 ) -> BulkInsertOutputModel:
     raw_data = raw_data.dict()
 
@@ -215,10 +205,4 @@ async def set_dirty_conditions(
     _: Annotated[User, Depends(get_current_active_user)],
     raw_condition_id_list: list[str],
 ):
-    try:
-        raw_conditions = await RawPatientCondition.filter(id__in=raw_condition_id_list)
-        raw_conditions.update(is_dirty=True)
-    except ValidationError as e:
-        return HTMLResponse(status_code=400, content=str(e))
-    except asyncpg.exceptions.DeadlockDetectedError as e:
-        return HTMLResponse(status_code=400, content=str(e))
+    await RawPatientCondition.filter(id__in=raw_condition_id_list).update(is_dirty=True)

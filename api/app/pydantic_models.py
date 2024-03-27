@@ -60,16 +60,15 @@ class TokenData(BaseModel):
     username: Optional[str]
 
 
-class RawDataModel(BaseModel):
+class RawDataModelInput(BaseModel):
     patient_cpf: str
     patient_code: str
     source_updated_at: str
-    is_dirty: Optional[bool]
     data: dict
 
 
-class RawDataListModel(BaseModel):
-    data_list: List[RawDataModel]
+class RawDataListModelInput(BaseModel):
+    data_list: List[RawDataModelInput]
     cnes: str
 
 
