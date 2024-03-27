@@ -116,6 +116,20 @@ async def create_raw_patientrecords(
         return HTMLResponse(status_code=400, content=str(e))
 
 
+@router.post("/patientrecords/setDirty", status_code=200)
+async def set_dirty_records(
+    _: Annotated[User, Depends(get_current_active_user)],
+    raw_record_id_list: list[str],
+):
+    try:
+        raw_records = await RawPatientRecord.filter(id__in=raw_record_id_list)
+        raw_records.update(is_dirty=True)
+    except ValidationError as e:
+        return HTMLResponse(status_code=400, content=str(e))
+    except asyncpg.exceptions.DeadlockDetectedError as e:
+        return HTMLResponse(status_code=400, content=str(e))
+
+
 @router.get("/patientconditions/fromEventDatetime")
 async def get_raw_patientconditions_from_event_datetime(
     _: Annotated[User, Depends(get_current_active_user)],
@@ -192,5 +206,19 @@ async def create_raw_patientconditions(
         return {
             'count': len(new_conditions)
         }
+    except asyncpg.exceptions.DeadlockDetectedError as e:
+        return HTMLResponse(status_code=400, content=str(e))
+
+
+@router.post("/patientconditions/setDirty", status_code=200)
+async def set_dirty_conditions(
+    _: Annotated[User, Depends(get_current_active_user)],
+    raw_condition_id_list: list[str],
+):
+    try:
+        raw_conditions = await RawPatientCondition.filter(id__in=raw_condition_id_list)
+        raw_conditions.update(is_dirty=True)
+    except ValidationError as e:
+        return HTMLResponse(status_code=400, content=str(e))
     except asyncpg.exceptions.DeadlockDetectedError as e:
         return HTMLResponse(status_code=400, content=str(e))
