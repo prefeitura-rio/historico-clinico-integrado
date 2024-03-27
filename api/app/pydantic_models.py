@@ -60,15 +60,15 @@ class TokenData(BaseModel):
     username: Optional[str]
 
 
-class RawDataModel(BaseModel):
+class RawDataModelInput(BaseModel):
     patient_cpf: str
     patient_code: str
     source_updated_at: str
     data: dict
 
 
-class RawDataListModel(BaseModel):
-    data_list: List[RawDataModel]
+class RawDataListModelInput(BaseModel):
+    data_list: List[RawDataModelInput]
     cnes: str
 
 
@@ -176,6 +176,7 @@ class StandardizedPatientRecordModel(BaseModel):
     address_list: Optional[List[StandardizedAddressModel]]
     telecom_list: Optional[List[StandardizedTelecomModel]]
     raw_source_id: str
+    is_dirty: Optional[bool]
 
 
 class StandardizedPatientConditionModel(BaseModel):
@@ -187,6 +188,7 @@ class StandardizedPatientConditionModel(BaseModel):
     category: Optional[str]
     date: datetime
     raw_source_id: str
+    is_dirty: Optional[bool]
 
 
 class StandardizedPatientRecordListModel(BaseModel):
