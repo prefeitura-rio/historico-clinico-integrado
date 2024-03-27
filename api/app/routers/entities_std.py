@@ -94,6 +94,8 @@ async def create_standardized_patientrecords(
         except ValueError as e:
             return HTMLResponse(status_code=400, content=str(e))
 
+        RawPatientRecord.filter(id=record['raw_source_id']).update(is_dirty=False)
+
     new_records = await StandardizedPatientRecord.bulk_create(records_to_create)
 
     return {
