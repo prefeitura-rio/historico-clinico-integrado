@@ -279,7 +279,7 @@ async def test_create_user(
             "data_source": {
                 "system": "vitacare",
                 "cnes": "11111111",
-                "description": "Test Description 2"
+                "description": "Test Description 3"
             }
         }
     )
