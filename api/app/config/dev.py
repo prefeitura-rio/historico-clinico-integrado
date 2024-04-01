@@ -3,7 +3,7 @@ from . import getenv_list_or_action, getenv_or_action
 from .base import *  # noqa: F401, F403
 
 
-DATABASE_HOST = "localhost"#getenv_or_action("DATABASE_HOST", default="localhost")
+DATABASE_HOST = getenv_or_action("DATABASE_HOST", default="localhost")
 DATABASE_PORT = getenv_or_action("DATABASE_PORT", default="5432")
 DATABASE_USER = getenv_or_action("DATABASE_USER", default="postgres")
 DATABASE_PASSWORD = getenv_or_action("DATABASE_PASSWORD", default="postgres")
