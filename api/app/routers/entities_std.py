@@ -9,9 +9,8 @@ from tortoise.exceptions import ValidationError, DoesNotExist
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import (
-    DataSourceModel, StandardizedPatientRecordModel, StandardizedPatientConditionModel,
-    BulkInsertOutputModel,
-    MergeableRecord
+    StandardizedPatientRecordModel, StandardizedPatientConditionModel,
+    BulkInsertOutputModel, MergeableRecord
 )
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
