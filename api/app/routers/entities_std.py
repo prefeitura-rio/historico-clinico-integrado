@@ -9,8 +9,9 @@ from tortoise.exceptions import ValidationError, DoesNotExist
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import (
-    StandardizedPatientRecordModel, StandardizedPatientConditionModel,
-    BulkInsertOutputModel
+    DataSourceModel, StandardizedPatientRecordModel, StandardizedPatientConditionModel,
+    BulkInsertOutputModel,
+    MergeableRecord
 )
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
@@ -33,13 +34,24 @@ StandardizedPatientConditionOutput = pydantic_model_creator(
 async def get_standardized_patientrecords(
     _           : Annotated[User, Depends(get_current_active_user)],
     patient_cpf : Optional[str] = None,
-) -> list[StandardizedPatientRecordOutput]:
+) -> list[ MergeableRecord[StandardizedPatientRecordModel] ]:
 
-    queryset = StandardizedPatientRecord.filter(
+    records = await StandardizedPatientRecord.filter(
         patient_cpf=patient_cpf
-    )
+    ).prefetch_related('raw_source__data_source')
 
-    return await StandardizedPatientRecordOutput.from_queryset(queryset)
+    results = []
+    for record in records:
+        result = MergeableRecord(
+            patient_code        = record.patient_code,
+            standardized_record = record,
+            source              = record.raw_source.data_source,
+            event_moment        = record.raw_source.source_updated_at,
+            ingestion_moment    = record.raw_source.updated_at
+        )
+        results.append( result )
+
+    return results
 
 
 @router.post("/patientrecords", status_code=201)
@@ -110,13 +122,24 @@ async def create_standardized_patientrecords(
 async def get_standardized_patientconditions(
     _           : Annotated[User, Depends(get_current_active_user)],
     patient_cpf : str,
-) -> list[StandardizedPatientConditionOutput]:
+) -> list[ MergeableRecord[StandardizedPatientConditionModel] ]:
 
-    queryset = StandardizedPatientCondition.filter(
+    conditions = await StandardizedPatientCondition.filter(
         patient_cpf=patient_cpf
-    )
+    ).prefetch_related('raw_source__data_source')
 
-    return await StandardizedPatientConditionOutput.from_queryset(queryset)
+    results = []
+    for condition in conditions:
+        result = MergeableRecord(
+            patient_code        = condition.patient_code,
+            standardized_record = condition,
+            source              = condition.raw_source.data_source,
+            event_moment        = condition.raw_source.source_updated_at,
+            ingestion_moment    = condition.raw_source.updated_at
+        )
+        results.append( result )
+
+    return results
 
 
 @router.post("/patientconditions", status_code=201)
