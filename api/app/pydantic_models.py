@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import date, datetime
-
+from typing import Generic, Optional, List, TypeVar
 from pydantic import BaseModel
-from typing import Optional, List
 
 
 class AddressModel(BaseModel):
@@ -190,6 +189,19 @@ class StandardizedPatientConditionModel(BaseModel):
     raw_source_id: str
     is_valid: Optional[bool]
 
+
+PatientData = TypeVar('PatientData', StandardizedPatientRecordModel, StandardizedPatientConditionModel)
+
+class MergeableRecord(Generic[PatientData], BaseModel):
+    patient_code: str
+    standardized_record: PatientData
+    source: DataSourceModel
+    event_moment: datetime
+    ingestion_moment: datetime
+
+
+class RecordListModel(Generic[PatientData], BaseModel):
+    records: List[PatientData]
 
 class StandardizedPatientRecordListModel(BaseModel):
     records: List[StandardizedPatientRecordModel]
