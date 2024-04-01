@@ -176,7 +176,7 @@ class StandardizedPatientRecordModel(BaseModel):
     address_list: Optional[List[StandardizedAddressModel]]
     telecom_list: Optional[List[StandardizedTelecomModel]]
     raw_source_id: str
-    is_dirty: Optional[bool]
+    is_valid: Optional[bool]
 
 
 class StandardizedPatientConditionModel(BaseModel):
@@ -188,7 +188,7 @@ class StandardizedPatientConditionModel(BaseModel):
     category: Optional[str]
     date: datetime
     raw_source_id: str
-    is_dirty: Optional[bool]
+    is_valid: Optional[bool]
 
 
 class StandardizedPatientRecordListModel(BaseModel):
