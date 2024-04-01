@@ -23,12 +23,12 @@ router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
 RawPatientConditionOutput = pydantic_model_creator(
     RawPatientCondition, name="RawPatientConditionOutput",
-    exclude=("is_dirty",)
+    exclude=("is_valid",)
 )
 
 RawPatientRecordOutput = pydantic_model_creator(
     RawPatientRecord, name="RawPatientRecordOutput",
-    exclude=("is_dirty",)
+    exclude=("is_valid",)
 )
 
 
@@ -44,7 +44,7 @@ async def get_raw_patientrecords_from_event_datetime(
     filtered = RawPatientRecord.filter(
         source_updated_at__gte=start_datetime,
         source_updated_at__lt=end_datetime,
-        is_dirty__not=True
+        is_valid__not=True
     )
 
     if datasource_system is not None:
@@ -65,7 +65,7 @@ async def get_raw_patientrecords_from_insertion_datetime(
     filtered = RawPatientRecord.filter(
         updated_at__gte=start_datetime,
         updated_at__lt=end_datetime,
-        is_dirty__not=True
+        is_valid__not=True
     )
 
     if datasource_system is not None:
@@ -112,12 +112,12 @@ async def create_raw_patientrecords(
         return HTMLResponse(status_code=400, content=str(e))
 
 
-@router.post("/patientrecords/setDirty", status_code=200)
-async def set_dirty_records(
+@router.post("/patientrecords/setAsInvalid", status_code=200)
+async def set_as_invalid_flag_records(
     _: Annotated[User, Depends(get_current_active_user)],
     raw_record_id_list: list[str],
 ):
-    await RawPatientRecord.filter(id__in=raw_record_id_list).update(is_dirty=True)
+    await RawPatientRecord.filter(id__in=raw_record_id_list).update(is_valid=False)
 
 
 @router.get("/patientconditions/fromEventDatetime")
@@ -132,7 +132,7 @@ async def get_raw_patientconditions_from_event_datetime(
     filtered = RawPatientCondition.filter(
         source_updated_at__gte=start_datetime,
         source_updated_at__lt=end_datetime,
-        is_dirty__not=True
+        is_valid__not=True
     )
 
     if datasource_system is not None:
@@ -153,7 +153,7 @@ async def get_raw_patientconditions_from_insertion_datetime(
     filtered = RawPatientCondition.filter(
         updated_at__gte=start_datetime,
         updated_at__lt=end_datetime,
-        is_dirty__not=True
+        is_valid__not=True
     )
 
     if datasource_system is not None:
@@ -200,9 +200,9 @@ async def create_raw_patientconditions(
         return HTMLResponse(status_code=400, content=str(e))
 
 
-@router.post("/patientconditions/setDirty", status_code=200)
-async def set_dirty_conditions(
+@router.post("/patientconditions/setAsInvalid", status_code=200)
+async def set_as_invalid_flag_conditions(
     _: Annotated[User, Depends(get_current_active_user)],
     raw_condition_id_list: list[str],
 ):
-    await RawPatientCondition.filter(id__in=raw_condition_id_list).update(is_dirty=True)
+    await RawPatientCondition.filter(id__in=raw_condition_id_list).update(is_valid=False)

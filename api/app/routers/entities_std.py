@@ -94,7 +94,7 @@ async def create_standardized_patientrecords(
         except ValueError as e:
             return HTMLResponse(status_code=400, content=str(e))
 
-        await RawPatientRecord.filter(id=record['raw_source_id']).update(is_dirty=False)
+        await RawPatientRecord.filter(id=record['raw_source_id']).update(is_valid=True)
 
     new_records = await StandardizedPatientRecord.bulk_create(records_to_create)
 
@@ -166,7 +166,7 @@ async def create_standardized_patientconditions(
         except ValueError as e:
             return HTMLResponse(status_code=400, content=str(e))
 
-        await RawPatientCondition.filter(id=condition['raw_source_id']).update(is_dirty=False)
+        await RawPatientCondition.filter(id=condition['raw_source_id']).update(is_valid=True)
 
     new_conditions = await StandardizedPatientCondition.bulk_create(conditions_to_create)
 
