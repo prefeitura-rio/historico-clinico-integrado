@@ -13,7 +13,7 @@ class RawPatientRecord(Model):
     data                 = fields.JSONField()
     data_source          = fields.ForeignKeyField("app.DataSource", related_name="raw_record_creator", null=False)
     source_updated_at    = fields.DatetimeField(null=False)
-    is_dirty             = fields.BooleanField(null=True)
+    is_valid             = fields.BooleanField(null=True)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -30,7 +30,7 @@ class RawPatientCondition(Model):
     data                = fields.JSONField()
     data_source         = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_creator", null=False)
     source_updated_at   = fields.DatetimeField(null=False)
-    is_dirty            = fields.BooleanField(null=True)
+    is_valid            = fields.BooleanField(null=True)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
@@ -62,7 +62,7 @@ class StandardizedPatientRecord(Model):
     cns_list            = fields.JSONField(null=True)
     address_list        = fields.JSONField(null=True)
     telecom_list        = fields.JSONField(null=True)
-    is_dirty            = fields.BooleanField(null=True)
+    is_valid            = fields.BooleanField(null=True)
 
     created_at          = fields.DatetimeField(auto_now_add=True)
     updated_at          = fields.DatetimeField(auto_now=True)
@@ -81,7 +81,7 @@ class StandardizedPatientCondition(Model):
     category            = fields.CharEnumField(enum_type=CategoryEnum, null=True)
     date                = fields.DatetimeField()
     raw_source          = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False)
-    is_dirty            = fields.BooleanField(null=True)
+    is_valid            = fields.BooleanField(null=True)
 
     created_at          = fields.DatetimeField(auto_now_add=True)
     updated_at          = fields.DatetimeField(auto_now=True)
