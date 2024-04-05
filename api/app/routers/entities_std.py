@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
@@ -9,8 +10,8 @@ from tortoise.exceptions import ValidationError, DoesNotExist
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import (
-    StandardizedPatientRecordModel, StandardizedPatientConditionModel,
-    BulkInsertOutputModel, MergeableRecord
+    PatientMergeableRecord, StandardizedPatientRecordModel, StandardizedPatientConditionModel,
+    BulkInsertOutputModel, PatientMergeableRecord, MergeableRecord
 )
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
@@ -32,25 +33,47 @@ StandardizedPatientConditionOutput = pydantic_model_creator(
 @router.get("/patientrecords")
 async def get_standardized_patientrecords(
     _           : Annotated[User, Depends(get_current_active_user)],
-    patient_cpf : Optional[str] = None,
-) -> list[ MergeableRecord[StandardizedPatientRecordModel] ]:
+    start_datetime: datetime.datetime = datetime.datetime.now() - datetime.timedelta(hours=1),
+    end_datetime: datetime.datetime = datetime.datetime.now()
+) -> list[ PatientMergeableRecord[StandardizedPatientRecordModel] ]:
+    
+    updated_patients = await StandardizedPatientRecord.raw(f"""
+    select std.*
+    from std__patientrecord std
+        left join patient on patient.patient_code = std.patient_code
+    where
+        std.created_at between '{start_datetime}' and '{end_datetime}'
+        and ((patient.id is null) or (patient.updated_at < std.created_at))    
+    """)
 
-    records = await StandardizedPatientRecord.filter(
-        patient_cpf=patient_cpf
-    ).prefetch_related('raw_source__data_source')
+    patient_mergeable_records = []
+    for std_patient in updated_patients[:5]:
 
-    results = []
-    for record in records:
-        result = MergeableRecord(
-            patient_code        = record.patient_code,
-            standardized_record = record,
-            source              = record.raw_source.data_source,
-            event_moment        = record.raw_source.source_updated_at,
-            ingestion_moment    = record.raw_source.updated_at
+        # Get All STD Records for the Patient
+        records = await StandardizedPatientRecord.filter(
+            patient_cpf=std_patient.patient_cpf
+        ).prefetch_related('raw_source__data_source')
+
+        # Format Records to MergeableRecord
+        mergeable_records = []
+        for record in records:
+            mergeable_records.append( 
+                MergeableRecord(
+                    standardized_record = record,
+                    source              = record.raw_source.data_source,
+                    event_moment        = record.raw_source.source_updated_at,
+                    ingestion_moment    = record.raw_source.updated_at,
+                ) 
+            )
+        
+        patient_mergeable_records.append(
+            PatientMergeableRecord(
+                patient_code        = std_patient.patient_code,
+                mergeable_records   = mergeable_records
+            )
         )
-        results.append( result )
 
-    return results
+    return patient_mergeable_records
 
 
 @router.post("/patientrecords", status_code=201)
