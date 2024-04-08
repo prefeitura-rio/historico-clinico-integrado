@@ -73,29 +73,38 @@ async def create_or_update_patient(
     # Reset de Address
     for instance in patient.address_patient_periods.related_objects:
         await instance.delete()
-    for address in patient_data.get("address_list"):
-        address_city = await City.get_or_none(
-            code                    = address['city'],
-            state__code             = address['state'],
-            state__country__code    = address['country']
-        )
-        address['patient']  = patient
-        address['city']     = address_city
-        await PatientAddress.create(**address)
+
+    address_list = patient_data.get("address_list", [])
+    if address_list is not None:
+        for address in address_list:
+            address_city = await City.get_or_none(
+                code                    = address['city'],
+                state__code             = address['state'],
+                state__country__code    = address['country']
+            )
+            address['patient']  = patient
+            address['city']     = address_city
+            await PatientAddress.create(**address)
 
     # Reset de Telecom
     for instance in patient.telecom_patient_periods.related_objects:
         await instance.delete()
-    for telecom in patient_data.get("telecom_list"):
-        telecom['patient']  = patient
-        await PatientTelecom.create(**telecom)
+
+    telecom_list = patient_data.get("telecom_list",[])
+    if telecom_list is not None:
+        for telecom in telecom_list:
+            telecom['patient']  = patient
+            await PatientTelecom.create(**telecom)
 
     # Reset de CNS
     for instance in patient.patient_cns.related_objects:
         await instance.delete()
-    for cns in patient_data.get("cns_list"):
-        cns['patient']  = patient
-        await PatientCns.create(**cns)
+
+    cns_list = patient_data.get("cns_list", [])
+    if cns_list is not None:
+        for cns in patient_data.get("cns_list", []):
+            cns['patient']  = patient
+            await PatientCns.create(**cns)
 
     return await PatientOutput.from_tortoise_orm(patient)
 
