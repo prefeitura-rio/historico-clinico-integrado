@@ -193,11 +193,15 @@ class StandardizedPatientConditionModel(BaseModel):
 PatientData = TypeVar('PatientData', StandardizedPatientRecordModel, StandardizedPatientConditionModel)
 
 class MergeableRecord(Generic[PatientData], BaseModel):
-    patient_code: str
     standardized_record: PatientData
     source: DataSourceModel
     event_moment: datetime
     ingestion_moment: datetime
+
+
+class PatientMergeableRecord(Generic[PatientData], BaseModel):
+    patient_code: str
+    mergeable_records: List[MergeableRecord[PatientData]]
 
 
 class RecordListModel(Generic[PatientData], BaseModel):
