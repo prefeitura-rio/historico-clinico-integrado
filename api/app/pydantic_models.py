@@ -105,9 +105,9 @@ class PatientModel(BaseModel):
     nationality: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
-    cns_list: List[CnsModel]
-    telecom_list: List[TelecomModel]
-    address_list: List[AddressModel]
+    cns_list: Optional[List[CnsModel]]
+    telecom_list: Optional[List[TelecomModel]]
+    address_list: Optional[List[AddressModel]]
 
 
 class CompletePatientModel(BaseModel):
