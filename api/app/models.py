@@ -141,8 +141,8 @@ class Nationality(Model):
 class PatientAddress(Model):
     id              = fields.IntField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="address_patient_periods")
-    use             = fields.CharField(max_length=32)
-    type            = fields.CharField(max_length=32)
+    use             = fields.CharField(max_length=32, null=True)
+    type            = fields.CharField(max_length=32, null=True)
     line            = fields.CharField(max_length=1024)
     city            = fields.ForeignKeyField("app.City", related_name="city")
     postal_code     = fields.CharField(max_length=8, null=True)
@@ -153,8 +153,8 @@ class PatientAddress(Model):
 class PatientTelecom(Model):
     id              = fields.IntField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="telecom_patient_periods")
-    system          = fields.CharField(max_length=32)
-    use             = fields.CharField(max_length=32)
+    system          = fields.CharField(max_length=32, null=True)
+    use             = fields.CharField(max_length=32, null=True)
     value           = fields.CharField(max_length=512)
     rank            = fields.IntField(null=True)
     period_start    = fields.DateField(null=True)

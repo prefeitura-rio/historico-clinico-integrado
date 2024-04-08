@@ -41,7 +41,8 @@ async def create_or_update_patient(
     )
     new_data = {
         'patient_cpf'           : patient_data.get('patient_cpf'),
-        'birth_date'            : patient_data.get('birth_date'),
+        'patient_code'          : patient_data.get('patient_code'),
+        'birth_date'            : patient_data.get('birth_date').isoformat(),
         'active'                : patient_data.get('active'),
         'protected_person'      : patient_data.get('protected_person'),
         'deceased'              : patient_data.get('deceased'),
@@ -68,6 +69,8 @@ async def create_or_update_patient(
         try:
             patient = await Patient.create(**new_data)
         except ValidationError as e:
+            return HTMLResponse(status_code=400, content=str(e))
+        except Exception as e:
             return HTMLResponse(status_code=400, content=str(e))
 
     # Reset de Address
