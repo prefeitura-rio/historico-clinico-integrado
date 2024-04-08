@@ -41,7 +41,8 @@ async def create_or_update_patient(
     )
     new_data = {
         'patient_cpf'           : patient_data.get('patient_cpf'),
-        'birth_date'            : patient_data.get('birth_date'),
+        'patient_code'          : patient_data.get('patient_code'),
+        'birth_date'            : patient_data.get('birth_date').isoformat(),
         'active'                : patient_data.get('active'),
         'protected_person'      : patient_data.get('protected_person'),
         'deceased'              : patient_data.get('deceased'),
@@ -69,6 +70,8 @@ async def create_or_update_patient(
             patient = await Patient.create(**new_data)
         except ValidationError as e:
             return HTMLResponse(status_code=400, content=str(e))
+        except Exception as e:
+            return HTMLResponse(status_code=400, content=str(e))
 
     # Reset de Address
     for instance in patient.address_patient_periods.related_objects:
@@ -82,8 +85,10 @@ async def create_or_update_patient(
                 state__code             = address['state'],
                 state__country__code    = address['country']
             )
-            address['patient']  = patient
-            address['city']     = address_city
+            address['patient']      = patient
+            address['city']         = address_city
+            address['period_start'] = address.get('start')
+            address['period_end']   = address.get('end')
             await PatientAddress.create(**address)
 
     # Reset de Telecom
@@ -93,7 +98,9 @@ async def create_or_update_patient(
     telecom_list = patient_data.get("telecom_list",[])
     if telecom_list is not None:
         for telecom in telecom_list:
-            telecom['patient']  = patient
+            telecom['patient']      = patient
+            telecom['period_start'] = telecom.get('start')
+            telecom['period_end']   = telecom.get('end')
             await PatientTelecom.create(**telecom)
 
     # Reset de CNS

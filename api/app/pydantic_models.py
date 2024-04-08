@@ -12,8 +12,8 @@ class AddressModel(BaseModel):
     country: str
     state: str
     postal_code: Optional[str]
-    period_start: date
-    period_end: Optional[date]
+    start: Optional[date]
+    end: Optional[date]
 
 
 class TelecomModel(BaseModel):
@@ -21,8 +21,8 @@ class TelecomModel(BaseModel):
     use: Optional[str]
     value: str
     rank: Optional[int]
-    period_start: date
-    period_end: Optional[date]
+    start: Optional[date]
+    end: Optional[date]
 
 
 class DataSourceModel(BaseModel):
