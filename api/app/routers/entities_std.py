@@ -21,7 +21,6 @@ from app.models import (
 
 router = APIRouter(prefix="/std", tags=["Entidades STD (Formato Standardized/Padronizado)"])
 
-
 StandardizedPatientRecordOutput = pydantic_model_creator(
     StandardizedPatientRecord, name="StandardizedPatientRecordOutput"
 )
