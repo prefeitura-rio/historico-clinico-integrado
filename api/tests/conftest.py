@@ -9,7 +9,7 @@ from app.db import TORTOISE_ORM
 from app.main import app
 from app.models import City, Country, DataSource, State, User, Gender, Patient, \
     ConditionCode, PatientCondition, PatientCns, Race, Nationality, PatientAddress, PatientTelecom, \
-    RawPatientRecord, RawPatientCondition
+    RawPatientRecord, RawPatientCondition, StandardizedPatientRecord
 from app.utils import password_hash
 
 
@@ -35,7 +35,12 @@ async def client():
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def initialize_tests(patient_cpf: str, other_patient_cpf:str):
+async def initialize_tests(
+    patient_cpf: str,
+    patient_code:str,
+    other_patient_cpf:str,
+    other_patient_code:str
+):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
@@ -76,7 +81,7 @@ async def initialize_tests(patient_cpf: str, other_patient_cpf:str):
     )
     patient = await Patient.create(
         name="João da Silva",
-        patient_code=f"{patient_cpf}.19970607",
+        patient_code=patient_code,
         patient_cpf=patient_cpf,
         birth_date="2021-01-01",
         active=True,
@@ -125,16 +130,25 @@ async def initialize_tests(patient_cpf: str, other_patient_cpf:str):
         category="encounter-diagnosis",
         date="2021-01-01"
     )
-    await RawPatientRecord.create(
+    raw_record = await RawPatientRecord.create(
         patient_cpf=other_patient_cpf,
-        patient_code=f"{other_patient_cpf}.19970607",
+        patient_code=other_patient_code,
         source_updated_at="2021-06-07T00:00:00Z",
         data={"name": "Maria"},
         data_source=datasource
     )
+    await StandardizedPatientRecord.create(
+        patient_cpf=other_patient_cpf,
+        patient_code=other_patient_code,
+        name="Maria",
+        gender='female',
+        birth_date="2021-01-01",
+        raw_source=raw_record,
+        created_at="2024-01-11T10:00:00Z",
+    )
     await RawPatientCondition.create(
         patient_cpf=other_patient_cpf,
-        patient_code=f"{other_patient_cpf}.19970607",
+        patient_code=other_patient_code,
         source_updated_at="2021-06-07T00:00:00Z",
         data={"cid": "A001"},
         data_source=datasource
@@ -162,12 +176,25 @@ async def patient_cpf():
     yield "38965996074"
 
 @pytest.fixture(scope="session")
+async def patient_code():
+    yield "38965996074.20210101"
+
+@pytest.fixture(scope="session")
 async def other_patient_cpf():
     yield "74663240020"
 
 @pytest.fixture(scope="session")
+async def other_patient_code():
+    yield "74663240020.20210101"
+
+@pytest.fixture(scope="session")
 async def patient_invalid_cpf():
     yield "11111111111"
+
+@pytest.fixture(scope="session")
+async def patient_invalid_code():
+    yield "11111111111.20210101"
+
 
 @pytest.fixture(scope="session")
 async def token(client: AsyncClient, username: str, password: str):
