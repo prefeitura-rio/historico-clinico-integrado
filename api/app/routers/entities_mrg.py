@@ -82,8 +82,10 @@ async def create_or_update_patient(
                 state__code             = address['state'],
                 state__country__code    = address['country']
             )
-            address['patient']  = patient
-            address['city']     = address_city
+            address['patient']      = patient
+            address['city']         = address_city
+            address['period_start'] = address.get('start')
+            address['period_end']   = address.get('end')
             await PatientAddress.create(**address)
 
     # Reset de Telecom
@@ -93,7 +95,9 @@ async def create_or_update_patient(
     telecom_list = patient_data.get("telecom_list",[])
     if telecom_list is not None:
         for telecom in telecom_list:
-            telecom['patient']  = patient
+            telecom['patient']      = patient
+            telecom['period_start'] = telecom.get('start')
+            telecom['period_end']   = telecom.get('end')
             await PatientTelecom.create(**telecom)
 
     # Reset de CNS
