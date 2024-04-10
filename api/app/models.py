@@ -104,6 +104,9 @@ class ConditionCode(Model):
     value       = fields.CharField(max_length=5, null=False)
     description = fields.CharField(max_length=512)
 
+    class Meta:
+        unique_together = ("type", "value")
+
 
 class City(Model):
     code    = fields.CharField(max_length=10, pk=True)
