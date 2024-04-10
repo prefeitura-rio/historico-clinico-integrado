@@ -77,7 +77,7 @@ async def get_raw_patientrecords_from_insertion_datetime(
 
 @router.post("/patientrecords", status_code=201)
 async def create_raw_patientrecords(
-    _: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
     raw_data: RawDataListModelInput,
 ) -> BulkInsertOutputModel:
 
@@ -95,7 +95,8 @@ async def create_raw_patientrecords(
                     patient_code=record.get('patient_code'),
                     source_updated_at=record.get('source_updated_at'),
                     data=record.get('data'),
-                    data_source=await DataSource.get(cnes=cnes)
+                    data_source=await DataSource.get(cnes=cnes),
+                    creator=current_user
                 )
             )
     except ValidationError as e:
@@ -166,7 +167,7 @@ async def get_raw_patientconditions_from_insertion_datetime(
 
 @router.post("/patientconditions", status_code=201)
 async def create_raw_patientconditions(
-    _: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
     raw_data: RawDataListModelInput,
 ) -> BulkInsertOutputModel:
     raw_data = raw_data.dict()
@@ -183,7 +184,8 @@ async def create_raw_patientconditions(
                     patient_code=condition.get('patient_code'),
                     source_updated_at=condition.get('source_updated_at'),
                     data=condition.get('data'),
-                    data_source=await DataSource.get(cnes=cnes)
+                    data_source=await DataSource.get(cnes=cnes),
+                    creator=current_user
                 )
             )
     except ValidationError as e:

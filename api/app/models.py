@@ -11,12 +11,13 @@ class RawPatientRecord(Model):
     patient_cpf          = fields.CharField(max_length=11, validators=[CPFValidator()], null=False)
     patient_code         = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False)
     data                 = fields.JSONField()
-    data_source          = fields.ForeignKeyField("app.DataSource", related_name="raw_record_creator", null=False)
+    data_source          = fields.ForeignKeyField("app.DataSource", related_name="raw_record_source", null=False)
     source_updated_at    = fields.DatetimeField(null=False)
     is_valid             = fields.BooleanField(null=True)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
+    creator  = fields.ForeignKeyField("app.User", related_name="record_creator", null=True)
 
     class Meta:
         table="raw__patientrecord"
@@ -28,12 +29,13 @@ class RawPatientCondition(Model):
     patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], null=False)
     patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False)
     data                = fields.JSONField()
-    data_source         = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_creator", null=False)
+    data_source         = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_source", null=False)
     source_updated_at   = fields.DatetimeField(null=False)
     is_valid            = fields.BooleanField(null=True)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
+    creator  = fields.ForeignKeyField("app.User", related_name="condition_creator", null=True)
 
     class Meta:
         table="raw__patientcondition"
