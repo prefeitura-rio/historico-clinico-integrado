@@ -82,7 +82,7 @@ class StandardizedPatientCondition(Model):
     clinical_status     = fields.CharEnumField(enum_type=ClinicalStatusEnum, null=True)
     category            = fields.CharEnumField(enum_type=CategoryEnum, null=True)
     date                = fields.DatetimeField()
-    raw_source          = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False, index=False)
+    raw_source          = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False, index=True)
     is_valid            = fields.BooleanField(null=True)
 
     created_at          = fields.DatetimeField(auto_now_add=True)
