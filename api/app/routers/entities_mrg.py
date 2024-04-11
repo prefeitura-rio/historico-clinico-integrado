@@ -28,132 +28,138 @@ PatientConditionOutput = pydantic_model_creator(
 
 @router.put("/patient")
 async def create_or_update_patient(
-    _           : Annotated[User, Depends(get_current_active_user)],
-    patient     : PatientModel,
-) -> PatientOutput:
+    _            : Annotated[User, Depends(get_current_active_user)],
+    patients     : list[PatientModel],
+) -> list[PatientOutput]:
 
-    patient_data = patient.dict()
+    updated_patients = []
+    for patient in patients:
+        patient_data = patient.dict()
 
-    birth_city = await City.get_or_none(
-        code                    = patient_data['birth_city'],
-        state__code             = patient_data['birth_state'],
-        state__country__code    = patient_data['birth_country']
-    )
-    new_data = {
-        'patient_cpf'           : patient_data.get('patient_cpf'),
-        'patient_code'          : patient_data.get('patient_code'),
-        'birth_date'            : patient_data.get('birth_date').isoformat(),
-        'active'                : patient_data.get('active'),
-        'protected_person'      : patient_data.get('protected_person'),
-        'deceased'              : patient_data.get('deceased'),
-        'deceased_date'         : patient_data.get('deceased_date'),
-        'name'                  : patient_data.get('name'),
-        'mother_name'           : patient_data.get('mother_name'),
-        'father_name'           : patient_data.get('father_name'),
-        'birth_city'            : birth_city,
-        'race'                  : await Race.get_or_none(slug = patient_data['race']),
-        'gender'                : await Gender.get_or_none(slug = patient_data['gender']),
-        'nationality'           : await Nationality.get_or_none(slug = patient_data['nationality']),
-    }
+        birth_city = await City.get_or_none(
+            code                    = patient_data['birth_city'],
+            state__code             = patient_data['birth_state'],
+            state__country__code    = patient_data['birth_country']
+        )
+        new_data = {
+            'patient_cpf'           : patient_data.get('patient_cpf'),
+            'patient_code'          : patient_data.get('patient_code'),
+            'birth_date'            : patient_data.get('birth_date').isoformat(),
+            'active'                : patient_data.get('active'),
+            'protected_person'      : patient_data.get('protected_person'),
+            'deceased'              : patient_data.get('deceased'),
+            'deceased_date'         : patient_data.get('deceased_date'),
+            'name'                  : patient_data.get('name'),
+            'mother_name'           : patient_data.get('mother_name'),
+            'father_name'           : patient_data.get('father_name'),
+            'birth_city'            : birth_city,
+            'race'                  : await Race.get_or_none(slug = patient_data['race']),
+            'gender'                : await Gender.get_or_none(slug = patient_data['gender']),
+            'nationality'           : await Nationality.get_or_none(slug = patient_data['nationality']),
+        }
 
-    try:
-        patient = await Patient.get_or_none(
-            patient_cpf = patient_data.get('patient_cpf')
-        ).prefetch_related('address_patient_periods','telecom_patient_periods', 'patient_cns')
-    except ValidationError as e:
-        return HTMLResponse(status_code=400, content=str(e))
-
-    if patient is not None:
-        await patient.update_from_dict(new_data).save()
-    else:
         try:
-            patient = await Patient.create(**new_data)
+            patient = await Patient.get_or_none(
+                patient_cpf = patient_data.get('patient_cpf')
+            ).prefetch_related('address_patient_periods','telecom_patient_periods', 'patient_cns')
         except ValidationError as e:
             return HTMLResponse(status_code=400, content=str(e))
-        except Exception as e:
-            return HTMLResponse(status_code=400, content=str(e))
 
-    # Reset de Address
-    for instance in patient.address_patient_periods.related_objects:
-        await instance.delete()
+        if patient is not None:
+            await patient.update_from_dict(new_data).save()
+        else:
+            try:
+                patient = await Patient.create(**new_data)
+            except ValidationError as e:
+                return HTMLResponse(status_code=400, content=str(e))
+            except Exception as e:
+                return HTMLResponse(status_code=400, content=str(e))
 
-    address_list = patient_data.get("address_list", [])
-    if address_list is not None:
-        for address in address_list:
-            address_city = await City.get_or_none(
-                code                    = address['city'],
-                state__code             = address['state'],
-                state__country__code    = address['country']
-            )
-            address['patient']      = patient
-            address['city']         = address_city
-            address['period_start'] = address.get('start')
-            address['period_end']   = address.get('end')
-            await PatientAddress.create(**address)
+        # Reset de Address
+        for instance in patient.address_patient_periods.related_objects:
+            await instance.delete()
 
-    # Reset de Telecom
-    for instance in patient.telecom_patient_periods.related_objects:
-        await instance.delete()
+        address_list = patient_data.get("address_list", [])
+        if address_list is not None:
+            for address in address_list:
+                address_city = await City.get_or_none(
+                    code                    = address['city'],
+                    state__code             = address['state'],
+                    state__country__code    = address['country']
+                )
+                address['patient']      = patient
+                address['city']         = address_city
+                address['period_start'] = address.get('start')
+                address['period_end']   = address.get('end')
+                await PatientAddress.create(**address)
 
-    telecom_list = patient_data.get("telecom_list",[])
-    if telecom_list is not None:
-        for telecom in telecom_list:
-            telecom['patient']      = patient
-            telecom['period_start'] = telecom.get('start')
-            telecom['period_end']   = telecom.get('end')
-            await PatientTelecom.create(**telecom)
+        # Reset de Telecom
+        for instance in patient.telecom_patient_periods.related_objects:
+            await instance.delete()
 
-    # Reset de CNS
-    for instance in patient.patient_cns.related_objects:
-        await instance.delete()
+        telecom_list = patient_data.get("telecom_list",[])
+        if telecom_list is not None:
+            for telecom in telecom_list:
+                telecom['patient']      = patient
+                telecom['period_start'] = telecom.get('start')
+                telecom['period_end']   = telecom.get('end')
+                await PatientTelecom.create(**telecom)
 
-    cns_list = patient_data.get("cns_list", [])
-    if cns_list is not None:
-        for cns in patient_data.get("cns_list", []):
-            cns['patient']  = patient
-            await PatientCns.create(**cns)
+        # Reset de CNS
+        for instance in patient.patient_cns.related_objects:
+            await instance.delete()
 
-    return await PatientOutput.from_tortoise_orm(patient)
+        cns_list = patient_data.get("cns_list", [])
+        if cns_list is not None:
+            for cns in patient_data.get("cns_list", []):
+                cns['patient']  = patient
+                await PatientCns.create(**cns)
+
+        patient_instance = await PatientOutput.from_tortoise_orm(patient)
+        updated_patients.append(patient_instance)
+
+    return updated_patients
 
 
 @router.put("/patientcondition")
 async def create_or_update_patientcondition(
-    _                   : Annotated[User, Depends(get_current_active_user)],
-    patientcondition    : PatientConditionListModel,
+    _                        : Annotated[User, Depends(get_current_active_user)],
+    patientcondition_list    : list[PatientConditionListModel],
 ) -> list[PatientConditionOutput]:
 
-    patient_data = patientcondition.dict()
+    inserted_conditions = []
+    for patientcondition in patientcondition_list:
+        patient_data = patientcondition.dict()
 
-    try:
-        patient = await Patient.get_or_none(
-            patient_cpf=patient_data.get('patient_cpf')
-        ).prefetch_related('patientconditions')
-    except ValidationError as e:
-        return HTMLResponse(status_code=400, content=str(e))
+        try:
+            patient = await Patient.get_or_none(
+                patient_cpf=patient_data.get('patient_cpf')
+            ).prefetch_related('patientconditions')
+        except ValidationError as e:
+            return HTMLResponse(status_code=400, content=str(e))
 
-    if patient is None:
-        return HTMLResponse(status_code=400, content="Patient doesn't exist")
+        if patient is None:
+            return HTMLResponse(status_code=400, content="Patient doesn't exist")
 
-    # Reset Patient Conditions
-    for instance in patient.patientconditions.related_objects:
-        await instance.delete()
+        # Reset Patient Conditions
+        for instance in patient.patientconditions.related_objects:
+            await instance.delete()
 
-    conditions = []
-    for condition in patient_data.get('conditions'):
-        condition_code = await ConditionCode.get_or_none(
-            value=condition.get('code')
-        )
-        if condition_code is None:
-            return HTMLResponse(
-                status_code=400,
-                content=f"Condition Code {condition.get('code')} doesn't exist"
+        for condition in patient_data.get('conditions'):
+            condition_code = await ConditionCode.get_or_none(
+                value=condition.get('code')
             )
-        condition['patient'] = patient
-        condition['condition_code'] = condition_code
-        new_condition = await PatientCondition.create(**condition)
-        conditions.append(new_condition)
+            if condition_code is None:
+                return HTMLResponse(
+                    status_code=400,
+                    content=f"Condition Code {condition.get('code')} doesn't exist"
+                )
+            condition['patient'] = patient
+            condition['condition_code'] = condition_code
+            new_condition = await PatientCondition.create(**condition)
+            inserted_conditions.append(new_condition)
 
-    return conditions
+    return inserted_conditions
 
 @router.get("/patient/{patient_cpf}")
 async def get_patient(
