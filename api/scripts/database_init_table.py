@@ -20,7 +20,7 @@ async def run():
         table, _ = await TableInitialization.get_or_create(
             table_name=tablemeta['table_name']
         )
-        
+
         if (table.last_version is None) or (tablemeta['version'] > table.last_version):
             table.last_version = tablemeta['version']
             await table.save()
@@ -54,7 +54,7 @@ async def run():
 
 
 if __name__ == "__main__":
-    
+
     run_async(
         run()
     )
