@@ -8,8 +8,8 @@ from app.validators import CPFValidator, PatientCodeValidator
 
 class RawPatientRecord(Model):
     id                   = fields.IntField(pk=True)
-    patient_cpf          = fields.CharField(max_length=11, validators=[CPFValidator()], null=False)
-    patient_code         = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False)
+    patient_cpf          = fields.CharField(max_length=11, validators=[CPFValidator()], null=False, index=True)
+    patient_code         = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False, index=True)
     data                 = fields.JSONField()
     data_source          = fields.ForeignKeyField("app.DataSource", related_name="raw_record_source", null=False)
     source_updated_at    = fields.DatetimeField(null=False)
@@ -26,8 +26,8 @@ class RawPatientRecord(Model):
 
 class RawPatientCondition(Model):
     id                  = fields.IntField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], null=False)
-    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False)
+    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], null=False, index=True)
+    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False, index=True)
     data                = fields.JSONField()
     data_source         = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_source", null=False)
     source_updated_at   = fields.DatetimeField(null=False)
@@ -44,8 +44,8 @@ class RawPatientCondition(Model):
 
 class StandardizedPatientRecord(Model):
     id                  = fields.IntField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()])
-    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()])
+    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], index=True)
+    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], index=True)
     birth_date          = fields.DateField()
     birth_city          = fields.ForeignKeyField("app.City", related_name="birthcity_stdpatients", null=True)
     birth_state         = fields.ForeignKeyField("app.State", related_name="birthstate_stdpatients", null=True)
@@ -75,8 +75,8 @@ class StandardizedPatientRecord(Model):
 
 class StandardizedPatientCondition(Model):
     id                  = fields.IntField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()])
-    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()])
+    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], index=True)
+    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], index=True)
     cid                 = fields.CharField(max_length=4)
     ciap                = fields.CharField(max_length=4, null=True)
     clinical_status     = fields.CharEnumField(enum_type=ClinicalStatusEnum, null=True)
