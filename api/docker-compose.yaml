@@ -16,7 +16,6 @@ services:
       - db
     environment:
       ENVIRONMENT: dev
-      IN_CONTAINER: true
       INFISICAL_ADDRESS: ${INFISICAL_ADDRESS}
       INFISICAL_TOKEN: ${INFISICAL_TOKEN}
     ports:

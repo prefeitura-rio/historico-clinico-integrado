@@ -11,12 +11,13 @@ class RawPatientRecord(Model):
     patient_cpf          = fields.CharField(max_length=11, validators=[CPFValidator()], null=False)
     patient_code         = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False)
     data                 = fields.JSONField()
-    data_source          = fields.ForeignKeyField("app.DataSource", related_name="raw_record_creator", null=False)
+    data_source          = fields.ForeignKeyField("app.DataSource", related_name="raw_record_source", null=False)
     source_updated_at    = fields.DatetimeField(null=False)
     is_valid             = fields.BooleanField(null=True)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
+    creator  = fields.ForeignKeyField("app.User", related_name="record_creator", null=True)
 
     class Meta:
         table="raw__patientrecord"
@@ -28,12 +29,13 @@ class RawPatientCondition(Model):
     patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], null=False)
     patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False)
     data                = fields.JSONField()
-    data_source         = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_creator", null=False)
+    data_source         = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_source", null=False)
     source_updated_at   = fields.DatetimeField(null=False)
     is_valid            = fields.BooleanField(null=True)
 
     created_at  = fields.DatetimeField(auto_now_add=True)
     updated_at  = fields.DatetimeField(auto_now=True)
+    creator  = fields.ForeignKeyField("app.User", related_name="condition_creator", null=True)
 
     class Meta:
         table="raw__patientcondition"
@@ -102,6 +104,9 @@ class ConditionCode(Model):
     value       = fields.CharField(max_length=5, null=False)
     description = fields.CharField(max_length=512)
 
+    class Meta:
+        unique_together = ("type", "value")
+
 
 class City(Model):
     code    = fields.CharField(max_length=10, pk=True)
@@ -141,8 +146,8 @@ class Nationality(Model):
 class PatientAddress(Model):
     id              = fields.IntField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="address_patient_periods")
-    use             = fields.CharField(max_length=32)
-    type            = fields.CharField(max_length=32)
+    use             = fields.CharField(max_length=32, null=True)
+    type            = fields.CharField(max_length=32, null=True)
     line            = fields.CharField(max_length=1024)
     city            = fields.ForeignKeyField("app.City", related_name="city")
     postal_code     = fields.CharField(max_length=8, null=True)
@@ -153,8 +158,8 @@ class PatientAddress(Model):
 class PatientTelecom(Model):
     id              = fields.IntField(pk=True)
     patient         = fields.ForeignKeyField("app.Patient", related_name="telecom_patient_periods")
-    system          = fields.CharField(max_length=32)
-    use             = fields.CharField(max_length=32)
+    system          = fields.CharField(max_length=32, null=True)
+    use             = fields.CharField(max_length=32, null=True)
     value           = fields.CharField(max_length=512)
     rank            = fields.IntField(null=True)
     period_start    = fields.DateField(null=True)

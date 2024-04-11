@@ -218,13 +218,33 @@ async def test_create_stdpatientrecords_invalid_cpf(
 
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
+async def test_read_updated_stdpatientrecords(
+    client      : AsyncClient,
+    token       : str
+):
+    response = await client.get(
+        "/std/patientrecords/updated",
+        params={
+            "start_datetime": "2024-01-11T00:00:00.000Z",
+            "end_datetime": "2024-01-12T00:00:00.000Z"
+        },
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+
+    json_response = response.json()
+    assert len(json_response) > 0
+
+@pytest.mark.anyio
+@pytest.mark.run(order=11)
 async def test_read_stdpatientrecords(
     client      : AsyncClient,
     token       : str,
-    patient_cpf : str
+    patient_code: str
 ):
     response = await client.get(
-        f"/std/patientrecords?patient_cpf={patient_cpf}",
+        f"/std/patientrecords/{patient_code}",
         headers={"Authorization": f"Bearer {token}"}
     )
 

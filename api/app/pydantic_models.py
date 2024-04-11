@@ -12,8 +12,8 @@ class AddressModel(BaseModel):
     country: str
     state: str
     postal_code: Optional[str]
-    period_start: date
-    period_end: Optional[date]
+    start: Optional[date]
+    end: Optional[date]
 
 
 class TelecomModel(BaseModel):
@@ -21,8 +21,8 @@ class TelecomModel(BaseModel):
     use: Optional[str]
     value: str
     rank: Optional[int]
-    period_start: date
-    period_end: Optional[date]
+    start: Optional[date]
+    end: Optional[date]
 
 
 class DataSourceModel(BaseModel):
@@ -105,9 +105,9 @@ class PatientModel(BaseModel):
     nationality: Optional[str]
     protected_person: Optional[bool]
     race: Optional[str]
-    cns_list: List[CnsModel]
-    telecom_list: List[TelecomModel]
-    address_list: List[AddressModel]
+    cns_list: Optional[List[CnsModel]]
+    telecom_list: Optional[List[TelecomModel]]
+    address_list: Optional[List[AddressModel]]
 
 
 class CompletePatientModel(BaseModel):
@@ -193,11 +193,15 @@ class StandardizedPatientConditionModel(BaseModel):
 PatientData = TypeVar('PatientData', StandardizedPatientRecordModel, StandardizedPatientConditionModel)
 
 class MergeableRecord(Generic[PatientData], BaseModel):
-    patient_code: str
     standardized_record: PatientData
     source: DataSourceModel
     event_moment: datetime
     ingestion_moment: datetime
+
+
+class PatientMergeableRecord(Generic[PatientData], BaseModel):
+    patient_code: str
+    mergeable_records: List[MergeableRecord[PatientData]]
 
 
 class RecordListModel(Generic[PatientData], BaseModel):
