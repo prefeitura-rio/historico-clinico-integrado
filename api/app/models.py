@@ -60,7 +60,7 @@ class StandardizedPatientRecord(Model):
     race                = fields.CharEnumField(enum_type=RaceEnum, null=True)
     gender              = fields.CharEnumField(enum_type=GenderEnum)
     nationality         = fields.CharEnumField(enum_type=NationalityEnum, null=True)
-    raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw", null=False)
+    raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw", null=False, index=True)
     cns_list            = fields.JSONField(null=True)
     address_list        = fields.JSONField(null=True)
     telecom_list        = fields.JSONField(null=True)
@@ -82,7 +82,7 @@ class StandardizedPatientCondition(Model):
     clinical_status     = fields.CharEnumField(enum_type=ClinicalStatusEnum, null=True)
     category            = fields.CharEnumField(enum_type=CategoryEnum, null=True)
     date                = fields.DatetimeField()
-    raw_source          = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False)
+    raw_source          = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False, index=True)
     is_valid            = fields.BooleanField(null=True)
 
     created_at          = fields.DatetimeField(auto_now_add=True)
@@ -214,3 +214,12 @@ class User(Model):
     is_superuser    = fields.BooleanField(default=False)
     created_at      = fields.DatetimeField(auto_now_add=True)
     updated_at      = fields.DatetimeField(auto_now=True)
+
+
+class TableInitialization(Model):
+    id           = fields.IntField(pk=True)
+    table_name   = fields.CharField(max_length=255, unique=True)
+    last_version = fields.IntField(null=True)
+
+    class Meta:
+        table="meta__tableinitialization"
