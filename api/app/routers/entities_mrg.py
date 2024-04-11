@@ -117,7 +117,7 @@ async def create_or_update_patient(
 
         patient_instance = await PatientOutput.from_tortoise_orm(patient)
         updated_patients.append(patient_instance)
-    
+
     return updated_patients
 
 
