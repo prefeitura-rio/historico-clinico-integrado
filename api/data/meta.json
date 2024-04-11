@@ -1,0 +1,51 @@
+[
+    {
+        "entity_model_name": "Gender",
+        "table_name": "gender",
+        "source_csv_name": "./data/gender.csv",
+        "conflict_columns": ["slug"],
+        "version": 1
+    },
+    {
+        "entity_model_name": "Race",
+        "table_name": "race",
+        "source_csv_name": "./data/race.csv",
+        "conflict_columns": ["slug"],
+        "version": 1
+    },
+    {
+        "entity_model_name": "Nationality",
+        "table_name": "nationality",
+        "source_csv_name": "./data/nationality.csv",
+        "conflict_columns": ["slug"],
+        "version": 1
+    },
+    {
+        "entity_model_name": "ConditionCode",
+        "table_name": "conditioncode",
+        "source_csv_name": "./data/conditioncode.csv",
+        "conflict_columns": ["type","value"],
+        "version": 1
+    },
+    {
+        "entity_model_name": "Country",
+        "table_name": "country",
+        "source_csv_name": "./data/country.csv",
+        "conflict_columns": ["code"],
+        "version": 1
+    },
+    {
+        "entity_model_name": "State",
+        "table_name": "state",
+        "source_csv_name": "./data/state.csv",
+        "conflict_columns": ["code"],
+        "version": 1
+    },
+    {
+        "entity_model_name": "City",
+        "table_name": "city",
+        "source_csv_name": "./data/city.csv",
+        "conflict_columns": ["code"],
+        "version": 1
+    }
+]

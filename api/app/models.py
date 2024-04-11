@@ -214,3 +214,12 @@ class User(Model):
     is_superuser    = fields.BooleanField(default=False)
     created_at      = fields.DatetimeField(auto_now_add=True)
     updated_at      = fields.DatetimeField(auto_now=True)
+
+
+class TableInitialization(Model):
+    id           = fields.IntField(pk=True)
+    table_name   = fields.CharField(max_length=255, unique=True)
+    last_version = fields.IntField(null=True)
+
+    class Meta:
+        table="meta__tableinitialization"
