@@ -69,7 +69,7 @@ async def test_create_or_update_mrgpatient_all_fields(
     response = await client.put(
         "/mrg/patient",
         headers={"Authorization": f"Bearer {token}"},
-        json={
+        json=[{
             "active": True,
             "birth_city": "00001",
             "birth_state": "00001",
@@ -114,11 +114,11 @@ async def test_create_or_update_mrgpatient_all_fields(
                     "period_end": "2013-07-11"
                 }
             ]
-        }
+        }]
     )
 
     assert response.status_code == 200
-    assert 'id' in response.json()
+    assert len( response.json() ) > 0
 
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
@@ -131,7 +131,7 @@ async def test_create_or_update_mrgpatient_mandatory_fields(
     response = await client.put(
         "/mrg/patient",
         headers={"Authorization": f"Bearer {token}"},
-        json={
+        json=[{
             "birth_city": "00001",
             "birth_state": "00001",
             "birth_country": "00001",
@@ -145,11 +145,11 @@ async def test_create_or_update_mrgpatient_mandatory_fields(
             "cns_list": [],
             "telecom_list": [],
             "address_list": []
-        }
+        }]
     )
 
     assert response.status_code == 200
-    assert 'id' in response.json()
+    assert len( response.json() ) > 0
 
 
 @pytest.mark.anyio
@@ -163,7 +163,7 @@ async def test_create_or_update_mrgpatient_invalid_cpf(
     response = await client.put(
         "/mrg/patient",
         headers={"Authorization": f"Bearer {token}"},
-        json={
+        json=[{
             "birth_city": "00001",
             "birth_state": "00001",
             "birth_country": "00001",
@@ -177,7 +177,7 @@ async def test_create_or_update_mrgpatient_invalid_cpf(
             "cns_list": [],
             "telecom_list": [],
             "address_list": []
-        }
+        }]
     )
 
     assert response.status_code == 400
