@@ -123,42 +123,43 @@ async def create_or_update_patient(
 
 @router.put("/patientcondition")
 async def create_or_update_patientcondition(
-    _                   : Annotated[User, Depends(get_current_active_user)],
-    patientcondition    : PatientConditionListModel,
+    _                        : Annotated[User, Depends(get_current_active_user)],
+    patientcondition_list    : list[PatientConditionListModel],
 ) -> list[PatientConditionOutput]:
 
-    patient_data = patientcondition.dict()
+    inserted_conditions = []
+    for patientcondition in patientcondition_list:
+        patient_data = patientcondition.dict()
 
-    try:
-        patient = await Patient.get_or_none(
-            patient_cpf=patient_data.get('patient_cpf')
-        ).prefetch_related('patientconditions')
-    except ValidationError as e:
-        return HTMLResponse(status_code=400, content=str(e))
+        try:
+            patient = await Patient.get_or_none(
+                patient_cpf=patient_data.get('patient_cpf')
+            ).prefetch_related('patientconditions')
+        except ValidationError as e:
+            return HTMLResponse(status_code=400, content=str(e))
 
-    if patient is None:
-        return HTMLResponse(status_code=400, content="Patient doesn't exist")
+        if patient is None:
+            return HTMLResponse(status_code=400, content="Patient doesn't exist")
 
-    # Reset Patient Conditions
-    for instance in patient.patientconditions.related_objects:
-        await instance.delete()
+        # Reset Patient Conditions
+        for instance in patient.patientconditions.related_objects:
+            await instance.delete()
 
-    conditions = []
-    for condition in patient_data.get('conditions'):
-        condition_code = await ConditionCode.get_or_none(
-            value=condition.get('code')
-        )
-        if condition_code is None:
-            return HTMLResponse(
-                status_code=400,
-                content=f"Condition Code {condition.get('code')} doesn't exist"
+        for condition in patient_data.get('conditions'):
+            condition_code = await ConditionCode.get_or_none(
+                value=condition.get('code')
             )
-        condition['patient'] = patient
-        condition['condition_code'] = condition_code
-        new_condition = await PatientCondition.create(**condition)
-        conditions.append(new_condition)
+            if condition_code is None:
+                return HTMLResponse(
+                    status_code=400,
+                    content=f"Condition Code {condition.get('code')} doesn't exist"
+                )
+            condition['patient'] = patient
+            condition['condition_code'] = condition_code
+            new_condition = await PatientCondition.create(**condition)
+            inserted_conditions.append(new_condition)
 
-    return conditions
+    return inserted_conditions
 
 @router.get("/patient/{patient_cpf}")
 async def get_patient(

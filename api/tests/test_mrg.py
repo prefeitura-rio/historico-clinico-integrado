@@ -189,7 +189,7 @@ async def test_create_or_update_mrgpatientcondition_all_fields(client: AsyncClie
     response = await client.put(
         "/mrg/patientcondition",
         headers={"Authorization": f"Bearer {token}"},
-        json={
+        json=[{
             "patient_cpf": patient_cpf,
             "patient_code": f"{patient_cpf}.20000111",
             "conditions": [
@@ -206,7 +206,7 @@ async def test_create_or_update_mrgpatientcondition_all_fields(client: AsyncClie
                 "date": "2024-01-11T17:38:15.850Z"
                 }
             ]
-        }
+        }]
     )
 
     assert response.status_code == 200
@@ -220,7 +220,7 @@ async def test_create_or_update_mrgpatientcondition_mandatory_fields(client: Asy
     response = await client.put(
         "/mrg/patientcondition",
         headers={"Authorization": f"Bearer {token}"},
-        json={
+        json=[{
             "patient_cpf": patient_cpf,
             "patient_code": f"{patient_cpf}.20000111",
             "conditions": [
@@ -229,7 +229,7 @@ async def test_create_or_update_mrgpatientcondition_mandatory_fields(client: Asy
                 "date": "2024-01-11T17:38:15.850Z"
                 }
             ]
-        }
+        }]
     )
 
     assert response.status_code == 200
@@ -247,7 +247,7 @@ async def test_create_or_update_mrgpatientcondition_invalid_cpf(
     response = await client.put(
         "/mrg/patientcondition",
         headers={"Authorization": f"Bearer {token}"},
-        json={
+        json=[{
             "patient_cpf": patient_invalid_cpf,
             "patient_code": f"{patient_invalid_cpf}.20000111",
             "conditions": [
@@ -256,7 +256,7 @@ async def test_create_or_update_mrgpatientcondition_invalid_cpf(
                 "date": "2024-01-11T17:38:15.850Z"
                 }
             ]
-        }
+        }]
     )
 
     assert response.status_code == 400
