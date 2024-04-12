@@ -13,7 +13,7 @@ fi
 echo "Running Migrations"
 aerich upgrade
 
-#echo "Atempt to create user"
+#echo "Atempt to create admin user"
 #python create_user.py --create-admin
 
 #echo "Initializing Database Data"
