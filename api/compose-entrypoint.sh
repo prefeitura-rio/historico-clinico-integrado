@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# ---------------------
+# Migration Handling
+# ---------------------
+
 # Run aerich init-db if migrations folder does not exist
 if [ ! -d "./migrations/app/" ]; then
     echo "Migrations folder does not exist, ASSUMING FIRST RUN"
@@ -10,14 +15,19 @@ else
     echo "./migrations/app/ folder exist, skipping initialization"
 fi
 
-echo "Running Migrations"
 aerich upgrade
 
-#echo "Atempt to create user"
-#python create_user.py --create-admin
+# ----------------------
+# Data Initialization
+# ----------------------
 
-#echo "Initializing Database Data"
-#python database_init_table.py
+# Creating admin user (in background)
+python create_user.py --create-admin &
 
-# Start server
+# Verify/create data in constant tables (in background)
+python database_init_table.py &
+
+# ----------------------
+# Begin Server
+# ----------------------
 uvicorn app.main:app --host 0.0.0.0 --port 80
