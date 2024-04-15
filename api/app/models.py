@@ -15,8 +15,8 @@ class RawPatientRecord(Model):
     source_updated_at    = fields.DatetimeField(null=False)
     is_valid             = fields.BooleanField(null=True)
 
-    created_at  = fields.DatetimeField(auto_now_add=True)
-    updated_at  = fields.DatetimeField(auto_now=True)
+    created_at  = fields.DatetimeField(auto_now_add=True, index=True)
+    updated_at  = fields.DatetimeField(auto_now=True, index=True)
     creator  = fields.ForeignKeyField("app.User", related_name="record_creator", null=True)
 
     class Meta:
@@ -33,8 +33,8 @@ class RawPatientCondition(Model):
     source_updated_at   = fields.DatetimeField(null=False)
     is_valid            = fields.BooleanField(null=True)
 
-    created_at  = fields.DatetimeField(auto_now_add=True)
-    updated_at  = fields.DatetimeField(auto_now=True)
+    created_at  = fields.DatetimeField(auto_now_add=True, index=True)
+    updated_at  = fields.DatetimeField(auto_now=True, index=True)
     creator  = fields.ForeignKeyField("app.User", related_name="condition_creator", null=True)
 
     class Meta:
@@ -66,8 +66,8 @@ class StandardizedPatientRecord(Model):
     telecom_list        = fields.JSONField(null=True)
     is_valid            = fields.BooleanField(null=True)
 
-    created_at          = fields.DatetimeField(auto_now_add=True)
-    updated_at          = fields.DatetimeField(auto_now=True)
+    created_at          = fields.DatetimeField(auto_now_add=True, index=True)
+    updated_at          = fields.DatetimeField(auto_now=True, index=True)
 
     class Meta:
         table="std__patientrecord"
@@ -85,8 +85,8 @@ class StandardizedPatientCondition(Model):
     raw_source          = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False, index=True)
     is_valid            = fields.BooleanField(null=True)
 
-    created_at          = fields.DatetimeField(auto_now_add=True)
-    updated_at          = fields.DatetimeField(auto_now=True)
+    created_at          = fields.DatetimeField(auto_now_add=True, index=True)
+    updated_at          = fields.DatetimeField(auto_now=True, index=True)
 
     class Meta:
         table="std__patientcondition"
@@ -94,7 +94,7 @@ class StandardizedPatientCondition(Model):
 
 class DataSource(Model):
     cnes        = fields.CharField(max_length=50, unique=True, pk=True)
-    system      = fields.CharEnumField(SystemEnum)
+    system      = fields.CharEnumField(SystemEnum, index=True)
     description = fields.CharField(max_length=512)
 
 
