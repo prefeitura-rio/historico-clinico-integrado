@@ -121,7 +121,6 @@ jobs:
             BUILDKIT_INLINE_CACHE=1
 
       - name: Google Auth
-        id: auth
         uses: 'google-github-actions/auth@v0'
         with:
           credentials_json: '${{ env.GCP_SA_KEY }}'
