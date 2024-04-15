@@ -81,9 +81,6 @@ jobs:
       id-token: write
       contents: read
     env:
-      DOCKERHUB_REPOSITORY: prontuario-integrado
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      DOCKERHUB_USERNAME: prefeiturario
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
       GCR_SERVICE: ${{ secrets.GCR_SERVICE }}
@@ -94,12 +91,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Docker Auth
-        id: docker-auth
-        uses: docker/login-action@v2
+      - id: auth
+        name: Login to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_TOKEN }}
+          credentials_json: ${{ secrets.GCP_SA_KEY_PLAIN }}
+          token_format: access_token
+          service_account: github-actions@rj-sms.iam.gserviceaccount.com
+
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v1
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
       - name: Build and push image
         uses: docker/build-push-action@v2
@@ -108,8 +113,7 @@ jobs:
           file: api/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
-            ${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}:latest
+            us-central1-docker.pkg.dev/rj-sms/docker/prontuario-integrado:${{ github.sha }}
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -128,7 +132,7 @@ jobs:
         with:
           service: ${{ env.GCR_SERVICE }}-production
           region: ${{ env.GCR_REGION }}
-          image: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
+          image: us-central1-docker.pkg.dev/rj-sms/docker/prontuario-integrado:${{ github.sha }}
           flags: '--add-cloudsql-instances=rj-sms:us-central1:postgres --port=80 --allow-unauthenticated --concurrency=10'
           secrets: |
             ENVIRONMENT=PRONTUARIO_INTEGRADO_PROD_ENVIRONMENT:latest
@@ -141,7 +145,7 @@ jobs:
         with:
           service: ${{ env.GCR_SERVICE }}-staging
           region: ${{ env.GCR_REGION }}
-          image: docker.io/${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKERHUB_REPOSITORY }}:${{ github.sha }}
+          image: us-central1-docker.pkg.dev/rj-sms/docker/prontuario-integrado:${{ github.sha }}
           flags: '--add-cloudsql-instances=rj-sms:us-central1:postgres --port=80 --allow-unauthenticated --concurrency=10'
           secrets: |
             ENVIRONMENT=PRONTUARIO_INTEGRADO_STAGING_ENVIRONMENT:latest
