@@ -8,15 +8,15 @@ from app.validators import CPFValidator, PatientCodeValidator
 
 class RawPatientRecord(Model):
     id                   = fields.IntField(pk=True)
-    patient_cpf          = fields.CharField(max_length=11, validators=[CPFValidator()], null=False)
-    patient_code         = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False)
+    patient_cpf          = fields.CharField(max_length=11, validators=[CPFValidator()], null=False, index=True)
+    patient_code         = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False, index=True)
     data                 = fields.JSONField()
     data_source          = fields.ForeignKeyField("app.DataSource", related_name="raw_record_source", null=False)
     source_updated_at    = fields.DatetimeField(null=False)
     is_valid             = fields.BooleanField(null=True)
 
-    created_at  = fields.DatetimeField(auto_now_add=True)
-    updated_at  = fields.DatetimeField(auto_now=True)
+    created_at  = fields.DatetimeField(auto_now_add=True, index=True)
+    updated_at  = fields.DatetimeField(auto_now=True, index=True)
     creator  = fields.ForeignKeyField("app.User", related_name="record_creator", null=True)
 
     class Meta:
@@ -26,15 +26,15 @@ class RawPatientRecord(Model):
 
 class RawPatientCondition(Model):
     id                  = fields.IntField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], null=False)
-    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False)
+    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], null=False, index=True)
+    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], null=False, index=True)
     data                = fields.JSONField()
     data_source         = fields.ForeignKeyField("app.DataSource", related_name="raw_condition_source", null=False)
     source_updated_at   = fields.DatetimeField(null=False)
     is_valid            = fields.BooleanField(null=True)
 
-    created_at  = fields.DatetimeField(auto_now_add=True)
-    updated_at  = fields.DatetimeField(auto_now=True)
+    created_at  = fields.DatetimeField(auto_now_add=True, index=True)
+    updated_at  = fields.DatetimeField(auto_now=True, index=True)
     creator  = fields.ForeignKeyField("app.User", related_name="condition_creator", null=True)
 
     class Meta:
@@ -44,8 +44,8 @@ class RawPatientCondition(Model):
 
 class StandardizedPatientRecord(Model):
     id                  = fields.IntField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()])
-    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()])
+    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], index=True)
+    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], index=True)
     birth_date          = fields.DateField()
     birth_city          = fields.ForeignKeyField("app.City", related_name="birthcity_stdpatients", null=True)
     birth_state         = fields.ForeignKeyField("app.State", related_name="birthstate_stdpatients", null=True)
@@ -60,14 +60,14 @@ class StandardizedPatientRecord(Model):
     race                = fields.CharEnumField(enum_type=RaceEnum, null=True)
     gender              = fields.CharEnumField(enum_type=GenderEnum)
     nationality         = fields.CharEnumField(enum_type=NationalityEnum, null=True)
-    raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw", null=False)
+    raw_source          = fields.ForeignKeyField("app.RawPatientRecord", related_name="std_record_raw", null=False, index=True)
     cns_list            = fields.JSONField(null=True)
     address_list        = fields.JSONField(null=True)
     telecom_list        = fields.JSONField(null=True)
     is_valid            = fields.BooleanField(null=True)
 
-    created_at          = fields.DatetimeField(auto_now_add=True)
-    updated_at          = fields.DatetimeField(auto_now=True)
+    created_at          = fields.DatetimeField(auto_now_add=True, index=True)
+    updated_at          = fields.DatetimeField(auto_now=True, index=True)
 
     class Meta:
         table="std__patientrecord"
@@ -75,18 +75,18 @@ class StandardizedPatientRecord(Model):
 
 class StandardizedPatientCondition(Model):
     id                  = fields.IntField(pk=True)
-    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()])
-    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()])
+    patient_cpf         = fields.CharField(max_length=11, validators=[CPFValidator()], index=True)
+    patient_code        = fields.CharField(max_length=20, validators=[PatientCodeValidator()], index=True)
     cid                 = fields.CharField(max_length=4)
     ciap                = fields.CharField(max_length=4, null=True)
     clinical_status     = fields.CharEnumField(enum_type=ClinicalStatusEnum, null=True)
     category            = fields.CharEnumField(enum_type=CategoryEnum, null=True)
     date                = fields.DatetimeField()
-    raw_source          = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False)
+    raw_source          = fields.ForeignKeyField("app.RawPatientCondition", related_name="std_condition_raw", null=False, index=True)
     is_valid            = fields.BooleanField(null=True)
 
-    created_at          = fields.DatetimeField(auto_now_add=True)
-    updated_at          = fields.DatetimeField(auto_now=True)
+    created_at          = fields.DatetimeField(auto_now_add=True, index=True)
+    updated_at          = fields.DatetimeField(auto_now=True, index=True)
 
     class Meta:
         table="std__patientcondition"
@@ -94,7 +94,7 @@ class StandardizedPatientCondition(Model):
 
 class DataSource(Model):
     cnes        = fields.CharField(max_length=50, unique=True, pk=True)
-    system      = fields.CharEnumField(SystemEnum)
+    system      = fields.CharEnumField(SystemEnum, index=True)
     description = fields.CharField(max_length=512)
 
 
@@ -214,3 +214,12 @@ class User(Model):
     is_superuser    = fields.BooleanField(default=False)
     created_at      = fields.DatetimeField(auto_now_add=True)
     updated_at      = fields.DatetimeField(auto_now=True)
+
+
+class TableInitialization(Model):
+    id           = fields.IntField(pk=True)
+    table_name   = fields.CharField(max_length=255, unique=True)
+    last_version = fields.IntField(null=True)
+
+    class Meta:
+        table="meta__tableinitialization"
