@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
 from tortoise.contrib.pydantic import pydantic_model_creator
-from tortoise.exceptions import ValidationError
+from tortoise.exceptions import ValidationError, IntegrityError
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import PatientModel, PatientConditionListModel, CompletePatientModel
@@ -113,7 +113,15 @@ async def create_or_update_patient(
         if cns_list is not None:
             for cns in patient_data.get("cns_list", []):
                 cns['patient']  = patient
-                await PatientCns.create(**cns)
+                try:
+                    await PatientCns.create(**cns)
+                except IntegrityError:
+                    # CNS already exists:
+                    #  - Don't trust both CNS
+                    #  - Delete the old CNS
+                    patient_cns = await PatientCns.get_or_none(value=cns['value'])
+                    if patient_cns:
+                        await patient_cns.delete()
 
         patient_instance = await PatientOutput.from_tortoise_orm(patient)
         updated_patients.append(patient_instance)
