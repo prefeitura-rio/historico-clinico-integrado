@@ -115,7 +115,7 @@ async def create_or_update_patient(
                 cns['patient']  = patient
                 try:
                     await PatientCns.create(**cns)
-                except IntegrityError as e:
+                except IntegrityError:
                     # CNS already exists:
                     #  - Don't trust both CNS
                     #  - Delete the old CNS
