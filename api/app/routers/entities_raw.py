@@ -1,88 +1,82 @@
 # -*- coding: utf-8 -*-
-import datetime
-from typing import Annotated
-
+from datetime import (
+    datetime as dt,
+    timedelta as td,
+)
+from typing import Annotated, Literal
 import asyncpg
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
-
-from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError
 
 from app.pydantic_models import (
-    RawDataListModelInput, BulkInsertOutputModel
+    RawDataListModel,
+    BulkInsertOutputModel,
+    RawDataModel
 )
 from app.dependencies import get_current_active_user
 from app.models import (
-    User, RawPatientRecord, RawPatientCondition, DataSource
+    User,
+    RawPatientRecord,
+    RawPatientCondition,
+    DataSource,
+    RawEncounter
 )
 
 
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
-
-RawPatientConditionOutput = pydantic_model_creator(
-    RawPatientCondition, name="RawPatientConditionOutput",
-    exclude=("is_valid",)
-)
-
-RawPatientRecordOutput = pydantic_model_creator(
-    RawPatientRecord, name="RawPatientRecordOutput",
-    exclude=("is_valid",)
-)
+entity_from_name = {
+    "patientrecords": RawPatientRecord,
+    "patientconditions": RawPatientCondition,
+    "encounter": RawEncounter
+}
 
 
-@router.get("/patientrecords/fromEventDatetime")
-async def get_raw_patientrecords_from_event_datetime(
+@router.get("/{entity_name}/{filter_type}")
+async def get_raw_data(
     _: Annotated[User, Depends(get_current_active_user)],
-    start_datetime: datetime.datetime = datetime.datetime.now() -
-    datetime.timedelta(hours=1),
-    end_datetime: datetime.datetime = datetime.datetime.now(),
-    datasource_system: str = None,
-) -> list[RawPatientRecordOutput]:
+    entity_name: Literal["patientrecords", "patientconditions", "encounter"],
+    filter_type: Literal["fromEventDatetime", "fromInsertionDatetime"],
+    start_datetime: dt = dt.now() - td(hours=1),
+    end_datetime: dt = dt.now(),
+    datasource_system: Literal["vitai", "vitacare", "smsrio"] = None,
+) -> list[RawDataModel]:
 
-    filtered = RawPatientRecord.filter(
-        source_updated_at__gte=start_datetime,
-        source_updated_at__lt=end_datetime,
-        is_valid__not=True
-    )
+    Entity = entity_from_name.get(entity_name)
+
+    if filter_type == "fromEventDatetime":
+        filtered = Entity.filter(
+            source_updated_at__gte=start_datetime,
+            source_updated_at__lt=end_datetime,
+            is_valid__not=True,
+        )
+    elif filter_type == "fromInsertionDatetime":
+        filtered = Entity.filter(
+            updated_at__gte=start_datetime, updated_at__lt=end_datetime, is_valid__not=True
+        )
+    else:
+        return HTMLResponse(status_code=400, content="Invalid filter type")
 
     if datasource_system is not None:
-        filtered = filtered.filter(
-            data_source__system=datasource_system
-        )
-    return await RawPatientRecordOutput.from_queryset(filtered)
+        filtered = filtered.filter(data_source__system=datasource_system)
 
-@router.get("/patientrecords/fromInsertionDatetime")
-async def get_raw_patientrecords_from_insertion_datetime(
-    _: Annotated[User, Depends(get_current_active_user)],
-    start_datetime: datetime.datetime = datetime.datetime.now() -
-    datetime.timedelta(hours=1),
-    end_datetime: datetime.datetime = datetime.datetime.now(),
-    datasource_system: str = None,
-) -> list[RawPatientRecordOutput]:
+    result = await filtered
 
-    filtered = RawPatientRecord.filter(
-        updated_at__gte=start_datetime,
-        updated_at__lt=end_datetime,
-        is_valid__not=True
-    )
-
-    if datasource_system is not None:
-        filtered = filtered.filter(
-            data_source__system=datasource_system
-        )
-    return await RawPatientRecordOutput.from_queryset(filtered)
+    result = [RawDataModel(**dict(record)) for record in result]
+    return result
 
 
-@router.post("/patientrecords", status_code=201)
-async def create_raw_patientrecords(
+@router.post("/{entity_name}", status_code=201)
+async def create_raw_data(
+    entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     current_user: Annotated[User, Depends(get_current_active_user)],
-    raw_data: RawDataListModelInput,
+    raw_data: RawDataListModel,
 ) -> BulkInsertOutputModel:
 
-    raw_data = raw_data.dict()
+    Entity = entity_from_name.get(entity_name)
 
+    raw_data = raw_data.dict()
     cnes = raw_data.pop("cnes")
     records = raw_data.pop("data_list")
 
@@ -90,121 +84,30 @@ async def create_raw_patientrecords(
         records_to_create = []
         for record in records:
             records_to_create.append(
-                RawPatientRecord(
-                    patient_cpf=record.get('patient_cpf'),
-                    patient_code=record.get('patient_code'),
-                    source_updated_at=record.get('source_updated_at'),
-                    data=record.get('data'),
+                Entity(
+                    patient_cpf=record.get("patient_cpf"),
+                    patient_code=record.get("patient_code"),
+                    source_updated_at=record.get("source_updated_at"),
+                    source_id=record.get("source_id"),
+                    data=record.get("data"),
                     data_source=await DataSource.get(cnes=cnes),
-                    creator=current_user
+                    creator=current_user,
                 )
             )
     except ValidationError as e:
         return HTMLResponse(status_code=400, content=str(e))
     try:
-        new_records = await RawPatientRecord.bulk_create(
-            records_to_create,
-            ignore_conflicts=True
-        )
-        return {
-            'count': len(new_records)
-        }
+        new_records = await Entity.bulk_create(records_to_create, ignore_conflicts=True)
+        return {"count": len(new_records)}
     except asyncpg.exceptions.DeadlockDetectedError as e:
         return HTMLResponse(status_code=400, content=str(e))
 
 
-@router.post("/patientrecords/setAsInvalid", status_code=200)
+@router.post("/{entity_name}/setAsInvalid", status_code=200)
 async def set_as_invalid_flag_records(
     _: Annotated[User, Depends(get_current_active_user)],
+    entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     raw_record_id_list: list[str],
 ):
-    await RawPatientRecord.filter(id__in=raw_record_id_list).update(is_valid=False)
-
-
-@router.get("/patientconditions/fromEventDatetime")
-async def get_raw_patientconditions_from_event_datetime(
-    _: Annotated[User, Depends(get_current_active_user)],
-    start_datetime: datetime.datetime = datetime.datetime.now() -
-    datetime.timedelta(hours=1),
-    end_datetime: datetime.datetime = datetime.datetime.now(),
-    datasource_system: str = None,
-) -> list[RawPatientConditionOutput]:
-
-    filtered = RawPatientCondition.filter(
-        source_updated_at__gte=start_datetime,
-        source_updated_at__lt=end_datetime,
-        is_valid__not=True
-    )
-
-    if datasource_system is not None:
-        filtered = filtered.filter(
-            data_source__system=datasource_system
-        )
-    return await RawPatientConditionOutput.from_queryset(filtered)
-
-@router.get("/patientconditions/fromInsertionDatetime")
-async def get_raw_patientconditions_from_insertion_datetime(
-    _: Annotated[User, Depends(get_current_active_user)],
-    start_datetime: datetime.datetime = datetime.datetime.now() -
-    datetime.timedelta(hours=1),
-    end_datetime: datetime.datetime = datetime.datetime.now(),
-    datasource_system: str = None,
-) -> list[RawPatientConditionOutput]:
-
-    filtered = RawPatientCondition.filter(
-        updated_at__gte=start_datetime,
-        updated_at__lt=end_datetime,
-        is_valid__not=True
-    )
-
-    if datasource_system is not None:
-        filtered = filtered.filter(
-            data_source__system=datasource_system
-        )
-    return await RawPatientConditionOutput.from_queryset(filtered)
-
-
-
-@router.post("/patientconditions", status_code=201)
-async def create_raw_patientconditions(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    raw_data: RawDataListModelInput,
-) -> BulkInsertOutputModel:
-    raw_data = raw_data.dict()
-
-    cnes = raw_data.pop("cnes")
-    conditions = raw_data.pop("data_list")
-
-    try:
-        conditions_to_create = []
-        for condition in conditions:
-            conditions_to_create.append(
-                RawPatientCondition(
-                    patient_cpf=condition.get('patient_cpf'),
-                    patient_code=condition.get('patient_code'),
-                    source_updated_at=condition.get('source_updated_at'),
-                    data=condition.get('data'),
-                    data_source=await DataSource.get(cnes=cnes),
-                    creator=current_user
-                )
-            )
-    except ValidationError as e:
-        return HTMLResponse(status_code=400, content=str(e))
-    try:
-        new_conditions = await RawPatientCondition.bulk_create(
-            conditions_to_create,
-            ignore_conflicts=True
-        )
-        return {
-            'count': len(new_conditions)
-        }
-    except asyncpg.exceptions.DeadlockDetectedError as e:
-        return HTMLResponse(status_code=400, content=str(e))
-
-
-@router.post("/patientconditions/setAsInvalid", status_code=200)
-async def set_as_invalid_flag_conditions(
-    _: Annotated[User, Depends(get_current_active_user)],
-    raw_condition_id_list: list[str],
-):
-    await RawPatientCondition.filter(id__in=raw_condition_id_list).update(is_valid=False)
+    Entity = entity_from_name.get(entity_name)
+    await Entity.filter(id__in=raw_record_id_list).update(is_valid=False)
