@@ -236,23 +236,6 @@ async def test_read_updated_stdpatientrecords(
     json_response = response.json()
     assert len(json_response) > 0
 
-@pytest.mark.anyio
-@pytest.mark.run(order=11)
-async def test_read_stdpatientrecords(
-    client      : AsyncClient,
-    token       : str,
-    patient_code: str
-):
-    response = await client.get(
-        f"/std/patientrecords/{patient_code}",
-        headers={"Authorization": f"Bearer {token}"}
-    )
-
-    assert response.status_code == 200
-
-    json_response = response.json()
-    assert len(json_response) > 0
-
 
 @pytest.mark.anyio
 @pytest.mark.run(order=10)

@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import datetime
+import json
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
+from tortoise import Tortoise
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError, DoesNotExist
 
@@ -29,50 +32,42 @@ StandardizedPatientConditionOutput = pydantic_model_creator(
 )
 
 @router.get("/patientrecords/updated")
-async def get_updated_patientrecords(
+async def get_patientrecords_of_updated_patients(
     _           : Annotated[User, Depends(get_current_active_user)],
     start_datetime: datetime.datetime = datetime.datetime.now() - datetime.timedelta(hours=1),
     end_datetime: datetime.datetime = datetime.datetime.now()
-) -> list[ str ]:
-    updated_patients = await StandardizedPatientRecord.raw(f"""
-    select std.patient_code
-    from std__patientrecord std
-        left join patient on patient.patient_code = std.patient_code
-    where
-        std.created_at between '{start_datetime}' and '{end_datetime}'
-        and ((patient.id is null) or (patient.updated_at < std.created_at))
-    """)
+) -> list[PatientMergeableRecord[StandardizedPatientRecordModel]]:
+    conn = Tortoise.get_connection("default")
 
-    updated_patientcodes = [patient.patient_code for patient in updated_patients]
-    return updated_patientcodes
-
-@router.get("/patientrecords/{patient_code}")
-async def get_standardized_patientrecords(
-    _           : Annotated[User, Depends(get_current_active_user)],
-    patient_code: str,
-) -> PatientMergeableRecord[StandardizedPatientRecordModel]:
-
-    # Get All STD Records for the Patient
-    records = await StandardizedPatientRecord.filter(
-        patient_code=patient_code,
-    ).prefetch_related('raw_source__data_source')
-
-    # Format Records to MergeableRecord
-    mergeable_records = []
-    for record in records:
-        mergeable_records.append(
-            MergeableRecord(
-                standardized_record = record,
-                source              = record.raw_source.data_source,
-                event_moment        = record.raw_source.source_updated_at,
-                ingestion_moment    = record.raw_source.updated_at,
+    results = await conn.execute_query_dict(
+        f"""
+        select tmp.patient_code, json_agg(tmp.*) as mergeable_records
+        from (
+            select
+                std.patient_code,
+                row_to_json(std) as standardized_record,
+                row_to_json(ds) as source,
+                raw.source_updated_at as event_moment,
+                raw.updated_at as ingestion_moment
+            from std__patientrecord std
+                inner join public.raw__patientrecord raw on std.raw_source_id = raw.id
+                inner join datasource ds on raw.data_source_id = ds.cnes
+            where std.patient_code in (
+                select std.patient_code
+                from std__patientrecord std
+                        left join patient on patient.patient_code = std.patient_code
+                where std.created_at between '{start_datetime}' and '{end_datetime}'
+                and ((patient.id is null) or (patient.updated_at < std.created_at))
             )
-        )
-
-    return PatientMergeableRecord(
-        patient_code        = patient_code,
-        mergeable_records   = mergeable_records
+        ) tmp
+        group by tmp.patient_code
+        """
     )
+    for result in results:
+        result['mergeable_records'] = json.loads(result['mergeable_records'])
+
+    return results
+
 
 @router.post("/patientrecords", status_code=201)
 async def create_standardized_patientrecords(
