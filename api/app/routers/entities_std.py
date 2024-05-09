@@ -18,7 +18,7 @@ from app.pydantic_models import (
 )
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
-    RawPatientCondition, RawPatientRecord, City, ConditionCode, DataSource
+    RawPatientCondition, RawPatientRecord, City, ConditionCode
 )
 
 
