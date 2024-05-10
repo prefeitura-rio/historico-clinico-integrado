@@ -22,7 +22,8 @@ from app.models import (
 )
 
 
-router = APIRouter(prefix="/std", tags=["Entidades STD (Formato Standardized/Padronizado)"])
+router = APIRouter(
+    prefix="/std", tags=["Entidades STD (Formato Standardized/Padronizado)"])
 
 StandardizedPatientRecordOutput = pydantic_model_creator(
     StandardizedPatientRecord, name="StandardizedPatientRecordOutput"
@@ -31,10 +32,12 @@ StandardizedPatientConditionOutput = pydantic_model_creator(
     StandardizedPatientCondition, name="StandardizedPatientConditionOutput"
 )
 
+
 @router.get("/patientrecords/updated")
 async def get_patientrecords_of_updated_patients(
-    _           : Annotated[User, Depends(get_current_active_user)],
-    start_datetime: datetime.datetime = datetime.datetime.now() - datetime.timedelta(hours=1),
+    _: Annotated[User, Depends(get_current_active_user)],
+    start_datetime: datetime.datetime = datetime.datetime.now() -
+    datetime.timedelta(hours=1),
     end_datetime: datetime.datetime = datetime.datetime.now()
 ) -> list[PatientMergeableRecord[StandardizedPatientRecordModel]]:
     conn = Tortoise.get_connection("default")
@@ -73,8 +76,8 @@ async def get_patientrecords_of_updated_patients(
 
 @router.post("/patientrecords", status_code=201)
 async def create_standardized_patientrecords(
-    _           : Annotated[User, Depends(get_current_active_user)],
-    records     : list[StandardizedPatientRecordModel],
+    _: Annotated[User, Depends(get_current_active_user)],
+    records: list[StandardizedPatientRecordModel],
 ) -> BulkInsertOutputModel:
 
     records_to_create = []
@@ -110,14 +113,14 @@ async def create_standardized_patientrecords(
             except DoesNotExist as e:
                 return HTMLResponse(status_code=404, content=f"Birth City: {e}")
 
-            record['birth_city']    = birth_city
-            record['birth_state']   = birth_city.state
+            record['birth_city'] = birth_city
+            record['birth_state'] = birth_city.state
             record['birth_country'] = birth_city.state.country
 
         record['raw_source'] = raw_source
 
         try:
-            records_to_create.append( StandardizedPatientRecord(**record) )
+            records_to_create.append(StandardizedPatientRecord(**record))
         except ValidationError as e:
             return HTMLResponse(status_code=400, content=str(e))
         except ValueError as e:
@@ -137,9 +140,9 @@ async def create_standardized_patientrecords(
 
 @router.get("/patientconditions")
 async def get_standardized_patientconditions(
-    _           : Annotated[User, Depends(get_current_active_user)],
-    patient_cpf : str,
-) -> list[ MergeableRecord[StandardizedPatientConditionModel] ]:
+    _: Annotated[User, Depends(get_current_active_user)],
+    patient_cpf: str,
+) -> list[MergeableRecord[StandardizedPatientConditionModel]]:
 
     conditions = await StandardizedPatientCondition.filter(
         patient_cpf=patient_cpf
@@ -148,21 +151,21 @@ async def get_standardized_patientconditions(
     results = []
     for condition in conditions:
         result = MergeableRecord(
-            patient_code        = condition.patient_code,
-            standardized_record = condition,
-            source              = condition.raw_source.data_source,
-            event_moment        = condition.raw_source.source_updated_at,
-            ingestion_moment    = condition.raw_source.updated_at
+            patient_code=condition.patient_code,
+            standardized_record=condition,
+            source=condition.raw_source.data_source,
+            event_moment=condition.raw_source.source_updated_at,
+            ingestion_moment=condition.raw_source.updated_at
         )
-        results.append( result )
+        results.append(result)
 
     return results
 
 
 @router.post("/patientconditions", status_code=201)
 async def create_standardized_patientconditions(
-    _           : Annotated[User, Depends(get_current_active_user)],
-    conditions  : list[StandardizedPatientConditionModel],
+    _: Annotated[User, Depends(get_current_active_user)],
+    conditions: list[StandardizedPatientConditionModel],
 ) -> BulkInsertOutputModel:
 
     conditions_to_create = []
@@ -200,7 +203,8 @@ async def create_standardized_patientconditions(
             )
 
         try:
-            conditions_to_create.append( StandardizedPatientCondition(**condition) )
+            conditions_to_create.append(
+                StandardizedPatientCondition(**condition))
         except ValidationError as e:
             return HTMLResponse(status_code=400, content=str(e))
         except ValueError as e:
