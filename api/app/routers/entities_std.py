@@ -44,7 +44,7 @@ async def get_patientrecords_of_updated_patients(
 
     results = await conn.execute_query_dict(
         f"""
-        select 
+        select
             tmp.patient_code,
             json_agg(tmp.*) as mergeable_records
         from (
