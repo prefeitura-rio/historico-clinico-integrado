@@ -60,6 +60,7 @@ class TokenData(BaseModel):
 
 
 class RawDataModel(BaseModel):
+    id: Optional[int]
     patient_cpf: str
     patient_code: str
     source_updated_at: datetime
