@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
+
 from tortoise import Tortoise
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError, DoesNotExist
@@ -14,7 +15,7 @@ from tortoise.exceptions import ValidationError, DoesNotExist
 from app.dependencies import get_current_active_user
 from app.pydantic_models import (
     PatientMergeableRecord, StandardizedPatientRecordModel, StandardizedPatientConditionModel,
-    BulkInsertOutputModel, MergeableRecord
+    BulkInsertOutputModel, MergeableRecord, Page
 )
 from app.models import (
     User, StandardizedPatientCondition, StandardizedPatientRecord,
@@ -38,15 +39,29 @@ async def get_patientrecords_of_updated_patients(
     _: Annotated[User, Depends(get_current_active_user)],
     start_datetime: datetime.datetime = datetime.datetime.now() -
     datetime.timedelta(hours=1),
-    end_datetime: datetime.datetime = datetime.datetime.now()
-) -> list[PatientMergeableRecord[StandardizedPatientRecordModel]]:
+    end_datetime: datetime.datetime = datetime.datetime.now(),
+    page: int = 1,
+    size: int = 10000
+) -> Page[PatientMergeableRecord[StandardizedPatientRecordModel]]:
+
     conn = Tortoise.get_connection("default")
+
+    total_amount = await conn.execute_query_dict(
+        f"""
+        select count(*) as quant
+        from std__patientrecord std
+                left join patient on patient.patient_code = std.patient_code
+        where std.created_at between '{start_datetime}' and '{end_datetime}'
+        and ((patient.id is null) or (patient.updated_at < std.created_at))
+        """
+    )
+    total_amount = total_amount[0]['quant']
 
     results = await conn.execute_query_dict(
         f"""
         select
             tmp.patient_code,
-            json_agg(tmp.*) as mergeable_records
+            jsonb_agg(tmp.*) as mergeable_records
         from (
             select
                 std.patient_code,
@@ -66,12 +81,18 @@ async def get_patientrecords_of_updated_patients(
             )
         ) tmp
         group by tmp.patient_code
+        limit {size}
+        offset {(page-1)*size}
         """
     )
     for result in results:
         result['mergeable_records'] = json.loads(result['mergeable_records'])
 
-    return results
+    return Page(
+        items=results,
+        current_page=page,
+        page_count=(total_amount//size)-1
+    )
 
 
 @router.post("/patientrecords", status_code=201)
