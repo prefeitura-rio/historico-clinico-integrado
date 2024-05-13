@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import date, datetime
-from typing import Generic, Optional, List, TypeVar
+from typing import Generic, Optional, List, TypeVar, Any
 from pydantic import BaseModel
 
 
@@ -200,11 +200,9 @@ class MergeableRecord(Generic[PatientData], BaseModel):
     event_moment: datetime
     ingestion_moment: datetime
 
-
 class PatientMergeableRecord(Generic[PatientData], BaseModel):
     patient_code: str
     mergeable_records: List[MergeableRecord[PatientData]]
-
 
 class RecordListModel(Generic[PatientData], BaseModel):
     records: List[PatientData]
@@ -212,6 +210,12 @@ class RecordListModel(Generic[PatientData], BaseModel):
 class StandardizedPatientRecordListModel(BaseModel):
     records: List[StandardizedPatientRecordModel]
 
-
 class StandardizedPatientConditionListModel(BaseModel):
     conditions: List[StandardizedPatientConditionModel]
+
+PageableData = TypeVar('PageableData', PatientMergeableRecord, Any)
+
+class Page(Generic[PageableData], BaseModel):
+    items: List[PageableData]
+    current_page: int
+    page_count: int
