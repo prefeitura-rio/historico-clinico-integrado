@@ -40,7 +40,7 @@ async def get_patientrecords_of_updated_patients(
     start_datetime: datetime.datetime = datetime.datetime.now() -
     datetime.timedelta(hours=1),
     end_datetime: datetime.datetime = datetime.datetime.now(),
-    page: int = 0,
+    page: int = 1,
     size: int = 10000
 ) -> Page[PatientMergeableRecord[StandardizedPatientRecordModel]]:
 
