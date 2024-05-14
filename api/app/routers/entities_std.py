@@ -2,6 +2,7 @@
 import datetime
 import json
 
+from math import ceil
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -91,7 +92,7 @@ async def get_patientrecords_of_updated_patients(
     return Page(
         items=results,
         current_page=page,
-        page_count=(total_amount//size)-1
+        page_count=ceil(total_amount/size)
     )
 
 
