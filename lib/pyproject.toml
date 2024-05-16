@@ -23,7 +23,7 @@ lint = "scripts.lint:main"
 test = "scripts.test:main"
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.3.0"
+black = {version = "^24.4.2", allow-prereleases = true}
 pre-commit = "^2.18.1"
 pytest-cov = "^3.0.0"
 flake8 = "^4.0.1"
