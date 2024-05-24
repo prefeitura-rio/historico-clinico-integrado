@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
+
 from os import getenv
 from typing import List
 
@@ -29,9 +31,11 @@ def getenv_or_action(env_name: str, *, action: str = "raise", default: str = Non
     value = getenv(env_name, default)
     if value is None:
         if action == "raise":
-            raise EnvironmentError(f"Environment variable {env_name} is not set.")
+            raise EnvironmentError(
+                f"Environment variable {env_name} is not set.")
         elif action == "warn":
-            logger.warning(f"Warning: Environment variable {env_name} is not set.")
+            logger.warning(
+                f"Warning: Environment variable {env_name} is not set.")
     return value
 
 
@@ -73,20 +77,28 @@ def inject_environment_variables(environment: str):
         token=token,
         site_url=site_url,
     )
-    secrets = infisical_client.get_all_secrets(environment=environment, attach_to_os_environ=True)
-    logger.info(f"Injecting {len(secrets)} environment variables from Infisical:")
+    secrets = infisical_client.get_all_secrets(
+        environment=environment, attach_to_os_environ=True)
+    logger.info(
+        f"Injecting {len(secrets)} environment variables from Infisical:")
     for secret in secrets:
-        logger.info(f" - {secret.secret_name}: {'*' * len(secret.secret_value)}")
+        logger.info(
+            f" - {secret.secret_name}: {'*' * len(secret.secret_value)}")
 
 
 environment = getenv_or_action("ENVIRONMENT", action="warn", default="dev")
-if environment not in ["dev", "staging", "prod"]:
-    raise ValueError("ENVIRONMENT must be one of 'dev', 'staging' or 'prod'")
+if environment not in [
+    "dev",
+    "staging",
+    "prod",
+    "local-staging",
+    "local-prod"
+]:
+    raise ValueError("ENVIRONMENT must be one of 'dev', 'staging', 'prod', 'local-staging', 'local-prod'")  # noqa
 
 inject_environment_variables(environment=environment)
 
-if environment == "dev":
+if environment == "dev" or "local" in environment:
     from app.config.dev import *  # noqa: F401, F403
-
 else:
     from app.config.prod import *  # noqa: F401, F403
