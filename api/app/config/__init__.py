@@ -94,7 +94,7 @@ if environment not in [
     "local-staging",
     "local-prod"
 ]:
-    raise ValueError("ENVIRONMENT must be one of 'dev', 'staging', 'prod', 'local-staging', 'local-prod'")  # noqa
+    raise ValueError("ENVIRONMENT must be either: 'dev', 'staging', 'prod', 'local-staging', 'local-prod'")  # noqa
 
 inject_environment_variables(environment=environment)
 
