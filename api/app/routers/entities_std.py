@@ -50,10 +50,11 @@ async def get_patientrecords_of_updated_patients(
     total_amount = await conn.execute_query_dict(
         f"""
         select count(*) as quant
-        from std__patientrecord std
-                left join patient on patient.patient_code = std.patient_code
-        where std.created_at between '{start_datetime}' and '{end_datetime}'
-        and ((patient.id is null) or (patient.updated_at < std.created_at))
+        from(
+            select distinct std.patient_code
+            from std__patientrecord std
+            where std.created_at between '{start_datetime}' and '{end_datetime}'
+        ) as tmp
         """
     )
     total_amount = total_amount[0]['quant']
@@ -71,14 +72,15 @@ async def get_patientrecords_of_updated_patients(
                 raw.source_updated_at as event_moment,
                 raw.updated_at as ingestion_moment
             from std__patientrecord std
-                inner join public.raw__patientrecord raw on std.raw_source_id = raw.id
-                inner join datasource ds on raw.data_source_id = ds.cnes
+                inner join public.raw__patientrecord raw
+                    on std.raw_source_id = raw.id
+                inner join datasource ds
+                    on raw.data_source_id = ds.cnes
             where std.patient_code in (
                 select std.patient_code
                 from std__patientrecord std
-                        left join patient on patient.patient_code = std.patient_code
-                where std.created_at between '{start_datetime}' and '{end_datetime}'
-                and ((patient.id is null) or (patient.updated_at < std.created_at))
+                where std.created_at between
+                    '{start_datetime}' and '{end_datetime}'
             )
         ) tmp
         group by tmp.patient_code
