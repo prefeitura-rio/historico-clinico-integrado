@@ -205,6 +205,7 @@ class PatientAddress(Model):
     postal_code = fields.CharField(max_length=8, null=True)
     period_start = fields.DateField(null=True)
     period_end = fields.DateField(null=True)
+    fingerprint = fields.CharField(max_length=32, null=True)
 
 
 class PatientTelecom(Model):
@@ -216,6 +217,7 @@ class PatientTelecom(Model):
     rank = fields.IntField(null=True)
     period_start = fields.DateField(null=True)
     period_end = fields.DateField(null=True)
+    fingerprint = fields.CharField(max_length=32, null=True)
 
 
 class PatientCns(Model):
@@ -223,6 +225,7 @@ class PatientCns(Model):
     patient = fields.ForeignKeyField("app.Patient", related_name="patient_cns")
     value = fields.CharField(max_length=16, unique=True)
     is_main = fields.BooleanField(default=False)
+    fingerprint = fields.CharField(max_length=32, null=True)
 
 
 class Patient(Model):

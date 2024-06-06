@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import asyncpg
 from typing import Annotated
 
+from app.utils import generate_dictionary_fingerprint, merge_versions
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
 from tortoise.contrib.pydantic import pydantic_model_creator
-from tortoise.exceptions import ValidationError, IntegrityError
+from tortoise.exceptions import ValidationError, IntegrityError, TransactionManagementError
 from tortoise.transactions import in_transaction
 
 from app.dependencies import get_current_active_user
@@ -40,14 +42,15 @@ async def create_or_update_patient(
 ) -> list[PatientOutput]:
 
     async def process_patient(patient_data):
+        # Remove null values
+        patient_data = {keys:values for keys, values in patient_data.items() if values is not None}
+
         birth_city_task = City.get_or_none(
-            code=patient_data["birth_city"],
-            state__code=patient_data["birth_state"],
-            state__country__code=patient_data["birth_country"],
+            code=patient_data.get("birth_city")
         )
-        race_task = Race.get_or_none(slug=patient_data["race"])
-        gender_task = Gender.get_or_none(slug=patient_data["gender"])
-        nationality_task = Nationality.get_or_none(slug=patient_data["nationality"])
+        race_task = Race.get_or_none(slug=patient_data.get("race"))
+        gender_task = Gender.get_or_none(slug=patient_data.get("gender"))
+        nationality_task = Nationality.get_or_none(slug=patient_data.get("nationality"))
 
         birth_city, race, gender, nationality = await asyncio.gather(
             birth_city_task, race_task, gender_task, nationality_task
@@ -80,45 +83,97 @@ async def create_or_update_patient(
             else:
                 patient = await Patient.create(**new_data)
 
-            # Reset and update Address
-            await patient.address_patient_periods.all().delete()
-            address_tasks = [
-                City.get_or_none(
-                    code=address["city"],
-                    state__code=address["state"],
-                    state__country__code=address["country"],
-                )
-                for address in patient_data.get("address_list", [])
-            ]
-            address_cities = await asyncio.gather(*address_tasks)
+            # -------------------------
+            # Address Update
+            # -------------------------
+            # Generate Fingerprints
+            addresses = patient_data.get("address_list", [])
+            for address in addresses:
+                address["fingerprint"] = generate_dictionary_fingerprint(address)
 
-            for address, city in zip(patient_data.get("address_list", []), address_cities):
+            # Plan the Update of Patient Addresses
+            deletions, insertions = merge_versions(
+                patient.address_patient_periods.related_objects,
+                addresses
+            )
+
+            # Delete
+            deletions_tasks = [address.delete() for address in deletions]
+            await asyncio.gather(*deletions_tasks)
+
+            # Inserts
+            get_city_tasks = [
+                City.get_or_none(code=address["city"])
+                for address in insertions
+            ]
+            address_cities = await asyncio.gather(*get_city_tasks)
+
+            insert_address_tasks = []
+            for address, city in zip(insertions, address_cities):
                 address["patient"] = patient
                 address["city"] = city
                 address["period_start"] = address.get("start")
                 address["period_end"] = address.get("end")
-                await PatientAddress.create(**address)
 
-            # Reset and update Telecom
-            await patient.telecom_patient_periods.all().delete()
+                insert_address_tasks.append(
+                    PatientAddress.create(**address)
+                )
+
+            await asyncio.gather(*insert_address_tasks)
+
+            # -------------------------
+            # Telecom Update
+            # -------------------------
             telecoms = patient_data.get("telecom_list", [])
             for telecom in telecoms:
+                telecom["fingerprint"] = generate_dictionary_fingerprint(telecom)
+
+            # Plan the Update of Patient Telecoms
+            deletions, insertions = merge_versions(
+                patient.telecom_patient_periods.related_objects,
+                telecoms
+            )
+
+            # Delete
+            deletions_tasks = [obj.delete() for obj in deletions]
+            await asyncio.gather(*deletions_tasks)
+
+            # Inserts
+            insert_telecom_tasks = []
+            for telecom in insertions:
                 telecom["patient"] = patient
                 telecom["period_start"] = telecom.get("start")
                 telecom["period_end"] = telecom.get("end")
-                await PatientTelecom.create(**telecom)
+                insert_telecom_tasks.append(
+                    PatientTelecom.create(**telecom)
+                )
+            await asyncio.gather(*insert_telecom_tasks)
 
-            # Reset and update CNS
-            await patient.patient_cns.all().delete()
-            cns_list = patient_data.get("cns_list", [])
-            for cns in cns_list:
+            # -------------------------
+            # CNS Update
+            # -------------------------
+            cnss = patient_data.get("cns_list", [])
+            for cns in cnss:
+                cns["fingerprint"] = generate_dictionary_fingerprint(cns)
+
+            # Plan the Update of Patient CNSs
+            deletions, insertions = merge_versions(
+                patient.patient_cns.related_objects,
+                cnss
+            )
+
+            # Delete
+            deletions_tasks = [obj.delete() for obj in deletions]
+            await asyncio.gather(*deletions_tasks)
+
+            # Inserts
+            insert_cns_tasks = []
+            for cns in insertions:
                 cns["patient"] = patient
-                try:
-                    await PatientCns.create(**cns)
-                except IntegrityError:
-                    existing_cns = await PatientCns.get_or_none(value=cns["value"])
-                    if existing_cns:
-                        await existing_cns.delete()
+                insert_cns_tasks.append(
+                    PatientCns.create(**cns)
+                )
+            await asyncio.gather(*insert_cns_tasks)
 
         return await PatientOutput.from_tortoise_orm(patient)
 
