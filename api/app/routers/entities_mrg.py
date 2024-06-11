@@ -41,7 +41,7 @@ async def create_or_update_patient(
     _: Annotated[User, Depends(get_current_active_user)],
     patients: List[PatientModel],
 ) -> list[PatientOutput]:
-    
+
     races = {x.slug: x for x in await Race.all()}
     cities = {x.code: x for x in await City.all()}
     genders = {x.slug: x for x in await Gender.all()}
@@ -62,7 +62,7 @@ async def create_or_update_patient(
         patient['gender'] = genders.get(patient.get('gender'))
         patient['nationality'] = nationalities.get(patient.get('nationality'))
         patient['birth_date'] = patient['birth_date'].isoformat()
-    
+
     existing_patients = [
         Patient.get_or_none(
             patient_code=x['patient_code']
