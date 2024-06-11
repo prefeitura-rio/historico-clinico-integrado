@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from typing import Annotated
+import asyncio
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
@@ -22,116 +23,114 @@ from app.models import (
     ConditionCode,
     PatientCns,
 )
+from app.utils import update_and_return
 
 
-router = APIRouter(prefix="/mrg", tags=["Entidades MRG (Formato Merged/Fundido)"])
+router = APIRouter(
+    prefix="/mrg", tags=["Entidades MRG (Formato Merged/Fundido)"])
 
 
 PatientOutput = pydantic_model_creator(Patient, name="PatientOutput")
-PatientConditionOutput = pydantic_model_creator(PatientCondition, name="PatientConditionOutput")
+PatientConditionOutput = pydantic_model_creator(
+    PatientCondition, name="PatientConditionOutput")
 
 
 @router.put("/patient")
 async def create_or_update_patient(
     _: Annotated[User, Depends(get_current_active_user)],
-    patients: list[PatientModel],
+    patients: List[PatientModel],
 ) -> list[PatientOutput]:
 
-    updated_patients = []
+    races = {x.slug: x for x in await Race.all()}
+    cities = {x.code: x for x in await City.all()}
+    genders = {x.slug: x for x in await Gender.all()}
+    nationalities = {x.slug: x for x in await Nationality.all()}
+
+    patients = [patient.dict() for patient in patients]
+
+    addresses, cnss, telecoms = [], [], []
     for patient in patients:
-        patient_data = patient.dict()
+        # Entity Splitting
+        addresses.append(patient.pop('address_list'))
+        cnss.append(patient.pop('cns_list'))
+        telecoms.append(patient.pop('telecom_list'))
 
-        birth_city = await City.get_or_none(
-            code=patient_data["birth_city"],
-            state__code=patient_data["birth_state"],
-            state__country__code=patient_data["birth_country"],
-        )
-        new_data = {
-            "patient_cpf": patient_data.get("patient_cpf"),
-            "patient_code": patient_data.get("patient_code"),
-            "birth_date": patient_data.get("birth_date").isoformat(),
-            "active": patient_data.get("active"),
-            "protected_person": patient_data.get("protected_person"),
-            "deceased": patient_data.get("deceased"),
-            "deceased_date": patient_data.get("deceased_date"),
-            "name": patient_data.get("name"),
-            "mother_name": patient_data.get("mother_name"),
-            "father_name": patient_data.get("father_name"),
-            "birth_city": birth_city,
-            "race": await Race.get_or_none(slug=patient_data["race"]),
-            "gender": await Gender.get_or_none(slug=patient_data["gender"]),
-            "nationality": await Nationality.get_or_none(slug=patient_data["nationality"]),
-        }
+        # Object Convertions
+        patient['race'] = races.get(patient['race'])
+        patient['birth_city'] = cities.get(patient.get('birth_city'))
+        patient['gender'] = genders.get(patient.get('gender'))
+        patient['nationality'] = nationalities.get(patient.get('nationality'))
+        patient['birth_date'] = patient['birth_date'].isoformat()
 
-        try:
-            patient = await Patient.get_or_none(
-                patient_cpf=patient_data.get("patient_cpf")
+    try:
+        existing_patients = [
+            Patient.get_or_none(
+                patient_cpf=x['patient_cpf']
             ).prefetch_related("address_patient_periods", "telecom_patient_periods", "patient_cns")
-        except ValidationError as e:
-            return HTMLResponse(status_code=400, content=str(e))
+            for x in patients
+        ]
+        existing_patients = await asyncio.gather(*existing_patients)
+    except ValidationError as e:
+        return HTMLResponse(
+            status_code=400,
+            content=f"Error fetching existing patients: {e}"
+        )
 
-        if patient is not None:
-            await patient.update_from_dict(new_data).save()
+    awaitables = []
+    for i, patient in enumerate(patients):
+        if existing_patients[i]:
+            awaitables.append(update_and_return(existing_patients[i], patient))
         else:
             try:
-                patient = await Patient.create(**new_data)
+                awaitables.append(Patient.create(**patient))
             except ValidationError as e:
-                return HTMLResponse(status_code=400, content=str(e))
-            except Exception as e:
-                return HTMLResponse(status_code=400, content=str(e))
-
-        # Reset de Address
-        for instance in patient.address_patient_periods.related_objects:
-            await instance.delete()
-
-        address_list = patient_data.get("address_list", [])
-        if address_list is not None:
-            for address in address_list:
-                address_city = await City.get_or_none(
-                    code=address["city"],
-                    state__code=address["state"],
-                    state__country__code=address["country"],
+                return HTMLResponse(
+                    status_code=400,
+                    content=f"Error Creating Patients: {e}"
                 )
-                address["patient"] = patient
-                address["city"] = address_city
-                address["period_start"] = address.get("start")
-                address["period_end"] = address.get("end")
-                await PatientAddress.create(**address)
+    modified_patients = await asyncio.gather(*awaitables)
 
-        # Reset de Telecom
-        for instance in patient.telecom_patient_periods.related_objects:
-            await instance.delete()
+    async def update_addresses():
+        addresses_to_insert = []
+        for i, address_list in enumerate(addresses):
+            for address in address_list:
+                address["patient"] = modified_patients[i]
+                address["city"] = cities.get(address.pop("city"))
+                address["period_start"] = address.pop("start")
+                address["period_end"] = address.pop("end")
+                addresses_to_insert.append(PatientAddress(**address))
+        await PatientAddress.filter(patient_id__in=[x.id for x in modified_patients]).delete()
+        await PatientAddress.bulk_create(addresses_to_insert)
 
-        telecom_list = patient_data.get("telecom_list", [])
-        if telecom_list is not None:
+    async def update_telecoms():
+        telecoms_to_insert = []
+        for i, telecom_list in enumerate(telecoms):
             for telecom in telecom_list:
-                telecom["patient"] = patient
+                telecom["patient"] = modified_patients[i]
                 telecom["period_start"] = telecom.get("start")
                 telecom["period_end"] = telecom.get("end")
-                await PatientTelecom.create(**telecom)
+                telecoms_to_insert.append(PatientTelecom(**telecom))
+        await PatientTelecom.filter(patient_id__in=[x.id for x in modified_patients]).delete()
+        await PatientTelecom.bulk_create(telecoms_to_insert)
 
-        # Reset de CNS
-        for instance in patient.patient_cns.related_objects:
-            await instance.delete()
+    async def update_cnss():
+        async def create_cns(cns_params):
+            try:
+                await PatientCns.create(**cns_params)
+            except IntegrityError:
+                await PatientCns.get(value=cns_params["value"]).delete()
 
-        cns_list = patient_data.get("cns_list", [])
-        if cns_list is not None:
-            for cns in patient_data.get("cns_list", []):
-                cns["patient"] = patient
-                try:
-                    await PatientCns.create(**cns)
-                except IntegrityError:
-                    # CNS already exists:
-                    #  - Don't trust both CNS
-                    #  - Delete the old CNS
-                    patient_cns = await PatientCns.get_or_none(value=cns["value"])
-                    if patient_cns:
-                        await patient_cns.delete()
+        cns_creation_tasks = []
+        for i, cns_list in enumerate(cnss):
+            for cns in cns_list:
+                cns["patient"] = modified_patients[i]
+                cns_creation_tasks.append(create_cns(cns))
+        await PatientCns.filter(patient_id__in=[x.id for x in modified_patients]).delete()
+        await asyncio.gather(*cns_creation_tasks)
 
-        patient_instance = await PatientOutput.from_tortoise_orm(patient)
-        updated_patients.append(patient_instance)
+    await asyncio.gather(*[update_cnss(), update_addresses(), update_telecoms()])
 
-    return updated_patients
+    return modified_patients
 
 
 @router.put("/patientcondition")

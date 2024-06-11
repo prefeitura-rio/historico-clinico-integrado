@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
-
+import hashlib
+import json
 import jwt
 from passlib.context import CryptContext
 
@@ -73,3 +74,40 @@ def password_verify(password: str, hashed: str) -> bool:
         bool: True if the password matches the hash, False otherwise.
     """
     return pwd_context.verify(password, hashed)
+
+
+def generate_dictionary_fingerprint(dict_obj: dict) -> str:
+    """
+    Generate a fingerprint for a dictionary object.
+
+    Args:
+        dict_obj (dict): The dictionary object to generate the fingerprint for.
+
+    Returns:
+        str: The MD5 hash of the serialized dictionary object.
+
+    """
+    serialized_obj = json.dumps(dict_obj, sort_keys=True)
+    return hashlib.md5(serialized_obj.encode('utf-8')).hexdigest()
+
+def merge_versions(current_objs, new_objs: dict) -> None:
+    current_fingerprints = {obj.fingerprint: obj for obj in current_objs}
+    new_fingerprints = {obj.get("fingerprint"): obj for obj in new_objs}
+
+    to_delete = current_fingerprints.keys() - new_fingerprints.keys()
+    to_add = new_fingerprints.keys() - current_fingerprints.keys()
+
+    deletions = [
+        current_fingerprints[fingerprint]
+        for fingerprint in to_delete
+    ]
+    insertions = [
+        new_fingerprints[fingerprint]
+        for fingerprint in to_add
+    ]
+
+    return deletions, insertions
+
+async def update_and_return(instance, new_data):
+    await instance.update_from_dict(new_data).save()
+    return instance
