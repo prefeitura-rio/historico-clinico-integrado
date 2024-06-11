@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 import hashlib
-import asyncio
 import json
 import jwt
 from passlib.context import CryptContext
-
-from tortoise.models import Model
 
 from app import config
 from app.models import User

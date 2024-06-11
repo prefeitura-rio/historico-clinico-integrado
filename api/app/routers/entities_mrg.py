@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import asyncpg
 from typing import Annotated, List
 
-from app.utils import generate_dictionary_fingerprint, merge_versions
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
 from tortoise.contrib.pydantic import pydantic_model_creator
-from tortoise.exceptions import ValidationError, IntegrityError, TransactionManagementError
-from tortoise.transactions import in_transaction
+from tortoise.exceptions import ValidationError, IntegrityError
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import PatientModel, PatientConditionListModel, CompletePatientModel
