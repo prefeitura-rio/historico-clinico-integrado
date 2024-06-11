@@ -166,9 +166,23 @@ async def create_or_update_patient(
             deletions_tasks = [obj.delete() for obj in deletions]
             await asyncio.gather(*deletions_tasks)
 
+            # Detect Duplicated CNSs
+            duplicated_cnss = await PatientCns.filter(
+                value__in=[x['value'] for x in cnss]
+            ).exclude(
+                patient=patient
+            )
+            untrusted_cnss = [x.value for x in duplicated_cnss]
+
+            # Delete Duplicated CNSs
+            deletions_tasks = [obj.delete() for obj in duplicated_cnss]
+            await asyncio.gather(*deletions_tasks)
+
             # Inserts
             insert_cns_tasks = []
             for cns in insertions:
+                if cns["value"] in untrusted_cnss:
+                    continue
                 cns["patient"] = patient
                 insert_cns_tasks.append(
                     PatientCns.create(**cns)
