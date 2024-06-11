@@ -73,7 +73,10 @@ async def create_or_update_patient(
         if existing_patients[i]:
             awaitables.append(update_and_return(existing_patients[i], patient))
         else:
-            awaitables.append(Patient.create(**patient))
+            try:
+                awaitables.append(Patient.create(**patient))
+            except ValidationError as e:
+                return HTMLResponse(status_code=400, content=str(e))
     modified_patients = await asyncio.gather(*awaitables)
 
     async def update_addresses():
