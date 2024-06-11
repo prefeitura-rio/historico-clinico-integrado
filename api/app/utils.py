@@ -110,3 +110,7 @@ def merge_versions(current_objs, new_objs: dict) -> None:
     ]
 
     return deletions, insertions
+
+async def update_and_return(instance, new_data):
+    await instance.update_from_dict(new_data).save()
+    return instance
