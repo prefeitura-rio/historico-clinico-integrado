@@ -26,11 +26,13 @@ from app.models import (
 from app.utils import update_and_return
 
 
-router = APIRouter(prefix="/mrg", tags=["Entidades MRG (Formato Merged/Fundido)"])
+router = APIRouter(
+    prefix="/mrg", tags=["Entidades MRG (Formato Merged/Fundido)"])
 
 
 PatientOutput = pydantic_model_creator(Patient, name="PatientOutput")
-PatientConditionOutput = pydantic_model_creator(PatientCondition, name="PatientConditionOutput")
+PatientConditionOutput = pydantic_model_creator(
+    PatientCondition, name="PatientConditionOutput")
 
 
 @router.put("/patient")
@@ -60,13 +62,19 @@ async def create_or_update_patient(
         patient['nationality'] = nationalities.get(patient.get('nationality'))
         patient['birth_date'] = patient['birth_date'].isoformat()
 
-    existing_patients = [
-        Patient.get_or_none(
-            patient_code=x['patient_code']
-        ).prefetch_related("address_patient_periods", "telecom_patient_periods", "patient_cns")
-        for x in patients
-    ]
-    existing_patients = await asyncio.gather(*existing_patients)
+    try:
+        existing_patients = [
+            Patient.get_or_none(
+                patient_cpf=x['patient_cpf']
+            ).prefetch_related("address_patient_periods", "telecom_patient_periods", "patient_cns")
+            for x in patients
+        ]
+        existing_patients = await asyncio.gather(*existing_patients)
+    except ValidationError as e:
+        return HTMLResponse(
+            status_code=400,
+            content=f"Error fetching existing patients: {e}"
+        )
 
     awaitables = []
     for i, patient in enumerate(patients):
@@ -76,7 +84,10 @@ async def create_or_update_patient(
             try:
                 awaitables.append(Patient.create(**patient))
             except ValidationError as e:
-                return HTMLResponse(status_code=400, content=str(e))
+                return HTMLResponse(
+                    status_code=400,
+                    content=f"Error Creating Patients: {e}"
+                )
     modified_patients = await asyncio.gather(*awaitables)
 
     async def update_addresses():
