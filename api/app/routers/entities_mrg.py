@@ -119,6 +119,8 @@ async def create_or_update_patient(
                 await PatientCns.create(**cns_params)
             except IntegrityError:
                 await PatientCns.get(value=cns_params["value"]).delete()
+            finally:
+                await asyncio.sleep(0)
 
         cns_creation_tasks = []
         for i, cns_list in enumerate(cnss):
