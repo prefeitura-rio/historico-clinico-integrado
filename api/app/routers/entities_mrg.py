@@ -10,57 +10,41 @@ from tortoise.exceptions import ValidationError, IntegrityError
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import (
-    PatientModel,
     CompletePatientModel,
-    MergedPatient,
-    MergedPatientCns,
-    MergedPatientAddress,
-    MergedPatientTelecom
+    MergedPatient as PydanticMergedPatient,
+    MergedPatientCns as PydanticMergedPatientCns,
+    MergedPatientAddress as PydanticMergedPatientAddress,
+    MergedPatientTelecom as PydanticMergedPatientTelecom,
 )
 from app.models import (
     User,
-    Patient,
     City,
     Race,
     Gender,
     Nationality,
-    PatientAddress,
-    PatientTelecom,
-    PatientCondition,
-    ConditionCode,
-    PatientCns,
+    MergedPatient,
+    MergedPatientAddress,
+    MergedPatientTelecom,
+    MergedPatientCns,
 )
-from app.utils import update_and_return
+from app.utils import get_instance
 
 
 router = APIRouter(
     prefix="/mrg", tags=["Entidades MRG (Formato Merged/Fundido)"])
 
-
-PatientOutput = pydantic_model_creator(Patient, name="PatientOutput")
-PatientConditionOutput = pydantic_model_creator(
-    PatientCondition, name="PatientConditionOutput")
+PatientOutput = pydantic_model_creator(MergedPatient, name="PatientOutput")
 
 
 @router.put("/patient")
 async def create_or_update_patient(
     _: Annotated[User, Depends(get_current_active_user)],
-    patients: List[MergedPatient],
+    patients: List[PydanticMergedPatient],
 ) -> int:
 
     patients = [patient.dict(exclude_none=True) for patient in patients]
 
     cities, races, genders, nationalities = {}, {}, {}, {}
-
-    async def get_instance(Model, table, slug=None, code=None):
-        if slug is None:
-            return None
-        if slug not in table:
-            if code:
-                table[slug] = await Model.get_or_none(code=code)
-            elif slug:
-                table[slug] = await Model.get_or_none(slug=slug)
-        return table[slug]
 
     for patient in patients:
         patient['race'] = await get_instance(Model=Race, table=races, slug=patient.get('race'))
@@ -69,13 +53,13 @@ async def create_or_update_patient(
         patient['birth_city'] = await get_instance(Model=City, table=cities, code=patient.get('birth_city'))
         patient['birth_date'] = patient['birth_date'].isoformat()
 
-    inserts = [Patient(**patient) for patient in patients]
+    inserts = [MergedPatient(**patient) for patient in patients]
     updatable_fields = [x for x in dict(inserts[0]).keys() if x not in [
         'patient_code', 'patient_cpf', 'created_at', 'updated_at', 'id']]
-    bulk_insert_results = await Patient.bulk_create(
+    bulk_insert_results = await MergedPatient.bulk_create(
         inserts,
         batch_size=500,
-        on_conflict=["patient_cpf"],
+        on_conflict=["patient_code"],
         update_fields=updatable_fields
     )
 
@@ -85,35 +69,92 @@ async def create_or_update_patient(
 @router.put("/patientaddress")
 async def create_or_update_patientaddress(
     _: Annotated[User, Depends(get_current_active_user)],
-    patientaddress_list: List[MergedPatientAddress],
+    patientaddress_list: List[PydanticMergedPatientAddress],
 ) -> int:
-    # Get list of patient_cpfs
-    patient_cpfs = [patientaddress.patient_cpf for patientaddress in patientaddress_list]
+    # Get list of patient codes
+    patient_codes = [
+        patientaddress.patient_code for patientaddress in patientaddress_list]
 
-    #Delete all addresses for the patients
-    await PatientAddress.filter(patient_cpf__in=patient_cpfs).delete()
+    # Delete all addresses for the patients
+    await MergedPatientAddress.filter(patient_id__in=patient_codes).delete()
 
-    # Get list of cities
+    # Prepare Inserts
+    inserts = []
+    for address in patientaddress_list:
+        address = address.dict(exclude_none=True)
+        address['city_id'] = address.pop('city')
+        address['patient_id'] = address.pop('patient_code')
 
-    raise NotImplementedError
-    
+        inserts.append(MergedPatientAddress(**address))
+
+    # Bulk Insert
+    results = await MergedPatientAddress.bulk_create(
+        inserts,
+        batch_size=500
+    )
+
+    return len(results)
 
 
 @router.put("/patienttelecom")
 async def create_or_update_patienttelecom(
     _: Annotated[User, Depends(get_current_active_user)],
-    patienttelecom_list: List[MergedPatientTelecom],
+    patienttelecom_list: List[PydanticMergedPatientTelecom],
 ) -> int:
-    
-    raise NotImplementedError
+    # Get list of patient codes
+    patient_codes = [
+        patientaddress.patient_code for patientaddress in patienttelecom_list]
+
+    # Delete all addresses for the patients
+    await MergedPatientTelecom.filter(patient_id__in=patient_codes).delete()
+
+    # Prepare Inserts
+    inserts = []
+    for telecom in patienttelecom_list:
+        telecom = telecom.dict(exclude_none=True)
+        telecom['patient_id'] = telecom.pop('patient_code')
+
+        inserts.append(MergedPatientTelecom(**telecom))
+
+    # Bulk Insert
+    results = await MergedPatientTelecom.bulk_create(
+        inserts,
+        batch_size=500
+    )
+
+    return len(results)
 
 
 @router.put("/patientcns")
 async def create_or_update_patientcns(
     _: Annotated[User, Depends(get_current_active_user)],
-    patientcns_list: List[MergedPatientCns],
+    patientcns_list: List[PydanticMergedPatientCns],
 ) -> int:
-    raise NotImplementedError
+    # Get list of patient codes
+    patient_codes = [patientcns.patient_code for patientcns in patientcns_list]
+
+    # Get CNSs to insert
+    cnss = [patientcns.value for patientcns in patientcns_list]
+
+    # Delete all CNS for the patients/
+    await MergedPatientCns.filter(patient_id__in=patient_codes).delete()
+
+    # Prepare Inserts
+    inserts = []
+    for cns in patientcns_list:
+        cns = cns.dict(exclude_none=True)
+        cns['patient_id'] = cns.pop('patient_code')
+
+        inserts.append(MergedPatientCns(**cns))
+
+    # Bulk Insert
+    results = await MergedPatientCns.bulk_create(
+        inserts,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+
+    return len(results)
 
 
 @router.get("/patient/{patient_cpf}")
@@ -122,7 +163,7 @@ async def get_patient(
     patient_cpf: int,
 ) -> CompletePatientModel:
 
-    patient = await Patient.get_or_none(patient_cpf=patient_cpf).prefetch_related(
+    patient = await MergedPatient.get_or_none(patient_cpf=patient_cpf).prefetch_related(
         "race",
         "nationality",
         "gender",
