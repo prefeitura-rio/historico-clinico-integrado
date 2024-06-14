@@ -9,7 +9,14 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError, IntegrityError
 
 from app.dependencies import get_current_active_user
-from app.pydantic_models import PatientModel, PatientConditionListModel, CompletePatientModel
+from app.pydantic_models import (
+    PatientModel,
+    CompletePatientModel,
+    MergedPatient,
+    MergedPatientCns,
+    MergedPatientAddress,
+    MergedPatientTelecom
+)
 from app.models import (
     User,
     Patient,
@@ -38,12 +45,13 @@ PatientConditionOutput = pydantic_model_creator(
 @router.put("/patient")
 async def create_or_update_patient(
     _: Annotated[User, Depends(get_current_active_user)],
-    patients: List[PatientModel],
+    patients: List[MergedPatient],
 ) -> int:
 
     patients = [patient.dict(exclude_none=True) for patient in patients]
-    
+
     cities, races, genders, nationalities = {}, {}, {}, {}
+
     async def get_instance(Model, table, slug=None, code=None):
         if slug is None:
             return None
@@ -62,7 +70,8 @@ async def create_or_update_patient(
         patient['birth_date'] = patient['birth_date'].isoformat()
 
     inserts = [Patient(**patient) for patient in patients]
-    updatable_fields = [ x for x in dict(inserts[0]).keys() if x not in ['patient_code', 'patient_cpf', 'created_at', 'updated_at', 'id'] ]
+    updatable_fields = [x for x in dict(inserts[0]).keys() if x not in [
+        'patient_code', 'patient_cpf', 'created_at', 'updated_at', 'id']]
     bulk_insert_results = await Patient.bulk_create(
         inserts,
         batch_size=500,
@@ -71,6 +80,40 @@ async def create_or_update_patient(
     )
 
     return len(bulk_insert_results)
+
+
+@router.put("/patientaddress")
+async def create_or_update_patientaddress(
+    _: Annotated[User, Depends(get_current_active_user)],
+    patientaddress_list: List[MergedPatientAddress],
+) -> int:
+    # Get list of patient_cpfs
+    patient_cpfs = [patientaddress.patient_cpf for patientaddress in patientaddress_list]
+
+    #Delete all addresses for the patients
+    await PatientAddress.filter(patient_cpf__in=patient_cpfs).delete()
+
+    # Get list of cities
+
+    raise NotImplementedError
+    
+
+
+@router.put("/patienttelecom")
+async def create_or_update_patienttelecom(
+    _: Annotated[User, Depends(get_current_active_user)],
+    patienttelecom_list: List[MergedPatientTelecom],
+) -> int:
+    
+    raise NotImplementedError
+
+
+@router.put("/patientcns")
+async def create_or_update_patientcns(
+    _: Annotated[User, Depends(get_current_active_user)],
+    patientcns_list: List[MergedPatientCns],
+) -> int:
+    raise NotImplementedError
 
 
 @router.get("/patient/{patient_cpf}")

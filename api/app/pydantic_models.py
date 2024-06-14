@@ -111,7 +111,6 @@ class PatientModel(BaseModel):
     telecom_list: Optional[List[TelecomModel]]
     address_list: Optional[List[AddressModel]]
 
-
 class CompletePatientModel(BaseModel):
     birth_date: date
     patient_cpf: str
@@ -219,3 +218,51 @@ class Page(Generic[PageableData], BaseModel):
     items: List[PageableData]
     current_page: int
     page_count: int
+
+
+# ======================================
+# MERGE INPUT MODELS
+# ======================================
+class MergedPatient(BaseModel):
+    active: Optional[bool] = True
+    birth_city: Optional[str]
+    birth_state: Optional[str]
+    birth_country: Optional[str]
+    birth_date: date
+    patient_cpf: str
+    patient_code: str
+    deceased: Optional[bool] = False
+    deceased_date: Optional[date]
+    father_name: Optional[str]
+    gender: str
+    mother_name: Optional[str]
+    name: str
+    nationality: Optional[str]
+    protected_person: Optional[bool]
+    race: Optional[str]
+
+class MergedPatientAddress(BaseModel):
+    patient_code: str
+    line: str
+    city: str
+    country: str
+    state: str
+    use: Optional[str]
+    type: Optional[str]
+    postal_code: Optional[str]
+    start: Optional[date]
+    end: Optional[date]
+
+class MergedPatientCns(BaseModel):
+    patient_code: str
+    value: str
+    is_main: bool
+
+class MergedPatientTelecom(BaseModel):
+    patient_code: str
+    value: str
+    system: Optional[str]
+    use: Optional[str]
+    rank: Optional[int]
+    start: Optional[date]
+    end: Optional[date]
