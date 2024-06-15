@@ -85,7 +85,7 @@ def inject_environment_variables(environment: str):
 
 
 environment = getenv_or_action("ENVIRONMENT", action="warn", default="dev")
-environment = "local-prod"
+
 if environment not in [
     "dev",
     "staging",
