@@ -115,7 +115,7 @@ async def update_and_return(instance, new_data):
 async def get_instance(Model, table, slug=None, code=None):
     if slug is None:
         return None
-    
+
     if slug not in table:
         if code:
             table[slug] = await Model.get_or_none(code=code)
