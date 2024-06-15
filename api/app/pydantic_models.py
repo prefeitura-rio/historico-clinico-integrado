@@ -244,8 +244,6 @@ class MergedPatientAddress(BaseModel):
     patient_code: str
     line: str
     city: str
-    country: str
-    state: str
     use: Optional[str]
     type: Optional[str]
     postal_code: Optional[str]

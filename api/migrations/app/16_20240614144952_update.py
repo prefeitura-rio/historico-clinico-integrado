@@ -5,7 +5,7 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     return """
         CREATE TABLE IF NOT EXISTS "mrg__patient" (
     "patient_code" VARCHAR(20) NOT NULL  PRIMARY KEY,
-    "patient_cpf" VARCHAR(11) NOT NULL UNIQUE,
+    "patient_cpf" VARCHAR(11) NOT NULL,
     "birth_date" DATE NOT NULL,
     "active" BOOL NOT NULL  DEFAULT True,
     "protected_person" BOOL,
@@ -52,16 +52,18 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     "fingerprint" VARCHAR(32),
     "patient_id" VARCHAR(20) NOT NULL REFERENCES "mrg__patient" ("patient_code") ON DELETE CASCADE
 );
-        DROP TABLE IF EXISTS "patient";
         DROP TABLE IF EXISTS "patientcns";
         DROP TABLE IF EXISTS "patientaddress";
         DROP TABLE IF EXISTS "patienttelecom";
-        DROP TABLE IF EXISTS "patientcondition";"""
+        DROP TABLE IF EXISTS "patientcondition";
+        DROP TABLE IF EXISTS "patient";
+        """
 
 
 async def downgrade(db: BaseDBAsyncClient) -> str:
     return """
-        DROP TABLE IF EXISTS "mrg__patient";
         DROP TABLE IF EXISTS "mrg__patientaddress";
         DROP TABLE IF EXISTS "mrg__patientcns";
-        DROP TABLE IF EXISTS "mrg__patienttelecom";"""
+        DROP TABLE IF EXISTS "mrg__patienttelecom";
+        DROP TABLE IF EXISTS "mrg__patient";
+        """
