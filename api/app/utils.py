@@ -111,3 +111,15 @@ def merge_versions(current_objs, new_objs: dict) -> None:
 async def update_and_return(instance, new_data):
     await instance.update_from_dict(new_data).save()
     return instance
+
+async def get_instance(Model, table, slug=None, code=None):
+    if slug is None:
+        return None
+
+    if slug not in table:
+        if code:
+            table[slug] = await Model.get_or_none(code=code)
+        elif slug:
+            table[slug] = await Model.get_or_none(slug=slug)
+
+    return table[slug]

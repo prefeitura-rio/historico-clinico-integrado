@@ -195,9 +195,9 @@ class Nationality(Model):
     name = fields.CharField(max_length=512)
 
 
-class PatientAddress(Model):
+class MergedPatientAddress(Model):
     id = fields.IntField(pk=True)
-    patient = fields.ForeignKeyField("app.Patient", related_name="address_patient_periods")
+    patient = fields.ForeignKeyField("app.MergedPatient", related_name="address_patient_periods")
     use = fields.CharField(max_length=32, null=True)
     type = fields.CharField(max_length=32, null=True)
     line = fields.CharField(max_length=1024)
@@ -207,10 +207,13 @@ class PatientAddress(Model):
     period_end = fields.DateField(null=True)
     fingerprint = fields.CharField(max_length=32, null=True)
 
+    class Meta:
+        table = "mrg__patientaddress"
 
-class PatientTelecom(Model):
+
+class MergedPatientTelecom(Model):
     id = fields.IntField(pk=True)
-    patient = fields.ForeignKeyField("app.Patient", related_name="telecom_patient_periods")
+    patient = fields.ForeignKeyField("app.MergedPatient", related_name="telecom_patient_periods")
     system = fields.CharField(max_length=32, null=True)
     use = fields.CharField(max_length=32, null=True)
     value = fields.CharField(max_length=512)
@@ -219,19 +222,24 @@ class PatientTelecom(Model):
     period_end = fields.DateField(null=True)
     fingerprint = fields.CharField(max_length=32, null=True)
 
+    class Meta:
+        table = "mrg__patienttelecom"
 
-class PatientCns(Model):
+
+class MergedPatientCns(Model):
     id = fields.IntField(pk=True)
-    patient = fields.ForeignKeyField("app.Patient", related_name="patient_cns")
+    patient = fields.ForeignKeyField("app.MergedPatient", related_name="patient_cns")
     value = fields.CharField(max_length=16, unique=True)
     is_main = fields.BooleanField(default=False)
     fingerprint = fields.CharField(max_length=32, null=True)
 
+    class Meta:
+        table = "mrg__patientcns"
 
-class Patient(Model):
-    id = fields.IntField(pk=True)
-    patient_cpf = fields.CharField(max_length=11, unique=True, validators=[CPFValidator()])
-    patient_code = fields.CharField(max_length=20, unique=True, validators=[PatientCodeValidator()])
+
+class MergedPatient(Model):
+    patient_code = fields.CharField(pk=True, max_length=20, validators=[PatientCodeValidator()])
+    patient_cpf = fields.CharField(max_length=11, validators=[CPFValidator()])
     birth_date = fields.DateField()
     active = fields.BooleanField(default=True)
     protected_person = fields.BooleanField(null=True)
@@ -240,6 +248,7 @@ class Patient(Model):
     father_name = fields.CharField(max_length=512, null=True)
     mother_name = fields.CharField(max_length=512, null=True)
     name = fields.CharField(max_length=512)
+    social_name = fields.CharField(max_length=512, null=True)
     race = fields.ForeignKeyField("app.Race", related_name="patient_race", null=True)
     gender = fields.ForeignKeyField("app.Gender", related_name="patient_gender")
     nationality = fields.ForeignKeyField(
@@ -249,16 +258,8 @@ class Patient(Model):
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
-
-class PatientCondition(Model):
-    id = fields.IntField(pk=True)
-    patient = fields.ForeignKeyField("app.Patient", related_name="patientconditions")
-    condition_code = fields.ForeignKeyField("app.ConditionCode", related_name="codes")
-    clinical_status = fields.CharEnumField(enum_type=ClinicalStatusEnum, null=True)
-    category = fields.CharEnumField(enum_type=CategoryEnum, null=True)
-    date = fields.DatetimeField()
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
+    class Meta:
+        table = "mrg__patient"
 
 
 class User(Model):
