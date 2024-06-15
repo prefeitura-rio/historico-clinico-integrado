@@ -85,6 +85,7 @@ def inject_environment_variables(environment: str):
 
 
 environment = getenv_or_action("ENVIRONMENT", action="warn", default="dev")
+
 if environment not in [
     "dev",
     "staging",
