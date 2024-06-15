@@ -24,6 +24,7 @@ async def test_auth(client: AsyncClient, username: str, password: str):
 
     return result_body.get("access_token")
 
+
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
 async def test_auth_invalid(client: AsyncClient, username: str):
@@ -39,7 +40,7 @@ async def test_auth_invalid(client: AsyncClient, username: str):
 
 @pytest.mark.anyio
 @pytest.mark.run(order=20)
-async def test_read_patient(client: AsyncClient, token: str, patient_cpf : str):
+async def test_read_patient(client: AsyncClient, token: str, patient_cpf: str):
     response = await client.get(
         f"/mrg/patient/{patient_cpf}",
         headers={"Authorization": f"Bearer {token}"}
@@ -48,7 +49,7 @@ async def test_read_patient(client: AsyncClient, token: str, patient_cpf : str):
     assert response.status_code == 200
 
     first_patient = response.json()[0]
-    
+
     assert 'gender' in first_patient
     assert 'nationality' in first_patient
     assert 'race' in first_patient
@@ -65,7 +66,7 @@ async def test_read_patient(client: AsyncClient, token: str, patient_cpf : str):
 async def test_create_or_update_mrgpatient_all_fields(
     client: AsyncClient,
     token: str,
-    patient_cpf : str
+    patient_cpf: str
 ):
 
     response = await client.put(
@@ -98,9 +99,9 @@ async def test_create_or_update_mrgpatient_all_fields(
 @pytest.mark.anyio
 @pytest.mark.run(order=10)
 async def test_create_or_update_mrgpatient_invalid_cpf(
-    client              : AsyncClient,
-    token               : str,
-    patient_invalid_cpf : str
+    client: AsyncClient,
+    token: str,
+    patient_invalid_cpf: str
 ):
 
     response = await client.put(
@@ -121,3 +122,71 @@ async def test_create_or_update_mrgpatient_invalid_cpf(
     )
 
     assert response.status_code == 400
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_or_update_mrgaddress(
+    client: AsyncClient,
+    token: str,
+    patient_code: str
+):
+
+    response = await client.put(
+        "/mrg/patientaddress",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[
+            {
+                "city": "00001",
+                "line": "AVENIDA ABELARDO, 141",
+                "postal_code": "21860390",
+                "patient_code": patient_code
+            }
+        ]
+    )
+
+    assert response.status_code == 200
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_or_update_mrgtelecom(
+    client: AsyncClient,
+    token: str,
+    patient_code: str
+):
+
+    response = await client.put(
+        "/mrg/patienttelecom",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[
+            {
+                "value": "21977741695",
+                "system": "phone",
+                "patient_code": patient_code
+            }
+        ]
+    )
+
+    assert response.status_code == 200
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_or_update_mrgcns(
+    client: AsyncClient,
+    token: str,
+    patient_code: str
+):
+
+    response = await client.put(
+        "/mrg/patientcns",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[
+            {
+                "value": "898092209631527",
+                "is_main": False,
+                "patient_code": patient_code
+            }
+        ]
+    )
+
+    assert response.status_code == 200
