@@ -53,7 +53,11 @@ async def create_or_update_patient(
         patient['birth_city'] = await get_instance(Model=City, table=cities, code=patient.get('birth_city'))
         patient['birth_date'] = patient['birth_date'].isoformat()
 
-    inserts = [MergedPatient(**patient) for patient in patients]
+    try:
+        inserts = [MergedPatient(**patient) for patient in patients]
+    except ValidationError as e:
+        return HTMLResponse(content=str(e), status_code=400)
+
     updatable_fields = [x for x in dict(inserts[0]).keys() if x not in [
         'patient_code', 'patient_cpf', 'created_at', 'updated_at', 'id']]
     bulk_insert_results = await MergedPatient.bulk_create(
@@ -161,57 +165,53 @@ async def create_or_update_patientcns(
 async def get_patient(
     _: Annotated[User, Depends(get_current_active_user)],
     patient_cpf: int,
-) -> CompletePatientModel:
+)-> list[CompletePatientModel]:
 
-    patient = await MergedPatient.get_or_none(patient_cpf=patient_cpf).prefetch_related(
+    patients = await MergedPatient.filter(patient_cpf=patient_cpf).prefetch_related(
         "race",
         "nationality",
         "gender",
         "patient_cns",
         "birth_city__state__country",
         "telecom_patient_periods",
-        "address_patient_periods__city__state__country",
-        "patientconditions__condition_code",
+        "address_patient_periods__city__state__country"
     )
 
-    address_list = []
-    for address in patient.address_patient_periods.related_objects:
-        address_data = dict(address)
-        address_data["city"] = address.city.code
-        address_data["state"] = address.city.state.code
-        address_data["country"] = address.city.state.country.code
-        address_list.append(address_data)
+    patient_list = []
+    for patient in patients:
+        address_list = []
+        for address in patient.address_patient_periods.related_objects:
+            address_data = dict(address)
+            address_data["city"] = address.city.code
+            address_data["state"] = address.city.state.code
+            address_data["country"] = address.city.state.country.code
+            address_list.append(address_data)
 
-    telecom_list = []
-    for telecom in patient.telecom_patient_periods.related_objects:
-        telecom_data = dict(telecom)
-        telecom_list.append(telecom_data)
+        telecom_list = []
+        for telecom in patient.telecom_patient_periods.related_objects:
+            telecom_data = dict(telecom)
+            telecom_list.append(telecom_data)
 
-    condition_list = []
-    for condition in patient.patientconditions.related_objects:
-        condition_data = dict(condition)
-        condition_data["code"] = condition.condition_code.value
-        condition_list.append(condition_data)
+        cns_list = []
+        for cns in patient.patient_cns.related_objects:
+            cns_data = dict(cns)
+            cns_list.append(cns_data)
 
-    cns_list = []
-    for cns in patient.patient_cns.related_objects:
-        cns_data = dict(cns)
-        cns_list.append(cns_data)
+        patient_data = dict(patient)
+        patient_data["gender"] = patient.gender.slug
+        patient_data["race"] = patient.race.slug
+        patient_data["address_list"] = address_list
+        patient_data["telecom_list"] = telecom_list
+        patient_data["cns_list"] = cns_list
 
-    patient_data = dict(patient)
-    patient_data["gender"] = patient.gender.slug
-    patient_data["race"] = patient.race.slug
-    patient_data["address_list"] = address_list
-    patient_data["telecom_list"] = telecom_list
-    patient_data["condition_list"] = condition_list
-    patient_data["cns_list"] = cns_list
+        if patient.nationality is not None:
+            patient_data["nationality"] = patient.nationality.slug
 
-    if patient.nationality is not None:
-        patient_data["nationality"] = patient.nationality.slug
+        if patient.birth_city is not None:
+            patient_data["birth_city"] = patient.birth_city.code
+            patient_data["birth_state"] = patient.birth_city.state.code
+            patient_data["birth_country"] = patient.birth_city.state.country.code
+        
+        patient_list.append(patient_data)
 
-    if patient.birth_city is not None:
-        patient_data["birth_city"] = patient.birth_city.code
-        patient_data["birth_state"] = patient.birth_city.state.code
-        patient_data["birth_country"] = patient.birth_city.state.country.code
-
-    return patient_data
+    return patient_list

@@ -120,7 +120,6 @@ class CompletePatientModel(BaseModel):
     cns_list: List[CnsModel]
     telecom_list: List[TelecomModel]
     address_list: List[AddressModel]
-    condition_list: List[ConditionListModel]
     active: Optional[bool] = True
     birth_city: Optional[str]
     birth_state: Optional[str]

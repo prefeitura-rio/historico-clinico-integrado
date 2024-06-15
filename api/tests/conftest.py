@@ -7,9 +7,23 @@ from tortoise import Tortoise
 
 from app.db import TORTOISE_ORM
 from app.main import app
-from app.models import City, Country, DataSource, State, User, Gender, Patient, \
-    ConditionCode, PatientCondition, PatientCns, Race, Nationality, PatientAddress, PatientTelecom, \
-    RawPatientRecord, RawPatientCondition, StandardizedPatientRecord
+from app.models import (
+    City,
+    Country,
+    DataSource,
+    State,
+    User,
+    Gender,
+    Race,
+    Nationality,
+    RawPatientRecord,
+    RawPatientCondition,
+    StandardizedPatientRecord,
+    MergedPatient,
+    MergedPatientCns,
+    MergedPatientAddress,
+    MergedPatientTelecom,
+)
 from app.utils import password_hash
 
 
@@ -37,9 +51,9 @@ async def client():
 @pytest.fixture(scope="session", autouse=True)
 async def initialize_tests(
     patient_cpf: str,
-    patient_code:str,
-    other_patient_cpf:str,
-    other_patient_code:str
+    patient_code: str,
+    other_patient_cpf: str,
+    other_patient_code: str
 ):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
@@ -52,23 +66,21 @@ async def initialize_tests(
     await Nationality.all().delete()
     await State.all().delete()
     await User.all().delete()
-    await Patient.all().delete()
-    await ConditionCode.all().delete()
-    await PatientCondition.all().delete()
-    await PatientCns.all().delete()
-    await PatientAddress.all().delete()
-    await PatientTelecom.all().delete()
+    await MergedPatient.all().delete()
+    await MergedPatientCns.all().delete()
+    await MergedPatientAddress.all().delete()
+    await MergedPatientTelecom.all().delete()
 
-    datasource  = await DataSource.create(
+    datasource = await DataSource.create(
         description="test_datasource",
         system="vitacare",
         cnes="1234567"
     )
-    country     = await Country.create(name="Brasil", code="00001")
-    state       = await State.create(name="Rio de Janeiro", country=country, code="00001")
-    city        = await City.create(name="Rio de Janeiro", state=state, code="00001")
-    gender      = await Gender.create(slug="male", name="male")
-    race        = await Race.create(slug="parda", name="parda")
+    country = await Country.create(name="Brasil", code="00001")
+    state = await State.create(name="Rio de Janeiro", country=country, code="00001")
+    city = await City.create(name="Rio de Janeiro", state=state, code="00001")
+    gender = await Gender.create(slug="male", name="male")
+    race = await Race.create(slug="parda", name="parda")
     nationality = await Nationality.create(slug="B", name="B")
 
     await User.create(
@@ -79,7 +91,7 @@ async def initialize_tests(
         is_superuser=False,
         data_source=datasource,
     )
-    patient = await Patient.create(
+    patient = await MergedPatient.create(
         name="João da Silva",
         patient_code=patient_code,
         patient_cpf=patient_cpf,
@@ -95,12 +107,12 @@ async def initialize_tests(
         birth_city=city,
         gender=gender
     )
-    await PatientCns.create(
+    await MergedPatientCns.create(
         value="123456789012345",
         patient=patient,
         is_main=True,
     )
-    await PatientAddress.create(
+    await MergedPatientAddress.create(
         patient=patient,
         city=city,
         state=state,
@@ -111,24 +123,12 @@ async def initialize_tests(
         use="home",
         period_start="2021-01-01"
     )
-    await PatientTelecom.create(
+    await MergedPatientTelecom.create(
         patient=patient,
         system="phone",
         use="home",
         value="21999999999",
         period_start="2021-01-01"
-    )
-    code = await ConditionCode.create(
-        value="A001",
-        type="cid",
-        description="Teste"
-    )
-    await PatientCondition.create(
-        patient=patient,
-        condition_code=code,
-        clinical_status="resolved",
-        category="encounter-diagnosis",
-        date="2021-01-01"
     )
     raw_record = await RawPatientRecord.create(
         patient_cpf=other_patient_cpf,
@@ -171,25 +171,31 @@ async def email():
 async def password():
     yield "testpassword"
 
+
 @pytest.fixture(scope="session")
 async def patient_cpf():
     yield "38965996074"
+
 
 @pytest.fixture(scope="session")
 async def patient_code():
     yield "38965996074.20210101"
 
+
 @pytest.fixture(scope="session")
 async def other_patient_cpf():
     yield "74663240020"
+
 
 @pytest.fixture(scope="session")
 async def other_patient_code():
     yield "74663240020.20210101"
 
+
 @pytest.fixture(scope="session")
 async def patient_invalid_cpf():
     yield "11111111111"
+
 
 @pytest.fixture(scope="session")
 async def patient_invalid_code():
@@ -205,45 +211,49 @@ async def token(client: AsyncClient, username: str, password: str):
     )
     yield response.json().get("access_token")
 
+
 @pytest.fixture(scope="session")
-async def patientrecord_raw_source(patient_cpf:str):
+async def patientrecord_raw_source(patient_cpf: str):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
     raw_patientrecord = await RawPatientRecord.get(
-        patient_cpf = patient_cpf
+        patient_cpf=patient_cpf
     ).first()
 
     yield str(raw_patientrecord.id)
 
+
 @pytest.fixture(scope="session")
-async def patientcondition_raw_source(patient_cpf:str):
+async def patientcondition_raw_source(patient_cpf: str):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
     raw_patientcondition = await RawPatientCondition.get(
-        patient_cpf = patient_cpf
+        patient_cpf=patient_cpf
     ).first()
     yield str(raw_patientcondition.id)
 
+
 @pytest.fixture(scope="session")
-async def other_patientrecord_raw_source(other_patient_cpf:str):
+async def other_patientrecord_raw_source(other_patient_cpf: str):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
     raw_patientrecord = await RawPatientRecord.get(
-        patient_cpf = other_patient_cpf
+        patient_cpf=other_patient_cpf
     ).first()
 
     yield str(raw_patientrecord.id)
 
+
 @pytest.fixture(scope="session")
-async def other_patientcondition_raw_source(other_patient_cpf:str):
+async def other_patientcondition_raw_source(other_patient_cpf: str):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
     raw_patientcondition = await RawPatientCondition.get(
-        patient_cpf = other_patient_cpf
+        patient_cpf=other_patient_cpf
     ).first()
 
     yield str(raw_patientcondition.id)
