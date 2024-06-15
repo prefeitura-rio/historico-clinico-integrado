@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import asyncio
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
 from tortoise.contrib.pydantic import pydantic_model_creator
-from tortoise.exceptions import ValidationError, IntegrityError
+from tortoise.exceptions import ValidationError
 
 from app.dependencies import get_current_active_user
 from app.pydantic_models import (
@@ -136,9 +135,6 @@ async def create_or_update_patientcns(
 ) -> int:
     # Get list of patient codes
     patient_codes = [patientcns.patient_code for patientcns in patientcns_list]
-
-    # Get CNSs to insert
-    cnss = [patientcns.value for patientcns in patientcns_list]
 
     # Delete all CNS for the patients/
     await MergedPatientCns.filter(patient_id__in=patient_codes).delete()
