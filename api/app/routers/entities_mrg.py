@@ -207,7 +207,7 @@ async def get_patient(
             patient_data["birth_city"] = patient.birth_city.code
             patient_data["birth_state"] = patient.birth_city.state.code
             patient_data["birth_country"] = patient.birth_city.state.country.code
-        
+
         patient_list.append(patient_data)
 
     return patient_list
