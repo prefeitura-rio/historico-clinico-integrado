@@ -58,7 +58,7 @@ async def create_or_update_patient(
         return HTMLResponse(content=str(e), status_code=400)
 
     updatable_fields = [x for x in dict(inserts[0]).keys() if x not in [
-        'patient_code', 'patient_cpf', 'created_at', 'updated_at', 'id']]
+        'patient_code', 'patient_cpf', 'created_at', 'id']]
     bulk_insert_results = await MergedPatient.bulk_create(
         inserts,
         batch_size=500,
