@@ -263,3 +263,12 @@ class MergedPatientTelecom(BaseModel):
     rank: Optional[int]
     start: Optional[date]
     end: Optional[date]
+
+class ProfessionalModel(BaseModel):
+    id_profissional_sus: str
+    cns: str
+    cpf: str
+    nome: str
+    id_cbo_lista: list[str]
+    id_registro_conselho_lista: list[str]
+    data_referencia: date

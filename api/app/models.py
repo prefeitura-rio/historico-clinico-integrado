@@ -281,3 +281,30 @@ class TableInitialization(Model):
 
     class Meta:
         table = "meta__tableinitialization"
+
+
+class HealthCareRoleFamily(Model):
+    code = fields.IntField(pk=True)
+    name = fields.CharField(max_length=512)
+
+
+class ProfessionalRegistry(Model):
+    code = fields.IntField(pk=True)
+    type = fields.CharField(max_length=12) #enum
+    professional = fields.ForeignKeyField("app.HealthCareProfessional", related_name="crm_professional")
+
+
+class HealthCareRole(Model):
+    cbo = fields.CharField(max_length=10, pk=True)
+    family = fields.ForeignKeyField("app.HealthCareRoleFamily", related_name="role_family")
+    description = fields.CharField(max_length=512)
+
+
+class HealthCareProfessional(Model):
+    id_sus = fields.IntField(pk=True)
+    name = fields.CharField(max_length=512)
+    cns = fields.CharField(max_length=16, index=True)
+    cpf = fields.CharField(max_length=11, index=True, validators=[CPFValidator()])
+    role = fields.ForeignKeyField("app.HealthCareRole", related_name="professional_role")
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
