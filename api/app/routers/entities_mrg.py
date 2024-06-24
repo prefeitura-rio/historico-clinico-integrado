@@ -14,6 +14,7 @@ from app.pydantic_models import (
     MergedPatientCns as PydanticMergedPatientCns,
     MergedPatientAddress as PydanticMergedPatientAddress,
     MergedPatientTelecom as PydanticMergedPatientTelecom,
+    ProfessionalModel
 )
 from app.models import (
     User,
@@ -25,6 +26,9 @@ from app.models import (
     MergedPatientAddress,
     MergedPatientTelecom,
     MergedPatientCns,
+    HealthCareProfessional,
+    ProfessionalRegistry,
+    HealthCareProfessionalOccupation
 )
 from app.utils import get_instance
 
@@ -211,3 +215,70 @@ async def get_patient(
         patient_list.append(patient_data)
 
     return patient_list
+
+
+@router.put("/professionals")
+async def create_or_update_professionals(
+    _: Annotated[User, Depends(get_current_active_user)],
+    professionals: List[ProfessionalModel],
+) -> int:
+
+    # Index by ID_SUS
+    professionals_indexed = {
+        p.id_profissional_sus: p.dict(exclude_none=True)
+        for p in professionals
+    }
+
+    # Insert Professionals
+    professionals_inserts = []
+    for id_sus, professional in professionals_indexed.items():
+        professional['id_sus'] = professional.pop('id_profissional_sus')
+        professional['name'] = professional.pop('nome')
+        professionals_inserts.append(HealthCareProfessional(**professional))
+    await HealthCareProfessional.bulk_create(
+        professionals_inserts,
+        batch_size=500,
+        on_conflict=["id_sus"],
+        update_fields=["name", "cpf","cns"]
+    )
+
+    # Retrieve Inserted Professionals
+    professionals = await HealthCareProfessional.filter(
+        id_sus__in=list(professionals_indexed.keys())
+    )
+
+    # Insert Health Care Professionals Occupations
+    occupation_inserts = []
+    for id_sus, professional in zip(list(professionals_indexed.keys()), professionals):
+        for cbo in professionals_indexed[id_sus]['id_cbo_lista']:
+            occupation_inserts.append(
+                HealthCareProfessionalOccupation(
+                    professional_id=professional.id_sus,
+                    role_id=cbo
+                )
+            )
+    await HealthCareProfessionalOccupation.bulk_create(
+        occupation_inserts,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+
+    # Insert Health Care Professional Registry
+    registry_inserts = []
+    for id_sus, professional in zip(list(professionals_indexed.keys()), professionals):
+        registry_list = professionals_indexed[id_sus].get('id_registro_conselho_lista', [])
+        for registry in registry_list:
+            registry_inserts.append(
+                ProfessionalRegistry(
+                    professional_id=professional.id_sus,
+                    code=registry,
+                    type=None
+                )
+            )
+    await ProfessionalRegistry.bulk_create(
+        registry_inserts,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+
+    return len(professionals)
