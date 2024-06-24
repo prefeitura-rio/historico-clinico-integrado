@@ -266,8 +266,8 @@ class MergedPatientTelecom(BaseModel):
 
 class ProfessionalModel(BaseModel):
     id_profissional_sus: str
-    cns: str
-    cpf: str
+    cns: Optional[str]
+    cpf: Optional[str]
     nome: str
     id_cbo_lista: list[str]
     id_registro_conselho_lista: list[str]

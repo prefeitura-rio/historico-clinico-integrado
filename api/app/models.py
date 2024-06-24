@@ -284,24 +284,25 @@ class TableInitialization(Model):
 
 
 class HealthCareRoleFamily(Model):
-    code = fields.IntField(pk=True)
+    code = fields.CharField(pk=True, max_length=4)
     name = fields.CharField(max_length=512)
 
 
 class ProfessionalRegistry(Model):
-    code = fields.IntField(pk=True)
-    type = fields.CharField(max_length=12) #enum
+    code = fields.CharField(pk=True, max_length=16)
+    type = fields.CharField(max_length=12)
     professional = fields.ForeignKeyField("app.HealthCareProfessional", related_name="crm_professional")
 
 
 class HealthCareRole(Model):
-    cbo = fields.CharField(max_length=10, pk=True)
+    cbo = fields.CharField(max_length=6, pk=True)
     family = fields.ForeignKeyField("app.HealthCareRoleFamily", related_name="role_family")
     description = fields.CharField(max_length=512)
+    professionals = fields.ReverseRelation["HealthCareProfessional"]
 
 
 class HealthCareProfessional(Model):
-    id_sus = fields.IntField(pk=True)
+    id_sus = fields.CharField(pk=True, max_length=16)
     name = fields.CharField(max_length=512)
     cns = fields.CharField(max_length=16, index=True)
     cpf = fields.CharField(max_length=11, index=True, validators=[CPFValidator()])

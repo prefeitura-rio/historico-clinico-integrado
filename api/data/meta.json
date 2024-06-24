@@ -47,5 +47,19 @@
         "source_csv_name": "./data/city.csv",
         "conflict_columns": ["code"],
         "version": 1
+    },
+    {
+        "entity_model_name": "HealthCareRoleFamily",
+        "table_name": "healthcarerolefamily",
+        "source_csv_name": "./data/ocupacao_familias.csv",
+        "conflict_columns": ["code"],
+        "version": 1
+    },
+    {
+        "entity_model_name": "HealthCareRole",
+        "table_name": "healthcarerole",
+        "source_csv_name": "./data/ocupacao_cbo.csv",
+        "conflict_columns": ["cbo"],
+        "version": 1
     }
 ]
