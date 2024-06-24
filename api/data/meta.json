@@ -49,15 +49,15 @@
         "version": 1
     },
     {
-        "entity_model_name": "HealthCareRoleFamily",
-        "table_name": "healthcarerolefamily",
+        "entity_model_name": "OccupationFamily",
+        "table_name": "occupationfamily",
         "source_csv_name": "./data/ocupacao_familias.csv",
         "conflict_columns": ["code"],
         "version": 1
     },
     {
-        "entity_model_name": "HealthCareRole",
-        "table_name": "healthcarerole",
+        "entity_model_name": "Occupation",
+        "table_name": "occupation",
         "source_csv_name": "./data/ocupacao_cbo.csv",
         "conflict_columns": ["cbo"],
         "version": 1

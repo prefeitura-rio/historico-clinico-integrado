@@ -283,29 +283,35 @@ class TableInitialization(Model):
         table = "meta__tableinitialization"
 
 
-class HealthCareRoleFamily(Model):
+class OccupationFamily(Model):
     code = fields.CharField(pk=True, max_length=4)
     name = fields.CharField(max_length=512)
 
 
 class ProfessionalRegistry(Model):
     code = fields.CharField(pk=True, max_length=16)
-    type = fields.CharField(max_length=12)
-    professional = fields.ForeignKeyField("app.HealthCareProfessional", related_name="crm_professional")
+    type = fields.CharField(max_length=12, null=True)
+    professional = fields.ForeignKeyField("app.HealthCareProfessional", related_name="professional_registry")
 
 
-class HealthCareRole(Model):
+class Occupation(Model):
     cbo = fields.CharField(max_length=6, pk=True)
-    family = fields.ForeignKeyField("app.HealthCareRoleFamily", related_name="role_family")
+    family = fields.ForeignKeyField("app.OccupationFamily", related_name="role_family")
     description = fields.CharField(max_length=512)
-    professionals = fields.ReverseRelation["HealthCareProfessional"]
-
 
 class HealthCareProfessional(Model):
     id_sus = fields.CharField(pk=True, max_length=16)
     name = fields.CharField(max_length=512)
     cns = fields.CharField(max_length=16, index=True)
-    cpf = fields.CharField(max_length=11, index=True, validators=[CPFValidator()])
-    role = fields.ForeignKeyField("app.HealthCareRole", related_name="professional_role")
+    cpf = fields.CharField(max_length=11, index=True, null=True, validators=[CPFValidator()])
+    roles = fields.ManyToManyField("app.Occupation", related_name="professional_roles")
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
+
+class HealthCareProfessionalOccupation(Model):
+    professional = fields.ForeignKeyField("app.HealthCareProfessional", related_name="professional_occcupation")
+    role = fields.ForeignKeyField("app.Occupation", related_name="professional_role")
+
+    class Meta:
+        table = "healthcareprofessional_occupation"
+        unique_together = ("professional", "role")
