@@ -225,7 +225,7 @@ async def create_or_update_professionals(
 
     # Index by ID_SUS
     professionals_indexed = {
-        p.id_profissional_sus: p.dict(exclude_none=True) 
+        p.id_profissional_sus: p.dict(exclude_none=True)
         for p in professionals
     }
 
@@ -236,7 +236,7 @@ async def create_or_update_professionals(
         professional['name'] = professional.pop('nome')
         professionals_inserts.append(HealthCareProfessional(**professional))
     await HealthCareProfessional.bulk_create(
-        professionals_inserts, 
+        professionals_inserts,
         batch_size=500,
         on_conflict=["id_sus"],
         update_fields=["name", "cpf","cns"]
@@ -258,7 +258,7 @@ async def create_or_update_professionals(
                 )
             )
     await HealthCareProfessionalOccupation.bulk_create(
-        occupation_inserts, 
+        occupation_inserts,
         batch_size=500,
         ignore_conflicts=True
     )
@@ -276,9 +276,9 @@ async def create_or_update_professionals(
                 )
             )
     await ProfessionalRegistry.bulk_create(
-        registry_inserts, 
+        registry_inserts,
         batch_size=500,
         ignore_conflicts=True
     )
-    
+
     return len(professionals)
