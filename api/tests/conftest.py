@@ -85,7 +85,7 @@ async def initialize_tests(
     gender = await Gender.create(slug="male", name="male")
     race = await Race.create(slug="parda", name="parda")
     nationality = await Nationality.create(slug="B", name="B")
-    occupation_family = await OccupationFamily.get_or_create(
+    occupation_family, _ = await OccupationFamily.get_or_create(
         code="1114",
         defaults={"name": "Test occupation family"}
     )
