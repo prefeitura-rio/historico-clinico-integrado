@@ -86,13 +86,11 @@ async def initialize_tests(
     race = await Race.create(slug="parda", name="parda")
     nationality = await Nationality.create(slug="B", name="B")
     occupation_family, _ = await OccupationFamily.get_or_create(
-        code="1114",
-        defaults={"name": "Test occupation family"}
+        code="1114", defaults={"name": "Test occupation family"}
     )
     await Occupation.get_or_create(
-        cbo="111415",
-        defaults={
-            "name": "Test occupation",
+        cbo="111415", defaults={
+            "description": "Test occupation",
             "family": occupation_family
         }
     )
