@@ -56,7 +56,7 @@ async def initialize_tests(
     patient_code: str,
     other_patient_cpf: str,
     other_patient_code: str
-):   
+):
 
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
