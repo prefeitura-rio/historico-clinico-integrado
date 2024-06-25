@@ -190,3 +190,30 @@ async def test_create_or_update_mrgcns(
     )
 
     assert response.status_code == 200
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_or_update_mrgprofessionals(
+    client: AsyncClient,
+    token: str,
+):
+
+    response = await client.put(
+        "/mrg/professionals",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[
+            {
+                "id_profissional_sus": "9999999999999999",
+                "cpf": None,
+                "cns": "99999999999999",
+                "nome": "PESSOA QUALQUER",
+                "id_cbo_lista": ["111415"],
+                "id_registro_conselho_lista": ["1111111"],
+                "data_referencia": "2021-01-01"
+            },
+        ]
+    )
+
+    assert response.json() == 1
+    assert response.status_code == 200
