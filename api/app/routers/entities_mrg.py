@@ -250,11 +250,11 @@ async def create_or_update_professionals(
     # Insert Health Care Professionals Occupations
     occupation_inserts = []
     for id_sus, professional in zip(list(professionals_indexed.keys()), professionals):
-        for cbo in professionals_indexed[id_sus]['id_cbo_lista']:
+        for cbo in professionals_indexed[id_sus]['cbo']:
             occupation_inserts.append(
                 HealthCareProfessionalOccupation(
                     professional_id=professional.id_sus,
-                    role_id=cbo
+                    role_id=cbo.get("id_cbo")
                 )
             )
     await HealthCareProfessionalOccupation.bulk_create(
@@ -266,13 +266,13 @@ async def create_or_update_professionals(
     # Insert Health Care Professional Registry
     registry_inserts = []
     for id_sus, professional in zip(list(professionals_indexed.keys()), professionals):
-        registry_list = professionals_indexed[id_sus].get('id_registro_conselho_lista', [])
+        registry_list = professionals_indexed[id_sus].get('conselho', [])
         for registry in registry_list:
             registry_inserts.append(
                 ProfessionalRegistry(
                     professional_id=professional.id_sus,
-                    code=registry,
-                    type=None
+                    code=registry.get('id_registro_conselho'),
+                    type=registry.get('id_tipo_conselho')
                 )
             )
     await ProfessionalRegistry.bulk_create(

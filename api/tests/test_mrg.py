@@ -147,6 +147,7 @@ async def test_create_or_update_mrgaddress(
 
     assert response.status_code == 200
 
+
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
 async def test_create_or_update_mrgtelecom(
@@ -168,6 +169,7 @@ async def test_create_or_update_mrgtelecom(
     )
 
     assert response.status_code == 200
+
 
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
@@ -208,10 +210,16 @@ async def test_create_or_update_mrgprofessionals(
                 "cpf": None,
                 "cns": "99999999999999",
                 "nome": "PESSOA QUALQUER",
-                "id_cbo_lista": ["111415"],
-                "id_registro_conselho_lista": ["1111111"],
-                "data_referencia": "2021-01-01"
-            },
+                "cbo": [{
+                    "id_cbo": "111415",
+                    "cbo": None
+                }],
+                "conselho": [{
+                    "id_registro_conselho": "1111111",
+                    "id_tipo_conselho": None
+                }],
+                "data_referencia": "2024-06-24"
+            }
         ]
     )
 
