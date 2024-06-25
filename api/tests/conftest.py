@@ -23,6 +23,8 @@ from app.models import (
     MergedPatientCns,
     MergedPatientAddress,
     MergedPatientTelecom,
+    Occupation,
+    OccupationFamily
 )
 from app.utils import password_hash
 
@@ -55,6 +57,7 @@ async def initialize_tests(
     other_patient_cpf: str,
     other_patient_code: str
 ):
+
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
@@ -82,6 +85,15 @@ async def initialize_tests(
     gender = await Gender.create(slug="male", name="male")
     race = await Race.create(slug="parda", name="parda")
     nationality = await Nationality.create(slug="B", name="B")
+    occupation_family, _ = await OccupationFamily.get_or_create(
+        code="1114", defaults={"name": "Test occupation family"}
+    )
+    await Occupation.get_or_create(
+        cbo="111415", defaults={
+            "description": "Test occupation",
+            "family": occupation_family
+        }
+    )
 
     await User.create(
         username="test",
