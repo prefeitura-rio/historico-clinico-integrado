@@ -265,7 +265,7 @@ async def create_or_update_professionals(
             if cbo.get("id_cbo_familia") not in occupation_family_ids:
                 new_occupation_families.append(
                     OccupationFamily(
-                        code=cbo.get("id_cbo_familia"),
+                        code=cbo.get("id_cbo_familia", cbo.get("id_cbo")[:4]),
                         name=cbo.get("cbo_familia")
                     )
                 )
