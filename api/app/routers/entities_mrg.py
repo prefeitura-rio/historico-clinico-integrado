@@ -279,7 +279,7 @@ async def create_or_update_professionals(
                         family_id=cbo.get("id_cbo_familia")
                     )
                 )
-            
+
             new_professional_occupation.append(
                 HealthCareProfessionalOccupation(
                     professional_id=professional.id_sus,
