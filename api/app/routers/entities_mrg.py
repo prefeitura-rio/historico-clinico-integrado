@@ -17,6 +17,8 @@ from app.pydantic_models import (
     ProfessionalModel
 )
 from app.models import (
+    Occupation,
+    OccupationFamily,
     User,
     City,
     Race,
@@ -242,23 +244,60 @@ async def create_or_update_professionals(
         update_fields=["name", "cpf","cns"]
     )
 
+    # Retrieve all Ocupations and Families
+    occupation_ids = [x.cbo for x in await Occupation.all()]
+    occupation_family_ids = [x.code for x in await OccupationFamily.all()]
+
     # Retrieve Inserted Professionals
     professionals = await HealthCareProfessional.filter(
         id_sus__in=list(professionals_indexed.keys())
     )
 
+    new_occupations = []
+    new_occupation_families = []
+    new_professional_occupation = []
+
     # Insert Health Care Professionals Occupations
-    occupation_inserts = []
     for id_sus, professional in zip(list(professionals_indexed.keys()), professionals):
         for cbo in professionals_indexed[id_sus]['cbo']:
-            occupation_inserts.append(
+
+            # If CBO Family does not exist in our base, prepare to insert it
+            if cbo.get("id_cbo_familia") not in occupation_family_ids:
+                new_occupation_families.append(
+                    OccupationFamily(
+                        code=cbo.get("id_cbo_familia"),
+                        name=cbo.get("cbo_familia")
+                    )
+                )
+
+            # If CBO does not exist in our base, prepare to insert it
+            if cbo.get("id_cbo") not in occupation_ids:
+                new_occupations.append(
+                    Occupation(
+                        cbo=cbo.get("id_cbo"),
+                        description=cbo.get("cbo"),
+                        family_id=cbo.get("id_cbo_familia")
+                    )
+                )
+
+            new_professional_occupation.append(
                 HealthCareProfessionalOccupation(
                     professional_id=professional.id_sus,
                     role_id=cbo.get("id_cbo")
                 )
             )
+    await OccupationFamily.bulk_create(
+        new_occupation_families,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+    await Occupation.bulk_create(
+        new_occupations,
+        batch_size=500,
+        ignore_conflicts=True
+    )
     await HealthCareProfessionalOccupation.bulk_create(
-        occupation_inserts,
+        new_professional_occupation,
         batch_size=500,
         ignore_conflicts=True
     )

@@ -266,6 +266,7 @@ class MergedPatientTelecom(BaseModel):
 
 class OccupationModel(BaseModel):
     id_cbo: str
+    cbo: str
     id_cbo_familia: Optional[str]
     cbo_familia: Optional[str]
 
