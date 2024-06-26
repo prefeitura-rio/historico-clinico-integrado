@@ -212,7 +212,9 @@ async def test_create_or_update_mrgprofessionals(
                 "nome": "PESSOA QUALQUER",
                 "cbo": [{
                     "id_cbo": "111415",
-                    "cbo": "Teste"
+                    "cbo": "Teste",
+                    "id_cbo_familia": "1114",
+                    "cbo_familia": "TESTE"
                 }],
                 "conselho": [{
                     "id_registro_conselho": "1111111",
