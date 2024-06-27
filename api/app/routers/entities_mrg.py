@@ -14,8 +14,11 @@ from app.pydantic_models import (
     MergedPatientCns as PydanticMergedPatientCns,
     MergedPatientAddress as PydanticMergedPatientAddress,
     MergedPatientTelecom as PydanticMergedPatientTelecom,
+    ProfessionalModel
 )
 from app.models import (
+    Occupation,
+    OccupationFamily,
     User,
     City,
     Race,
@@ -25,6 +28,9 @@ from app.models import (
     MergedPatientAddress,
     MergedPatientTelecom,
     MergedPatientCns,
+    HealthCareProfessional,
+    ProfessionalRegistry,
+    HealthCareProfessionalOccupation
 )
 from app.utils import get_instance
 
@@ -211,3 +217,107 @@ async def get_patient(
         patient_list.append(patient_data)
 
     return patient_list
+
+
+@router.put("/professionals")
+async def create_or_update_professionals(
+    _: Annotated[User, Depends(get_current_active_user)],
+    professionals: List[ProfessionalModel],
+) -> int:
+
+    # Index by ID_SUS
+    professionals_indexed = {
+        p.id_profissional_sus: p.dict(exclude_none=True)
+        for p in professionals
+    }
+
+    # Insert Professionals
+    professionals_inserts = []
+    for id_sus, professional in professionals_indexed.items():
+        professional['id_sus'] = professional.pop('id_profissional_sus')
+        professional['name'] = professional.pop('nome')
+        professionals_inserts.append(HealthCareProfessional(**professional))
+    await HealthCareProfessional.bulk_create(
+        professionals_inserts,
+        batch_size=500,
+        on_conflict=["id_sus"],
+        update_fields=["name", "cpf","cns"]
+    )
+
+    # Retrieve all Ocupations and Families
+    occupation_ids = [x.cbo for x in await Occupation.all()]
+    occupation_family_ids = [x.code for x in await OccupationFamily.all()]
+
+    # Retrieve Inserted Professionals
+    professionals = await HealthCareProfessional.filter(
+        id_sus__in=list(professionals_indexed.keys())
+    )
+
+    new_occupations = []
+    new_occupation_families = []
+    new_professional_occupation = []
+
+    # Insert Health Care Professionals Occupations
+    for id_sus, professional in zip(list(professionals_indexed.keys()), professionals):
+        for cbo in professionals_indexed[id_sus]['cbo']:
+
+            # If CBO Family does not exist in our base, prepare to insert it
+            if cbo.get("id_cbo_familia") not in occupation_family_ids:
+                new_occupation_families.append(
+                    OccupationFamily(
+                        code=cbo.get("id_cbo_familia"),
+                        name=cbo.get("cbo_familia")
+                    )
+                )
+
+            # If CBO does not exist in our base, prepare to insert it
+            if cbo.get("id_cbo") not in occupation_ids:
+                new_occupations.append(
+                    Occupation(
+                        cbo=cbo.get("id_cbo"),
+                        description=cbo.get("cbo"),
+                        family_id=cbo.get("id_cbo_familia")
+                    )
+                )
+
+            new_professional_occupation.append(
+                HealthCareProfessionalOccupation(
+                    professional_id=professional.id_sus,
+                    role_id=cbo.get("id_cbo")
+                )
+            )
+    await OccupationFamily.bulk_create(
+        new_occupation_families,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+    await Occupation.bulk_create(
+        new_occupations,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+    await HealthCareProfessionalOccupation.bulk_create(
+        new_professional_occupation,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+
+    # Insert Health Care Professional Registry
+    registry_inserts = []
+    for id_sus, professional in zip(list(professionals_indexed.keys()), professionals):
+        registry_list = professionals_indexed[id_sus].get('conselho', [])
+        for registry in registry_list:
+            registry_inserts.append(
+                ProfessionalRegistry(
+                    professional_id=professional.id_sus,
+                    code=registry.get('id_registro_conselho'),
+                    type=registry.get('id_tipo_conselho')
+                )
+            )
+    await ProfessionalRegistry.bulk_create(
+        registry_inserts,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+
+    return len(professionals)

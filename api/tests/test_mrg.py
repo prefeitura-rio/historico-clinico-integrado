@@ -147,6 +147,7 @@ async def test_create_or_update_mrgaddress(
 
     assert response.status_code == 200
 
+
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
 async def test_create_or_update_mrgtelecom(
@@ -169,6 +170,7 @@ async def test_create_or_update_mrgtelecom(
 
     assert response.status_code == 200
 
+
 @pytest.mark.anyio
 @pytest.mark.run(order=11)
 async def test_create_or_update_mrgcns(
@@ -189,4 +191,39 @@ async def test_create_or_update_mrgcns(
         ]
     )
 
+    assert response.status_code == 200
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=10)
+async def test_create_or_update_mrgprofessionals(
+    client: AsyncClient,
+    token: str,
+):
+
+    response = await client.put(
+        "/mrg/professionals",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[
+            {
+                "id_profissional_sus": "9999999999999999",
+                "cpf": None,
+                "cns": "99999999999999",
+                "nome": "PESSOA QUALQUER",
+                "cbo": [{
+                    "id_cbo": "111415",
+                    "cbo": "Teste",
+                    "id_cbo_familia": "1114",
+                    "cbo_familia": "TESTE"
+                }],
+                "conselho": [{
+                    "id_registro_conselho": "1111111",
+                    "id_tipo_conselho": None
+                }],
+                "data_referencia": "2024-06-24"
+            }
+        ]
+    )
+
+    assert response.json() == 1
     assert response.status_code == 200
