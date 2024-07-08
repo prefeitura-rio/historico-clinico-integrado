@@ -315,3 +315,24 @@ class HealthCareProfessionalOccupation(Model):
     class Meta:
         table = "healthcareprofessional_occupation"
         unique_together = ("professional", "role")
+
+class HealthCareTeamType(Model):
+    code = fields.CharField(pk=True, max_length=4)
+    name = fields.CharField(max_length=512)
+
+class HealthCareTeam(Model):
+    ine_code = fields.CharField(pk=True, max_length=10)
+    name = fields.CharField(max_length=512)
+    healthcare_unit = fields.ForeignKeyField("app.DataSource", related_name="team_datasource")
+    team_type = fields.ForeignKeyField("app.HealthCareTeamType", related_name="team_type")
+    phone = fields.CharField(max_length=16, null=True)
+    last_update_professionals = fields.DateField()
+    last_update_team = fields.DateField()
+
+class HealthCareProfessionalTeam(Model):
+    professional = fields.ForeignKeyField("app.HealthCareProfessional", related_name="professional_team")
+    team = fields.ForeignKeyField("app.HealthCareTeam", related_name="team_professional")
+
+    class Meta:
+        table = "healthcareprofessional_team"
+        unique_together = ("professional", "team")
