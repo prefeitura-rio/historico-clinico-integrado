@@ -146,8 +146,10 @@ class StandardizedPatientCondition(Model):
 
 class DataSource(Model):
     cnes = fields.CharField(max_length=50, unique=True, pk=True)
-    system = fields.CharEnumField(SystemEnum, index=True)
-    description = fields.CharField(max_length=512)
+    system = fields.CharEnumField(SystemEnum, index=True, max_length=50, null=True)
+    description = fields.CharField(max_length=512, null=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
 
 
 class ConditionCode(Model):
