@@ -205,7 +205,7 @@ class MergedPatientAddress(Model):
     postal_code = fields.CharField(max_length=8, null=True)
     period_start = fields.DateField(null=True)
     period_end = fields.DateField(null=True)
-    fingerprint = fields.CharField(max_length=32, null=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:
         table = "mrg__patientaddress"
@@ -220,7 +220,7 @@ class MergedPatientTelecom(Model):
     rank = fields.IntField(null=True)
     period_start = fields.DateField(null=True)
     period_end = fields.DateField(null=True)
-    fingerprint = fields.CharField(max_length=32, null=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:
         table = "mrg__patienttelecom"
@@ -231,7 +231,7 @@ class MergedPatientCns(Model):
     patient = fields.ForeignKeyField("app.MergedPatient", related_name="patient_cns")
     value = fields.CharField(max_length=16, unique=True)
     is_main = fields.BooleanField(default=False)
-    fingerprint = fields.CharField(max_length=32, null=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:
         table = "mrg__patientcns"
