@@ -353,17 +353,17 @@ async def create_or_update_teams(
         HealthCareTeam(
             ine_code=ine,
             name=team.pop('nome_referencia'),
-            team_type=team.pop('id_equipe_tipo'),
-            healthcare_unit=team.pop('id_cnes'),
-            team_phone=team.pop('telefone', None),
+            team_type_id=team.pop('id_equipe_tipo'),
+            healthcare_unit_id=team.pop('id_cnes'),
+            phone=team.pop('telefone', None),
         )
-        for ine, team in teams_indexed.values()
+        for ine, team in teams_indexed.items()
     ]
     created_teams = await HealthCareTeam.bulk_create(
         teams_to_insert,
         batch_size=500,
         on_conflict=["ine_code"],
-        update_fields=["name", "team_type", "team_phone", "healthcare_unit"]
+        update_fields=["name", "team_type_id", "phone", "healthcare_unit_id"]
     )
 
     # Insert/Update Professional Teams
@@ -378,7 +378,7 @@ async def create_or_update_teams(
             'dentista',
             'outros_profissionais'
         ]:
-            for prof_id_sus in team.get(column, []):
+            for prof_id_sus in team.dict().get(column, []):
                 professional_teams_to_insert.append(
                     HealthCareProfessionalTeam(
                         professional_id=prof_id_sus,
