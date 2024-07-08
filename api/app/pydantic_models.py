@@ -281,3 +281,22 @@ class ProfessionalModel(BaseModel):
     nome: str
     cbo: List[OccupationModel]
     conselho: List[RegistryModel]
+
+class TeamModel(BaseModel):
+    id_ine: str
+    nome_referencia: str
+    id_cnes: str
+    id_equipe_tipo: str
+    equipe_tipo_descricao: str
+    id_area: str
+    area_descricao: str
+    telefone: Optional[str]
+    medicos: List[str]
+    enfermeiros: List[str]
+    auxiliares_tecnicos_enfermagem: List[str]
+    agentes_comunitarios: List[str]
+    auxiliares_tecnico_saude_bucal: List[str]
+    dentista: List[str]
+    outros_profissionais: List[str]
+    ultima_atualizacao_profissionais: date
+    ultima_atualizacao_infos_equipe: date

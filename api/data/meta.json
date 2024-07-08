@@ -61,5 +61,12 @@
         "source_csv_name": "./data/ocupacao_cbo.csv",
         "conflict_columns": ["cbo"],
         "version": 1
+    },
+    {
+        "entity_model_name": "DataSource",
+        "table_name": "datasource",
+        "source_csv_name": "./data/datasource.csv",
+        "conflict_columns": ["cnes"],
+        "version": 1
     }
 ]
