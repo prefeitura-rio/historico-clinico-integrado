@@ -281,4 +281,3 @@ class ProfessionalModel(BaseModel):
     nome: str
     cbo: List[OccupationModel]
     conselho: List[RegistryModel]
-    data_referencia: date
