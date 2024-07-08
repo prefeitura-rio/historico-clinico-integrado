@@ -281,7 +281,6 @@ class ProfessionalModel(BaseModel):
     nome: str
     cbo: List[OccupationModel]
     conselho: List[RegistryModel]
-    data_referencia: date
 
 class TeamModel(BaseModel):
     id_ine: str
