@@ -14,7 +14,8 @@ from app.pydantic_models import (
     MergedPatientCns as PydanticMergedPatientCns,
     MergedPatientAddress as PydanticMergedPatientAddress,
     MergedPatientTelecom as PydanticMergedPatientTelecom,
-    ProfessionalModel
+    ProfessionalModel,
+    TeamModel
 )
 from app.models import (
     Occupation,
@@ -30,7 +31,10 @@ from app.models import (
     MergedPatientCns,
     HealthCareProfessional,
     ProfessionalRegistry,
-    HealthCareProfessionalOccupation
+    HealthCareProfessionalOccupation,
+    HealthCareTeam,
+    HealthCareTeamType,
+    HealthCareProfessionalTeam
 )
 from app.utils import get_instance
 
@@ -321,3 +325,70 @@ async def create_or_update_professionals(
     )
 
     return len(professionals)
+
+@router.put("/teams")
+async def create_or_update_teams(
+    _: Annotated[User, Depends(get_current_active_user)],
+    teams: List[TeamModel],
+) -> int:
+
+    # Insert/Update Team Types
+    types = {t.id_equipe_tipo: t.equipe_tipo_descricao for t in teams}
+    types_to_insert = [
+        HealthCareTeamType(code=tipo, name=nome)
+        for tipo, nome in types.items()
+    ]
+    await HealthCareTeamType.bulk_create(
+        types_to_insert,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+
+    # Insert/Update Teams
+    teams_indexed = {
+        t.id_ine: t.dict(exclude_none=True)
+        for t in teams
+    }
+    teams_to_insert = [
+        HealthCareTeam(
+            ine_code=ine,
+            name=team.pop('nome_referencia'),
+            team_type=team.pop('id_equipe_tipo'),
+            healthcare_unit=team.pop('id_cnes'),
+            team_phone=team.pop('telefone', None),
+        )
+        for ine, team in teams_indexed.values()
+    ]
+    created_teams = await HealthCareTeam.bulk_create(
+        teams_to_insert,
+        batch_size=500,
+        on_conflict=["ine_code"],
+        update_fields=["name", "team_type", "team_phone", "healthcare_unit"]
+    )
+
+    # Insert/Update Professional Teams
+    professional_teams_to_insert = []
+    for team in teams:
+        for column in [
+            'medicos',
+            'enfermeiros',
+            'auxiliares_tecnicos_enfermagem',
+            'agentes_comunitarios',
+            'auxiliares_tecnico_saude_bucal',
+            'dentista',
+            'outros_profissionais'
+        ]:
+            for prof_id_sus in team.get(column, []):
+                professional_teams_to_insert.append(
+                    HealthCareProfessionalTeam(
+                        professional_id=prof_id_sus,
+                        team_id=team.id_ine
+                    )
+                )
+    await HealthCareProfessionalTeam.bulk_create(
+        professional_teams_to_insert,
+        batch_size=500,
+        ignore_conflicts=True
+    )
+
+    return len(created_teams)
