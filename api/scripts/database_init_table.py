@@ -36,7 +36,7 @@ async def run():
 
             new_instances = []
             for _, row in initial_data.iterrows():
-                kwargs = row.to_dict()
+                kwargs = {k: v for k, v in row.to_dict().items() if pd.notnull(v)}
                 instance = ModelClass(**kwargs)
                 new_instances.append(instance)
 
