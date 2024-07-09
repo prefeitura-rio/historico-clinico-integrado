@@ -3,37 +3,50 @@ from enum import Enum
 
 
 class ConditionCodeTypeEnum(str, Enum):
-	CID="cid"
-	CIAP="ciap"
+    CID = "cid"
+    CIAP = "ciap"
+
 
 class SystemEnum(str, Enum):
-	VITACARE="vitacare"
-	VITAI="vitai"
-	PRONTUARIO="prontuario"
-	SMSRIO="smsrio"
+    VITACARE = "vitacare"
+    VITAI = "vitai"
+    PRONTUARIO = "prontuario"
+    SMSRIO = "smsrio"
+    ESUS = "esus"
+    MV = "mv"
+    WARELINE = "wareline"
+    MEDCLINIC = "medclinic"
+    SARAH = "sarah"
+    NA = "nao se aplica"
+    PAPEL = "papel"
+
 
 class ClinicalStatusEnum(str, Enum):
-	RESOLVED = "resolved"
-	RESOLVING = "resolving"
-	NOT_RESOLVED = "not_resolved"
+    RESOLVED = "resolved"
+    RESOLVING = "resolving"
+    NOT_RESOLVED = "not_resolved"
+
 
 class CategoryEnum(str, Enum):
-	PROBLEM_LIST_ITEM = "problem-list-item"
-	ENCOUTER_DIAGNOSIS = "encounter-diagnosis"
+    PROBLEM_LIST_ITEM = "problem-list-item"
+    ENCOUTER_DIAGNOSIS = "encounter-diagnosis"
+
 
 class GenderEnum(str, Enum):
-	MALE = "male"
-	FEMALE = "female"
-	UNKNOWN = "unknown"
+    MALE = "male"
+    FEMALE = "female"
+    UNKNOWN = "unknown"
+
 
 class RaceEnum(str, Enum):
-	BRANCA = "branca"
-	PRETA = "preta"
-	PARDA = "parda"
-	AMARELA = "amarela"
-	INDIGENA = "indigena"
+    BRANCA = "branca"
+    PRETA = "preta"
+    PARDA = "parda"
+    AMARELA = "amarela"
+    INDIGENA = "indigena"
+
 
 class NationalityEnum(str, Enum):
-	BRASILEIRO = "B"
-	ESTRANGEIRO = "E"
-	NATURALIZADO = "N"
+    BRASILEIRO = "B"
+    ESTRANGEIRO = "E"
+    NATURALIZADO = "N"
