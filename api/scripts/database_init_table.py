@@ -22,9 +22,6 @@ async def run():
         )
 
         if (table.last_version is None) or (tablemeta['version'] > table.last_version):
-            table.last_version = tablemeta['version']
-            await table.save()
-
             module = importlib.import_module('app.models')
             ModelClass = getattr(module, tablemeta['entity_model_name'])
 
@@ -45,6 +42,9 @@ async def run():
                 on_conflict=tablemeta['conflict_columns'],
                 update_fields=initial_data.columns.tolist()
             )
+
+            table.last_version = tablemeta['version']
+            await table.save()
 
             logger.info(f"{tablemeta['entity_model_name']} initialized successfully")
         else:
