@@ -227,3 +227,38 @@ async def test_create_or_update_mrgprofessionals(
 
     assert response.json() == 1
     assert response.status_code == 200
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=11)
+async def test_create_or_update_mrgteams(
+    client: AsyncClient,
+    token: str,
+):
+
+    response = await client.put(
+        "/mrg/teams",
+        headers={"Authorization": f"Bearer {token}"},
+        json=[{
+            "id_ine": "0008887779",
+            "nome_referencia": "AGENOR PORTO ESB",
+            "id_cnes": "1234567",
+            "id_equipe_tipo": "71",
+            "equipe_tipo_descricao": "ESB - EQUIPE DE SAUDE BUCAL",
+            "id_area": "0001",
+            "area_descricao": "CESARIO DE MELO",
+            "telefone": None,
+            "medicos": [],
+            "enfermeiros": [],
+            "auxiliares_tecnicos_enfermagem": [],
+            "agentes_comunitarios": [],
+            "auxiliares_tecnico_saude_bucal": ["9999999999999999"],
+            "dentista": [],
+            "outros_profissionais": [],
+            "ultima_atualizacao_profissionais": "2024-05-01",
+            "ultima_atualizacao_infos_equipe": "2024-05-13"
+        }]
+    )
+
+    assert response.json() == 1
+    assert response.status_code == 200
