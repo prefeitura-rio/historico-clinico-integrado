@@ -67,6 +67,6 @@
         "table_name": "datasource",
         "source_csv_name": "./data/datasource.csv",
         "conflict_columns": ["cnes"],
-        "version": 2
+        "version": 3
     }
 ]
