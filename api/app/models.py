@@ -75,7 +75,7 @@ class RawEncounter(Model):
         "app.DataSource", related_name="raw_encounter_source", null=False
     )
     source_updated_at = fields.DatetimeField(null=False)
-    source_id = fields.DatetimeField(null=False)
+    source_id = fields.CharField(max_length=100, null=False)
     is_valid = fields.BooleanField(null=True)
     created_at = fields.DatetimeField(auto_now_add=True, index=True)
     updated_at = fields.DatetimeField(auto_now=True, index=True)
