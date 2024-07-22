@@ -34,7 +34,7 @@ class DataLakeUploader:
         self._base_path = os.path.join(os.getcwd(), "/files")
 
     def _prepare_gcp_credential(self) -> None:
-        base64_credential = os.environ["GCP_JSON_CREDENTIAL"]
+        base64_credential = os.environ["BASEDOSDADOS_CREDENTIALS_PROD"]
 
         with open("/tmp/credentials.json", "wb") as f:
             f.write(base64.b64decode(base64_credential))
