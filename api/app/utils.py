@@ -5,7 +5,6 @@ import json
 import jwt
 import pandas as pd
 from passlib.context import CryptContext
-from loguru import logger
 
 from app import config
 from app.models import User

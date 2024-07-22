@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncpg
-import pandas as pd
 
 from datetime import (
     datetime as dt,
