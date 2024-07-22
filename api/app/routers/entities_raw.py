@@ -1,35 +1,49 @@
 # -*- coding: utf-8 -*-
+import asyncpg
+import pandas as pd
+
 from datetime import (
     datetime as dt,
     timedelta as td,
 )
 from typing import Annotated, Literal
-import asyncpg
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from tortoise.exceptions import ValidationError
 
-from app.pydantic_models import (
-    RawDataListModel,
-    BulkInsertOutputModel,
-    RawDataModel
-)
+from app.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawDataModel
 from app.dependencies import get_current_active_user
-from app.models import (
-    User,
-    RawPatientRecord,
-    RawPatientCondition,
-    DataSource,
-    RawEncounter
+from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
+from app.enums import SystemEnum
+from app.datalake import DataLakeUploader
+from app.utils import (
+    unnester_encounter,
+    unnester_patientconditions,
+    unnester_patientrecords
 )
 
 
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
-entity_from_name = {
-    "patientrecords": RawPatientRecord,
-    "patientconditions": RawPatientCondition,
-    "encounter": RawEncounter
+entities_config = {
+    "patientrecords": {
+        "class": RawPatientRecord,
+        "unnester": unnester_patientrecords,
+    },
+    "patientconditions": {
+        "class": RawPatientCondition,
+        "unnester": unnester_patientconditions,
+    },
+    "encounter": {
+        "class": RawEncounter,
+        "unnester": unnester_encounter,
+    },
+}
+
+datalake_config = {
+    SystemEnum.VITACARE: "brutos_prontuario_vitacare",
+    SystemEnum.VITAI: "brutos_prontuario_vitai",
+    SystemEnum.SMSRIO: "brutos_plataforma_smsrio",
 }
 
 
@@ -43,7 +57,7 @@ async def get_raw_data(
     datasource_system: Literal["vitai", "vitacare", "smsrio"] = None,
 ) -> list[RawDataModel]:
 
-    Entity = entity_from_name.get(entity_name)
+    Entity = entities_config[entity_name]["class"]
 
     if filter_type == "fromEventDatetime":
         filtered = Entity.filter(
@@ -74,12 +88,35 @@ async def create_raw_data(
     raw_data: RawDataListModel,
 ) -> BulkInsertOutputModel:
 
-    Entity = entity_from_name.get(entity_name)
+    Entity = entities_config[entity_name]["class"]
+    unnester = entities_config[entity_name]["unnester"]
 
     raw_data = raw_data.dict()
     cnes = raw_data.pop("cnes")
     records = raw_data.pop("data_list")
 
+    # Get DataSource
+    data_source = await DataSource.get(cnes=cnes)
+
+    # Configure Datalake Uploader
+    uploader = DataLakeUploader(
+        biglake_table=True,
+        dataset_is_public=False,
+        dump_mode="append",
+        force_unique_file_name=True,
+    )
+
+    # Upload to Datalake
+    for name, dataframe in unnester(records):
+        uploader.upload(
+            dataframe=dataframe,
+            dataset_id=datalake_config[data_source.system],
+            table_id=f"{name}_eventos",
+            partition_by_date=True,
+            partition_column="updated_at",
+        )
+
+    # Send to HCI Database
     try:
         records_to_create = []
         for record in records:
@@ -109,5 +146,5 @@ async def set_as_invalid_flag_records(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     raw_record_id_list: list[str],
 ):
-    Entity = entity_from_name.get(entity_name)
+    Entity = entities_config[entity_name]["class"]
     await Entity.filter(id__in=raw_record_id_list).update(is_valid=False)
