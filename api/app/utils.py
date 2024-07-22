@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import hashlib
 import json
 import jwt
+import copy
 import pandas as pd
 from passlib.context import CryptContext
 
@@ -126,7 +127,7 @@ async def get_instance(Model, table, slug=None, code=None):
 def unnester_encounter(payloads: dict) -> pd.DataFrame:
     tables = {}
 
-    for payload in payloads:
+    for payload in copy.deepcopy(payloads):
         for field in [
             "vacinas",
             "condicoes",
@@ -158,7 +159,7 @@ def unnester_encounter(payloads: dict) -> pd.DataFrame:
 def unnester_patientrecords(payloads: dict) -> pd.DataFrame:
     tables = {}
 
-    for payload in payloads:
+    for payload in copy.deepcopy(payloads):
         for field in [
             "telefones",
             "cns_provisorio"
@@ -185,7 +186,7 @@ def unnester_patientrecords(payloads: dict) -> pd.DataFrame:
 def unnester_patientconditions(payloads: dict) -> pd.DataFrame:
     tables = {}
 
-    for payload in payloads:
+    for payload in copy.deepcopy(payloads):
         payload["data"]['id'] = payload["patient_code"]
         payload["data"]["updated_at"] = payload["source_updated_at"]
         payload["data"]["patient_cpf"] = payload["patient_cpf"]
