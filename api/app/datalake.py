@@ -3,6 +3,7 @@ import os
 import uuid
 import glob
 from typing import Optional
+import base64
 
 import pandas as pd
 import basedosdados as bd
@@ -31,6 +32,16 @@ class DataLakeUploader:
         self.force_unique_file_name = force_unique_file_name
 
         self._base_path = os.path.join(os.getcwd(), "/files")
+
+    def _prepare_gcp_credential(self) -> None:
+        base64_credential = os.environ["GCP_JSON_CREDENTIAL"]
+
+        with open("/tmp/credentials.json", "wb") as f:
+            f.write(base64.b64decode(base64_credential))
+
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/tmp/credentials.json"
+        return
+
 
     def _split_dataframe_per_day(
         self,
@@ -79,6 +90,8 @@ class DataLakeUploader:
         table_id: str,
         source_format: str = "parquet"
     ) -> None:
+        self._prepare_gcp_credential()
+
         tb = bd.Table(dataset_id=dataset_id, table_id=table_id)
         table_staging = f"{tb.table_full_name['staging']}"
 
