@@ -85,6 +85,7 @@ async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     current_user: Annotated[User, Depends(get_current_active_user)],
     raw_data: RawDataListModel,
+    upload_to_datalake: bool = True,
 ) -> BulkInsertOutputModel:
 
     Entity = entities_config[entity_name]["class"]
@@ -97,23 +98,22 @@ async def create_raw_data(
     # Get DataSource
     data_source = await DataSource.get(cnes=cnes)
 
-    # Configure Datalake Uploader
-    uploader = DataLakeUploader(
-        biglake_table=True,
-        dataset_is_public=False,
-        dump_mode="append",
-        force_unique_file_name=True,
-    )
-
-    # Upload to Datalake
-    for name, dataframe in unnester(records):
-        uploader.upload(
-            dataframe=dataframe,
-            dataset_id=datalake_config[data_source.system],
-            table_id=f"{name}_eventos",
-            partition_by_date=True,
-            partition_column="updated_at",
+    if upload_to_datalake:
+        uploader = DataLakeUploader(
+            biglake_table=True,
+            dataset_is_public=False,
+            dump_mode="append",
+            force_unique_file_name=True,
         )
+
+        for name, dataframe in unnester(records):
+            uploader.upload(
+                dataframe=dataframe,
+                dataset_id=datalake_config[data_source.system],
+                table_id=f"{name}_eventos",
+                partition_by_date=True,
+                partition_column="updated_at",
+            )
 
     # Send to HCI Database
     try:
