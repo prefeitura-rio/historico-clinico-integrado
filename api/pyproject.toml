@@ -14,7 +14,7 @@ aerich = "^0.7.2"
 aioredis = "^2.0.1"
 bcrypt = "<4.1"
 fastapi = "0.109.2"
-loguru = "^0.7.2"
+loguru = "^0.7.0"
 passlib = { extras = ["bcrypt"], version = "^1.7.4" }
 python-multipart = "0.0.7"
 sentry-sdk = { version = "^1.37.1", extras = ["fastapi"] }
@@ -28,6 +28,7 @@ validate-docbr = "^1.10.0"
 pyjwt = "^2.8.0"
 urllib3 = "2.0.7"
 idna = "3.7"
+basedosdados = "^2.0.0b16"
 
 
 [tool.poetry.group.dev.dependencies]
