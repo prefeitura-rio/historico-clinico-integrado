@@ -66,6 +66,12 @@ class DataLakeUploader:
         else:
             return f"{table_id}.parquet"
 
+    def _cast_to_string(self, df: pd.DataFrame) -> pd.DataFrame:
+        # Cast all columns to string
+        for column in df.columns:
+            df[column] = df[column].astype(str)
+        return df
+
     def _upload_file(
         self,
         input_path: str,
@@ -169,6 +175,7 @@ class DataLakeUploader:
                 folder_path = os.path.join(upload_folder, partition_folder)
                 os.makedirs(folder_path, exist_ok=True)
 
+                dataframe = self._cast_to_string(dataframe)
                 dataframe.to_parquet(
                     os.path.join(
                         folder_path, self._create_file_name(table_id, self.force_unique_file_name)
