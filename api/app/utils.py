@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import hashlib
 import json
 import jwt
+import pandas as pd
 from passlib.context import CryptContext
 
 from app import config
@@ -88,7 +89,8 @@ def generate_dictionary_fingerprint(dict_obj: dict) -> str:
 
     """
     serialized_obj = json.dumps(dict_obj, sort_keys=True)
-    return hashlib.md5(serialized_obj.encode('utf-8')).hexdigest()
+    return hashlib.md5(serialized_obj.encode("utf-8")).hexdigest()
+
 
 def merge_versions(current_objs, new_objs: dict) -> None:
     current_fingerprints = {obj.fingerprint: obj for obj in current_objs}
@@ -97,20 +99,16 @@ def merge_versions(current_objs, new_objs: dict) -> None:
     to_delete = current_fingerprints.keys() - new_fingerprints.keys()
     to_add = new_fingerprints.keys() - current_fingerprints.keys()
 
-    deletions = [
-        current_fingerprints[fingerprint]
-        for fingerprint in to_delete
-    ]
-    insertions = [
-        new_fingerprints[fingerprint]
-        for fingerprint in to_add
-    ]
+    deletions = [current_fingerprints[fingerprint] for fingerprint in to_delete]
+    insertions = [new_fingerprints[fingerprint] for fingerprint in to_add]
 
     return deletions, insertions
+
 
 async def update_and_return(instance, new_data):
     await instance.update_from_dict(new_data).save()
     return instance
+
 
 async def get_instance(Model, table, slug=None, code=None):
     if slug is None:
@@ -123,3 +121,80 @@ async def get_instance(Model, table, slug=None, code=None):
             table[slug] = await Model.get_or_none(slug=slug)
 
     return table[slug]
+
+
+def unnester_encounter(payloads: dict) -> pd.DataFrame:
+    tables = {}
+
+    for payload in payloads:
+        for field in [
+            "vacinas",
+            "condicoes",
+            "encaminhamentos",
+            "indicadores",
+            "alergias_anamnese",
+            "exames_solicitados",
+            "prescricoes",
+        ]:
+            for row in payload["data"].pop(field, []):
+                row["atendimento_id"] = payload["source_id"]
+                row["updated_at"] = payload["source_updated_at"]
+                tables[field] = tables.get(field, []) + [row]
+
+        payload["data"]['id'] = payload["source_id"]
+        payload["data"]["updated_at"] = payload["source_updated_at"]
+        payload["data"]["patient_cpf"] = payload["patient_cpf"]
+        payload["data"]["patient_code"] = payload["patient_code"]
+
+        tables["atendimento"] = tables.get("atendimento", []) + [payload["data"]]
+
+    result = []
+    for table_name, rows in tables.items():
+        result.append((table_name, pd.DataFrame(rows)))
+
+    return result
+
+
+def unnester_patientrecords(payloads: dict) -> pd.DataFrame:
+    tables = {}
+
+    for payload in payloads:
+        for field in [
+            "telefones",
+            "cns_provisorio"
+        ]:
+            for row in payload["data"].pop(field, []):
+                row["patient_code"] = payload["patient_code"]
+                row["updated_at"] = payload["source_updated_at"]
+                tables[field] = tables.get(field, []) + [row]
+
+        payload["data"]['id'] = payload["patient_code"]
+        payload["data"]["updated_at"] = payload["source_updated_at"]
+        payload["data"]["patient_cpf"] = payload["patient_cpf"]
+        payload["data"]["patient_code"] = payload["patient_code"]
+
+        tables["paciente"] = tables.get("paciente", []) + [payload["data"]]
+
+    result = []
+    for table_name, rows in tables.items():
+        result.append((table_name, pd.DataFrame(rows)))
+
+    return result
+
+
+def unnester_patientconditions(payloads: dict) -> pd.DataFrame:
+    tables = {}
+
+    for payload in payloads:
+        payload["data"]['id'] = payload["patient_code"]
+        payload["data"]["updated_at"] = payload["source_updated_at"]
+        payload["data"]["patient_cpf"] = payload["patient_cpf"]
+        payload["data"]["patient_code"] = payload["patient_code"]
+
+        tables["resumo_diagnostico"] = tables.get("resumo_diagnostico", []) + [payload["data"]]
+
+    result = []
+    for table_name, rows in tables.items():
+        result.append((table_name, pd.DataFrame(rows)))
+
+    return result

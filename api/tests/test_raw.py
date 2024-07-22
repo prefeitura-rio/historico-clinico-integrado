@@ -16,7 +16,7 @@ async def test_create_rawpatientrecord(
     patient_cpf         : str,
 ):
     response = await client.post(
-        "/raw/patientrecords",
+        "/raw/patientrecords?upload_to_datalake=false",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "data_list": [
@@ -50,7 +50,7 @@ async def test_create_rawpatientrecord_invalid_cpf(
     patient_invalid_cpf         : str
 ):
     response = await client.post(
-        "/raw/patientrecords",
+        "/raw/patientrecords?upload_to_datalake=false",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "data_list": [
@@ -122,7 +122,7 @@ async def test_create_rawpatientcondition(
     patient_cpf : str
 ):
     response = await client.post(
-        "/raw/patientconditions",
+        "/raw/patientconditions?upload_to_datalake=false",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "data_list": [
@@ -156,7 +156,7 @@ async def test_create_rawpatientcondition_invalid_cpf(
     patient_cpf                 : str
 ):
     response = await client.post(
-        "/raw/patientconditions",
+        "/raw/patientconditions?upload_to_datalake=false",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "data_list": [
