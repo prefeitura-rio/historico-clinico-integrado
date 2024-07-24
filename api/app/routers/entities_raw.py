@@ -14,7 +14,7 @@ from app.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawData
 from app.dependencies import get_current_active_user
 from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
 from app.enums import SystemEnum
-from app.datalake import DataLakeUploader
+from app.datalake import DatalakeUploader
 from app.utils import (
     unnester_encounter,
     unnester_patientconditions,
@@ -99,7 +99,7 @@ async def create_raw_data(
     data_source = await DataSource.get(cnes=cnes)
 
     if upload_to_datalake:
-        uploader = DataLakeUploader(
+        uploader = DatalakeUploader(
             biglake_table=True,
             dataset_is_public=False,
             dump_mode="append",
