@@ -30,11 +30,11 @@ class DatalakeUploader:
         self.dump_mode = dump_mode
         self.csv_delimiter = csv_delimiter
         self.force_unique_file_name = force_unique_file_name
-        
+
         self._base_path = os.path.join(os.getcwd(), "files")
 
         self._validate_envs()
-    
+
     def _validate_envs(self) -> None:
         mandatory_envs = [
             "BASEDOSDADOS_CREDENTIALS_PROD",
@@ -215,5 +215,5 @@ class DatalakeUploader:
                     upload_folder, self._create_file_name(table_id, self.force_unique_file_name)
                 )
             )
-            
+
         self._upload_files_in_folder(upload_folder, dataset_id, table_id)
