@@ -11,7 +11,7 @@ import basedosdados as bd
 from loguru import logger
 
 
-class DataLakeUploader:
+class DatalakeUploader:
 
     def __init__(
         self,
@@ -30,10 +30,25 @@ class DataLakeUploader:
         self.dump_mode = dump_mode
         self.csv_delimiter = csv_delimiter
         self.force_unique_file_name = force_unique_file_name
+        
+        self._base_path = os.path.join(os.getcwd(), "files")
 
-        self._base_path = os.path.join(os.getcwd(), "/files")
+        self._validate_envs()
+    
+    def _validate_envs(self) -> None:
+        mandatory_envs = [
+            "BASEDOSDADOS_CREDENTIALS_PROD",
+            "BASEDOSDADOS_CREDENTIALS_STAGING",
+            "BASEDOSDADOS_CONFIG",
+        ]
+        missing_envs = [
+            env for env in mandatory_envs if env not in os.environ
+        ]
+        if len(missing_envs) > 0:
+            raise ValueError(f"Missing environment variables: {missing_envs}")
 
     def _prepare_gcp_credential(self) -> None:
+
         base64_credential = os.environ["BASEDOSDADOS_CREDENTIALS_PROD"]
 
         with open("/tmp/credentials.json", "wb") as f:
@@ -83,9 +98,9 @@ class DataLakeUploader:
             df[column] = df[column].astype(str)
         return df
 
-    def _upload_file(
+    def _upload_files_in_folder(
         self,
-        input_path: str,
+        folder_path: str,
         dataset_id: str,
         table_id: str,
         source_format: str = "parquet"
@@ -108,7 +123,7 @@ class DataLakeUploader:
             if not table_exists:
                 logger.info(f"CREATING TABLE: {dataset_id}.{table_id}")
                 tb.create(
-                    path=input_path,
+                    path=folder_path,
                     source_format=source_format,
                     csv_delimiter=self.csv_delimiter,
                     if_storage_data_exists=self.if_storage_data_exists,
@@ -121,7 +136,7 @@ class DataLakeUploader:
                         f"TABLE ALREADY EXISTS APPENDING DATA TO STORAGE: {dataset_id}.{table_id}"
                     )
 
-                    tb.append(filepath=input_path, if_exists=self.if_exists)
+                    tb.append(filepath=folder_path, if_exists=self.if_exists)
                 elif self.dump_mode == "overwrite":
                     logger.info(
                         "MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n"
@@ -140,7 +155,7 @@ class DataLakeUploader:
                     )  # pylint: disable=C0301
 
                     tb.create(
-                        path=input_path,
+                        path=folder_path,
                         source_format=source_format,
                         csv_delimiter=self.csv_delimiter,
                         if_storage_data_exists=self.if_storage_data_exists,
@@ -200,7 +215,5 @@ class DataLakeUploader:
                     upload_folder, self._create_file_name(table_id, self.force_unique_file_name)
                 )
             )
-
-        for file in glob.glob(f"{upload_folder}/**/*.parquet", recursive=True):
-            self._upload_file(file, dataset_id, table_id)
-            os.remove(file)
+            
+        self._upload_files_in_folder(upload_folder, dataset_id, table_id)
