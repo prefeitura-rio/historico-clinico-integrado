@@ -36,9 +36,6 @@ def get_formatter(system: str, entity: str):
 
     Returns:
         function: The formatter function for the specified system and entity.
-
-    Raises:
-        AssertionError: If the formatter for the specified system and entity is not found.
     """
     formatter = formatters.get((system, entity))
     if not formatter:
