@@ -198,7 +198,7 @@ class VitacareCondicao(BaseModel):
     atendimento_id: str
     source_updated_at: str
     cod_cid10: str
-    cod_ciap2: str
+    cod_ciap2: Optional[str]
     estado: str
     data_diagnostico: str
 
