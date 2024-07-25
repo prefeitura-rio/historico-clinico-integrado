@@ -2,8 +2,7 @@
 # =============================================
 # Pydantic Models Representing Datalake Tables
 # =============================================
-from datetime import date, datetime
-from typing import Generic, Optional, List, TypeVar, Any
+from typing import Optional
 from pydantic import BaseModel
 
 

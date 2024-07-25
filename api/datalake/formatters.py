@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
+# =============================================
+# Formatters that are responsible for converting 
+# raw JSON records to Datalake table rows.
+# =============================================
 from typing import List, Tuple
-
 from datalake.utils import flatten, register_formatter
 from datalake.models import (
     SMSRioCnsProvisorio,
