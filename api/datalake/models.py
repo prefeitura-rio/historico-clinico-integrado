@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 # =============================================
-# Pydantic Models Representing Datalake Tables
+# TABLE MODELS
+# =============================================
+# - Pydantic Models Representing Datalake Tables.
+# These models describe the format that every
+# row sent to the Datalake must follow.
+# - Also, configuration of the table name, 
+# dataset, etc must be provided.
 # =============================================
 from typing import Optional
 from pydantic import BaseModel
@@ -153,6 +159,56 @@ class VitacarePaciente(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "paciente_eventos"
+        partition_column = "source_updated_at"
+
+
+class VitacarePacienteHistorico(BaseModel):
+    patient_cpf: str
+    patient_code: str
+    source_updated_at: str
+    source_id: Optional[str]
+    data__AP: Optional[str]
+    data__SEXO: Optional[str]
+    data__HIST_CID: Optional[str]
+    data__RACA_COR: Optional[str]
+    data__RELIGIAO: Optional[str]
+    data__cpfPaciente: Optional[str]
+    data__ESCOLARIDADE: Optional[str]
+    data__dataConsulta: Optional[str]
+    data__NACIONALIDADE: Optional[str]
+    data__FREQUENTA_ESCOLA: Optional[str]
+    data__SITUACAO_USUARIO: Optional[str]
+    data__TELEFONE_CONTATO: Optional[str]
+    data__dataNascPaciente: Optional[str]
+    data__SITUACAO_FAMILIAR: Optional[str]
+    data__TERRITORIO_SOCIAL: Optional[str]
+    data__NUMERO_CNES_UNIDADE: Optional[str]
+    data__N_DE_CONSULTAS_2018: Optional[str]
+    data__N_DE_CONSULTAS_2019: Optional[str]
+    data__N_DE_CONSULTAS_2020: Optional[str]
+    data__N_DE_CONSULTAS_2021: Optional[str]
+    data__N_DE_CONSULTAS_2022: Optional[str]
+    data__N_DE_CONSULTAS_2023: Optional[str]
+    data__PACIENTE_TEMPORARIO: Optional[str]
+    data__NOME_UNIDADE_DE_SAUDE: Optional[str]
+    data__POSSUI_PLANO_DE_SAUDE: Optional[str]
+    data__SITUACAO_PROFISSIONAL: Optional[str]
+    data__MUNICIPIO_DE_NASCIMENTO: Optional[str]
+    data__N_DE_PROCEDIMENTOS_2018: Optional[str]
+    data__N_DE_PROCEDIMENTOS_2019: Optional[str]
+    data__N_DE_PROCEDIMENTOS_2020: Optional[str]
+    data__N_DE_PROCEDIMENTOS_2021: Optional[str]
+    data__N_DE_PROCEDIMENTOS_2022: Optional[str]
+    data__N_DE_PROCEDIMENTOS_2023: Optional[str]
+    data__PACIENTE_SITUACAO_RUA: Optional[str]
+    data__CODIGO_DA_EQUIPE_DE_SAUDE: Optional[str]
+    data__NOME_DA_PESSOA_CADASTRADA: Optional[str]
+    data__N_CNS_DA_PESSOA_CADASTRADA: Optional[str]
+    data__NOME_DA_MAE_PESSOA_CADASTRADA: Optional[str]
+
+    class Config:
+        dataset_id = "brutos_prontuario_vitacare"
+        table_id = "paciente_historico_eventos"
         partition_column = "source_updated_at"
 
 

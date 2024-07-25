@@ -4,8 +4,8 @@ import pandas as pd
 from loguru import logger
 
 
-# Dicionário global para armazenar os formatters
-formatters = {}
+REGISTERED_FORMATTERS = {}
+
 
 def register_formatter(system: str, entity: str):
     """
@@ -19,13 +19,13 @@ def register_formatter(system: str, entity: str):
         function: The decorated function.
     """
     def decorator(func):
-        logger.info(f"Registering formatter for {system} - {entity}: {func.__name__}")
-        formatters[(system, entity)] = func
+        logger.info(
+            f"Registering formatter for {system} - {entity}: {func.__name__}")
+        REGISTERED_FORMATTERS[(system, entity)] = func
         return func
     return decorator
 
 
-# Função para acessar o formatter
 def get_formatter(system: str, entity: str):
     """
     Retrieves the formatter function for the specified system and entity.
@@ -37,7 +37,7 @@ def get_formatter(system: str, entity: str):
     Returns:
         function: The formatter function for the specified system and entity.
     """
-    formatter = formatters.get((system, entity))
+    formatter = REGISTERED_FORMATTERS.get((system, entity))
     if not formatter:
         logger.warning(f"No formatter implemented for ({system},{entity})")
     return formatter
@@ -67,7 +67,7 @@ def flatten(
         if isinstance(content, dict):
             if depth < dict_max_depth:
                 flattened = flatten(
-                    content, 
+                    content,
                     depth=depth + 1,
                     dict_max_depth=dict_max_depth,
                     list_max_depth=list_max_depth
@@ -80,11 +80,11 @@ def flatten(
             updated_record[field] = str(content)
         else:
             updated_record[field] = content
-    
+
     return updated_record
 
 
-def apply_formatter(records:list[dict], formatter) -> dict:
+def apply_formatter(records: list[dict], formatter) -> dict:
     """
     Applies a formatter function to a list of records and returns a dictionary of formatted tables.
 
@@ -98,14 +98,20 @@ def apply_formatter(records:list[dict], formatter) -> dict:
     tables = {}
 
     for record in records:
-        for row_set in formatter(record):
+        try:
+            formatted_record = formatter(record)
+        except Exception as e:
+            logger.error(f"An error occured during the process {e}")
+            raise e
+
+        for row_set in formatted_record:
             for row in row_set:
                 if row.Config in tables:
                     tables[row.Config].append(row)
                 else:
                     tables[row.Config] = [row]
-    
+
     for table_config, rows in tables.items():
         tables[table_config] = pd.DataFrame([row.dict() for row in rows])
-    
+
     return tables

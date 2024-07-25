@@ -10,6 +10,7 @@ from datalake.models import (
     SMSRioPaciente,
     SMSRioTelefone,
     VitacarePaciente,
+    VitacarePacienteHistorico,
     VitacareAtendimento,
     VitacareCondicao,
     VitacareAlergia,
@@ -62,13 +63,17 @@ def format_smsrio_patient(
 @register_formatter(system="vitacare", entity="patientrecords")
 def format_vitacare_patient(
     raw_record: dict
-) -> Tuple[List[SMSRioPaciente]]:
+) -> Tuple[List[VitacarePaciente | VitacarePacienteHistorico]]:
     # Convert source_updated_at to string
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
 
     flattened = flatten(raw_record, list_max_depth=0)
 
-    return ([VitacarePaciente(**flattened)],)
+    # Temp criterium to discriminate between Routine and Historic format
+    if 'AP' in raw_record['data'].keys():
+        return ([VitacarePacienteHistorico(**flattened)],) 
+    else:
+        return ([VitacarePaciente(**flattened)],)
 
 
 @register_formatter(system="vitacare", entity="encounter")
