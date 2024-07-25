@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncpg
+import itertools
 
 from datetime import (
     datetime as dt,
@@ -14,12 +15,9 @@ from app.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawData
 from app.dependencies import get_current_active_user
 from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
 from app.enums import SystemEnum
-from app.datalake import DatalakeUploader
-from app.utils import (
-    unnester_encounter,
-    unnester_patientconditions,
-    unnester_patientrecords
-)
+
+from datalake.uploader import DatalakeUploader
+from datalake.utils import get_formatter, apply_formatter
 
 
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
@@ -27,15 +25,12 @@ router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 entities_config = {
     "patientrecords": {
         "class": RawPatientRecord,
-        "unnester": unnester_patientrecords,
     },
     "patientconditions": {
         "class": RawPatientCondition,
-        "unnester": unnester_patientconditions,
     },
     "encounter": {
         "class": RawEncounter,
-        "unnester": unnester_encounter,
     },
 }
 
@@ -85,20 +80,21 @@ async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     current_user: Annotated[User, Depends(get_current_active_user)],
     raw_data: RawDataListModel,
-    upload_to_datalake: bool = True,
+    upload_to_datalake: bool = False,
 ) -> BulkInsertOutputModel:
 
-    Entity = entities_config[entity_name]["class"]
-    unnester = entities_config[entity_name]["unnester"]
+    records = raw_data.dict().get("data_list")
+    data_source = await DataSource.get(cnes=raw_data.cnes)
 
-    raw_data = raw_data.dict()
-    cnes = raw_data.pop("cnes")
-    records = raw_data.pop("data_list")
+    # ====================
+    # SEND TO DATALAKE
+    # ====================
+    formatter = get_formatter(
+        system=data_source.system.value,
+        entity=entity_name
+    )
 
-    # Get DataSource
-    data_source = await DataSource.get(cnes=cnes)
-
-    if upload_to_datalake:
+    if upload_to_datalake and formatter:
         uploader = DatalakeUploader(
             biglake_table=True,
             dataset_is_public=False,
@@ -106,16 +102,19 @@ async def create_raw_data(
             force_unique_file_name=True,
         )
 
-        for name, dataframe in unnester(records):
+        for table_config, dataframe in apply_formatter(records, formatter).items():
             uploader.upload(
                 dataframe=dataframe,
-                dataset_id=datalake_config[data_source.system],
-                table_id=f"{name}_eventos",
+                dataset_id=table_config.dataset_id,
+                table_id=table_config.table_id,
                 partition_by_date=True,
-                partition_column="updated_at",
+                partition_column=table_config.partition_column,
             )
 
-    # Send to HCI Database
+    # ====================
+    # SAVE IN HCI DATABASE
+    # ====================
+    Entity = entities_config[entity_name]["class"]
     try:
         records_to_create = []
         for record in records:
@@ -126,7 +125,7 @@ async def create_raw_data(
                     source_updated_at=record.get("source_updated_at"),
                     source_id=record.get("source_id"),
                     data=record.get("data"),
-                    data_source=await DataSource.get(cnes=cnes),
+                    data_source=data_source,
                     creator=current_user,
                 )
             )
@@ -134,7 +133,9 @@ async def create_raw_data(
         return HTMLResponse(status_code=400, content=str(e))
     try:
         new_records = await Entity.bulk_create(records_to_create, ignore_conflicts=True)
-        return {"count": len(new_records)}
+        return {
+            "count": len(new_records),
+        }
     except asyncpg.exceptions.DeadlockDetectedError as e:
         return HTMLResponse(status_code=400, content=str(e))
 

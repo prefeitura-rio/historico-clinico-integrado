@@ -47,7 +47,6 @@ class DatalakeUploader:
             raise ValueError(f"Missing environment variables: {missing_envs}")
 
     def _prepare_gcp_credential(self) -> None:
-
         base64_credential = os.environ["BASEDOSDADOS_CREDENTIALS_PROD"]
 
         with open("/tmp/credentials.json", "wb") as f:

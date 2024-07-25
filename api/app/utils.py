@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import hashlib
 import json
+from typing import Literal
 import jwt
 import copy
 import pandas as pd
@@ -122,80 +123,3 @@ async def get_instance(Model, table, slug=None, code=None):
             table[slug] = await Model.get_or_none(slug=slug)
 
     return table[slug]
-
-
-def unnester_encounter(payloads: dict) -> pd.DataFrame:
-    tables = {}
-
-    for payload in copy.deepcopy(payloads):
-        for field in [
-            "vacinas",
-            "condicoes",
-            "encaminhamentos",
-            "indicadores",
-            "alergias_anamnese",
-            "exames_solicitados",
-            "prescricoes",
-        ]:
-            for row in payload["data"].pop(field, []):
-                row["atendimento_id"] = payload["source_id"]
-                row["updated_at"] = payload["source_updated_at"]
-                tables[field] = tables.get(field, []) + [row]
-
-        payload["data"]['id'] = payload["source_id"]
-        payload["data"]["updated_at"] = payload["source_updated_at"]
-        payload["data"]["patient_cpf"] = payload["patient_cpf"]
-        payload["data"]["patient_code"] = payload["patient_code"]
-
-        tables["atendimento"] = tables.get("atendimento", []) + [payload["data"]]
-
-    result = []
-    for table_name, rows in tables.items():
-        result.append((table_name, pd.DataFrame(rows)))
-
-    return result
-
-
-def unnester_patientrecords(payloads: dict) -> pd.DataFrame:
-    tables = {}
-
-    for payload in copy.deepcopy(payloads):
-        for field in [
-            "telefones",
-            "cns_provisorio"
-        ]:
-            for row in payload["data"].pop(field, []):
-                row["patient_code"] = payload["patient_code"]
-                row["updated_at"] = payload["source_updated_at"]
-                tables[field] = tables.get(field, []) + [row]
-
-        payload["data"]['id'] = payload["patient_code"]
-        payload["data"]["updated_at"] = payload["source_updated_at"]
-        payload["data"]["patient_cpf"] = payload["patient_cpf"]
-        payload["data"]["patient_code"] = payload["patient_code"]
-
-        tables["paciente"] = tables.get("paciente", []) + [payload["data"]]
-
-    result = []
-    for table_name, rows in tables.items():
-        result.append((table_name, pd.DataFrame(rows)))
-
-    return result
-
-
-def unnester_patientconditions(payloads: dict) -> pd.DataFrame:
-    tables = {}
-
-    for payload in copy.deepcopy(payloads):
-        payload["data"]['id'] = payload["patient_code"]
-        payload["data"]["updated_at"] = payload["source_updated_at"]
-        payload["data"]["patient_cpf"] = payload["patient_cpf"]
-        payload["data"]["patient_code"] = payload["patient_code"]
-
-        tables["resumo_diagnostico"] = tables.get("resumo_diagnostico", []) + [payload["data"]]
-
-    result = []
-    for table_name, rows in tables.items():
-        result.append((table_name, pd.DataFrame(rows)))
-
-    return result
