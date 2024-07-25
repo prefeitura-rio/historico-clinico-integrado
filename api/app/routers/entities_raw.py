@@ -80,6 +80,7 @@ async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     current_user: Annotated[User, Depends(get_current_active_user)],
     raw_data: RawDataListModel,
+    upload_to_datalake: bool = False,
 ) -> BulkInsertOutputModel:
 
     records = raw_data.dict().get("data_list")
@@ -88,25 +89,26 @@ async def create_raw_data(
     # ====================
     # SEND TO DATALAKE
     # ====================
-    formatter = get_formatter(
-        system=data_source.system.value,
-        entity=entity_name
-    )
-    uploader = DatalakeUploader(
-        biglake_table=True,
-        dataset_is_public=False,
-        dump_mode="append",
-        force_unique_file_name=True,
-    )
-
-    for table_config, dataframe in apply_formatter(records, formatter).items():
-        uploader.upload(
-            dataframe=dataframe,
-            dataset_id=table_config.dataset_id,
-            table_id=table_config.table_id,
-            partition_by_date=True,
-            partition_column=table_config.partition_column,
+    if upload_to_datalake:
+        formatter = get_formatter(
+            system=data_source.system.value,
+            entity=entity_name
         )
+        uploader = DatalakeUploader(
+            biglake_table=True,
+            dataset_is_public=False,
+            dump_mode="append",
+            force_unique_file_name=True,
+        )
+
+        for table_config, dataframe in apply_formatter(records, formatter).items():
+            uploader.upload(
+                dataframe=dataframe,
+                dataset_id=table_config.dataset_id,
+                table_id=table_config.table_id,
+                partition_by_date=True,
+                partition_column=table_config.partition_column,
+            )
 
     # ====================
     # SAVE IN HCI DATABASE
