@@ -61,7 +61,7 @@ def format_vitacare_patient(
 ) -> Tuple[List[SMSRioPaciente]]:
     # Convert source_updated_at to string
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
-    
+
     flattened = flatten(raw_record, list_max_depth=0)
 
     return ([VitacarePaciente(**flattened)],)
@@ -71,15 +71,15 @@ def format_vitacare_patient(
 def format_vitacare_encounter(
     raw_record: dict
 ) -> Tuple[
-        List[VitacareAtendimento],
-        List[VitacareCondicao],
-        List[VitacareAlergia],
-        List[VitacareEncaminhamento],
-        List[VitacareExameSolicitado],
-        List[VitacareIndicador],
-        List[VitacarePrescricao],
-        List[VitacareVacina],
-    ]:
+    List[VitacareAtendimento],
+    List[VitacareCondicao],
+    List[VitacareAlergia],
+    List[VitacareEncaminhamento],
+    List[VitacareExameSolicitado],
+    List[VitacareIndicador],
+    List[VitacarePrescricao],
+    List[VitacareVacina],
+]:
     # Convert source_updated_at to string
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
 
