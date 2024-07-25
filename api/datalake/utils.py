@@ -43,7 +43,7 @@ def get_formatter(system: str, entity: str):
     formatter = formatters.get((system, entity))
     if not formatter:
         logger.warning(f"No formatter implemented for ({system},{entity})")
-    return formatters.get((system, entity))
+    return formatter
 
 
 # Função para aplanar um dicionário
