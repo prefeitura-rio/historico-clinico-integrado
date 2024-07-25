@@ -1,4 +1,6 @@
+import re
 import pandas as pd
+
 from loguru import logger
 
 
@@ -45,29 +47,37 @@ def get_formatter(system: str, entity: str):
 # Função para aplanar um dicionário
 def flatten(
     record: dict,
-    max_depth: int = 2,
+    dict_max_depth: int = 2,
+    list_max_depth: int = 1,
     depth: int = 0,
 ) -> dict:
     """
-    Flattens a nested dictionary by concatenating keys with '__' separator.
-    
+    Flatten a nested dictionary by concatenating keys with '__' separator.
+
     Args:
         record (dict): The nested dictionary to be flattened.
-        max_depth (int, optional): The maximum depth to flatten. Defaults to 2.
+        dict_max_depth (int, optional): The maximum depth to flatten dictionaries. Defaults to 2.
+        list_max_depth (int, optional): The maximum depth to flatten lists. Defaults to 1.
         depth (int, optional): The current depth of recursion. Defaults to 0.
-    
+
     Returns:
         dict: The flattened dictionary.
     """
     updated_record = {}
     for field, content in record.items():
         if isinstance(content, dict):
-            if depth < max_depth:
-                for key, value in flatten(content, depth=depth + 1).items():
+            if depth < dict_max_depth:
+                flattened = flatten(
+                    content, 
+                    depth=depth + 1,
+                    dict_max_depth=dict_max_depth,
+                    list_max_depth=list_max_depth
+                )
+                for key, value in flattened.items():
                     updated_record[f"{field}__{key}"] = value
             else:
                 updated_record[field] = str(content)
-        elif isinstance(content, list) and depth > 1:
+        elif isinstance(content, list) and depth >= list_max_depth:
             updated_record[field] = str(content)
         else:
             updated_record[field] = content
@@ -76,6 +86,16 @@ def flatten(
 
 
 def apply_formatter(records:list[dict], formatter) -> dict:
+    """
+    Applies a formatter function to a list of records and returns a dictionary of formatted tables.
+
+    Args:
+        records (list[dict]): A list of records to be formatted.
+        formatter (function): A formatter function that takes a record as input and returns a list of row sets.
+
+    Returns:
+        dict: A dictionary where the keys are table configurations and the values are pandas DataFrames containing the formatted rows.
+    """
     tables = {}
 
     for record in records:

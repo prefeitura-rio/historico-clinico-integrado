@@ -4,14 +4,23 @@ from datalake.utils import flatten, register_formatter
 from datalake.models import (
     SMSRioCnsProvisorio,
     SMSRioPaciente,
-    SMSRioTelefones,
+    SMSRioTelefone,
+    VitacarePaciente,
+    VitacareAtendimento,
+    VitacareCondicao,
+    VitacareAlergia,
+    VitacareEncaminhamento,
+    VitacareExameSolicitado,
+    VitacareIndicador,
+    VitacarePrescricao,
+    VitacareVacina,
 )
 
 
 @register_formatter(system="smsrio", entity="patientrecords")
 def format_smsrio_patient(
     raw_record: dict
-) -> Tuple[List[SMSRioPaciente], List[SMSRioTelefones], List[SMSRioCnsProvisorio]]:
+) -> Tuple[List[SMSRioPaciente], List[SMSRioTelefone], List[SMSRioCnsProvisorio]]:
     # Convert source_updated_at to string
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
 
@@ -27,7 +36,7 @@ def format_smsrio_patient(
 
     # Create Tables for List Fields
     for field_name, FieldModel in [
-        ('telefones', SMSRioTelefones),
+        ('telefones', SMSRioTelefone),
         ('cns_provisorio', SMSRioCnsProvisorio)
     ]:
         # If field not in record, skip
@@ -44,3 +53,76 @@ def format_smsrio_patient(
             )
 
     return rows['pacientes'], rows['telefones'], rows['cns_provisorio']
+
+
+@register_formatter(system="vitacare", entity="patientrecords")
+def format_vitacare_patient(
+    raw_record: dict
+) -> Tuple[List[SMSRioPaciente]]:
+    # Convert source_updated_at to string
+    raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
+    
+    flattened = flatten(raw_record, list_max_depth=0)
+
+    return ([VitacarePaciente(**flattened)],)
+
+
+@register_formatter(system="vitacare", entity="encounter")
+def format_vitacare_encounter(
+    raw_record: dict
+) -> Tuple[
+        List[VitacareAtendimento],
+        List[VitacareCondicao],
+        List[VitacareAlergia],
+        List[VitacareEncaminhamento],
+        List[VitacareExameSolicitado],
+        List[VitacareIndicador],
+        List[VitacarePrescricao],
+        List[VitacareVacina],
+    ]:
+    # Convert source_updated_at to string
+    raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
+
+    # Flatten Record
+    flattened = flatten(
+        raw_record,
+        dict_max_depth=3,
+    )
+
+    # Initialize Tables
+    rows = {
+        "encounter": [VitacareAtendimento(**flattened)],
+        "condicoes": [],
+        "alergias_anamnese": [],
+        "encaminhamentos": [],
+        "exames_solicitados": [],
+        "indicadores": [],
+        "prescricoes": [],
+        "vacinas": [],
+    }
+
+    # Create Tables for List Fields
+    for field_name, FieldModel in [
+        ('condicoes', VitacareCondicao),
+        ('alergias_anamnese', VitacareAlergia),
+        ('encaminhamentos', VitacareEncaminhamento),
+        ('exames_solicitados', VitacareExameSolicitado),
+        ('indicadores', VitacareIndicador),
+        ('prescricoes', VitacarePrescricao),
+        ('vacinas', VitacareVacina)
+    ]:
+        # If field not in record, skip
+        if field_name not in raw_record['data']:
+            continue
+
+        for fields in raw_record['data'].pop(field_name) or []:
+            rows[field_name].append(
+                FieldModel(
+                    patient_cpf=raw_record.get("patient_cpf"),
+                    atendimento_id=raw_record.get("source_id"),
+                    source_updated_at=raw_record.get("source_updated_at"),
+                    **fields
+                )
+            )
+
+    return tuple(rows.values())
