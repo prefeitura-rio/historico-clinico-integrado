@@ -89,11 +89,12 @@ async def create_raw_data(
     # ====================
     # SEND TO DATALAKE
     # ====================
-    if upload_to_datalake:
-        formatter = get_formatter(
-            system=data_source.system.value,
-            entity=entity_name
-        )
+    formatter = get_formatter(
+        system=data_source.system.value,
+        entity=entity_name
+    )
+
+    if upload_to_datalake and formatter:
         uploader = DatalakeUploader(
             biglake_table=True,
             dataset_is_public=False,

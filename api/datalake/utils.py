@@ -40,7 +40,9 @@ def get_formatter(system: str, entity: str):
     Raises:
         AssertionError: If the formatter for the specified system and entity is not found.
     """
-    assert (system, entity) in formatters, f"Formatter for {system} - {entity} not found"
+    formatter = formatters.get((system, entity))
+    if not formatter:
+        logger.warning(f"No formatter implemented for ({system},{entity})")
     return formatters.get((system, entity))
 
 
