@@ -105,14 +105,17 @@ def convert_model_config_to_dict(config):
 
 def apply_formatter(records: list[dict], formatter: Callable) -> dict:
     """
-    Apply a formatter function to each record in a list and return the formatted data as a dictionary of DataFrames.
+    Apply a formatter function to each record in a list and return the formatted data
+        as a dictionary of DataFrames.
 
     Args:
         records (list[dict]): A list of records to be formatted.
-        formatter (Callable): A function that takes a record as input and returns a list of formatted rows.
+        formatter (Callable): A function that takes a record as input and returns a 
+            list of formatted rows.
 
     Returns:
-        dict: A dictionary where the keys are table configurations and the values are DataFrames containing the formatted rows.
+        dict: A dictionary where the keys are table configurations and the values 
+            are DataFrames containing the formatted rows.
     """
     # Apply formatter to each record, saving result rows
     rows = []
