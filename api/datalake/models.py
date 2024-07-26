@@ -5,7 +5,7 @@
 # - Pydantic Models Representing Datalake Tables.
 # These models describe the format that every
 # row sent to the Datalake must follow.
-# - Also, configuration of the table name, 
+# - Also, configuration of the table name,
 # dataset, etc must be provided.
 # =============================================
 from typing import Optional

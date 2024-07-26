@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import uuid
-import shutil   
+import shutil
 import base64
 from typing import Optional
 

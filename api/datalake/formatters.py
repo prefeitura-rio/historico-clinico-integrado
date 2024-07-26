@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =============================================
-# Formatters that are responsible for converting 
+# Formatters that are responsible for converting
 # raw JSON records to Datalake table rows.
 # =============================================
 from typing import List, Tuple
