@@ -96,17 +96,17 @@ async def create_raw_data(
             )
     except ValidationError as e:
         return HTMLResponse(status_code=400, content=str(e))
-    
+
     try:
         new_records = await Entity.bulk_create(records_to_create, ignore_conflicts=True)
     except asyncpg.exceptions.DeadlockDetectedError as e:
         return HTMLResponse(status_code=400, content=str(e))
-    
+
     # ====================
     # SEND TO DATALAKE
     # ====================
     uploaded_to_datalake = False
-    
+
     formatter = get_formatter(
         system=data_source.system.value,
         entity=entity_name
