@@ -129,7 +129,7 @@ async def create_raw_data(
         logger.error(f"Error uploading to datalake: {e}")
     finally:
         return BulkInsertOutputModel(
-            inserted=len(new_records),
+            count=len(new_records),
             uploaded_to_datalake=uploaded_to_datalake,
         )
 
