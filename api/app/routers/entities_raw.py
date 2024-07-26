@@ -14,8 +14,8 @@ from app.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawData
 from app.dependencies import get_current_active_user
 from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
 
-from datalake.uploader import DatalakeUploader
-from datalake.utils import (
+from app.datalake.uploader import DatalakeUploader
+from app.datalake.utils import (
     get_formatter,
     apply_formatter,
     convert_model_config_to_dict
