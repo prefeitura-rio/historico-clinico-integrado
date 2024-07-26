@@ -69,7 +69,7 @@ async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     current_user: Annotated[User, Depends(get_current_active_user)],
     raw_data: RawDataListModel,
-    upload_to_datalake: bool = False,
+    upload_to_datalake: bool = True,
 ) -> BulkInsertOutputModel:
 
     records = raw_data.dict().get("data_list")
