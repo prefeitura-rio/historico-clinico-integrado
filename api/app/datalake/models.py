@@ -54,32 +54,6 @@ class SMSRioPaciente(BaseModel):
         dataset_is_public = False
 
 
-class SMSRioTelefone(BaseModel):
-    patient_cpf: str
-    value: str
-    source_updated_at: str
-
-    class Config:
-        dataset_id = "brutos_plataforma_smsrio"
-        table_id = "paciente_telefone_eventos"
-        partition_by_date = False
-        biglake_table = True
-        dataset_is_public = False
-
-
-class SMSRioCnsProvisorio(BaseModel):
-    patient_cpf: str
-    value: str
-    source_updated_at: str
-
-    class Config:
-        dataset_id = "brutos_plataforma_smsrio"
-        table_id = "paciente_cns_eventos"
-        partition_by_date = False
-        biglake_table = True
-        dataset_is_public = False
-
-
 # ===============
 # Vitacare
 # ===============
