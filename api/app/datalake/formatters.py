@@ -6,9 +6,7 @@
 from typing import List
 from app.datalake.utils import flatten, register_formatter
 from app.datalake.models import (
-    SMSRioCnsProvisorio,
     SMSRioPaciente,
-    SMSRioTelefone,
     VitacarePaciente,
     VitacarePacienteHistorico,
     VitacareAtendimento,
@@ -28,26 +26,8 @@ def format_smsrio_patient(raw_record: dict) -> List:
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
 
     flattened_patient = flatten(raw_record)
-    rows = [SMSRioPaciente(**flattened_patient)]
 
-    for field_name, FieldModel in [
-        ('telefones', SMSRioTelefone),
-        ('cns_provisorio', SMSRioCnsProvisorio)
-    ]:
-        # If field not in record, skip
-        if field_name not in raw_record['data']:
-            continue
-
-        for value in raw_record['data'].pop(field_name) or []:
-            rows.append(
-                FieldModel(
-                    value=value,
-                    patient_cpf=raw_record.get("patient_cpf"),
-                    source_updated_at=raw_record.get("source_updated_at")
-                )
-            )
-
-    return rows
+    return [SMSRioPaciente(**flattened_patient)]
 
 
 @register_formatter(system="vitacare", entity="patientrecords")
