@@ -4,8 +4,8 @@
 # raw JSON records to Datalake table rows.
 # =============================================
 from typing import List
-from datalake.utils import flatten, register_formatter
-from datalake.models import (
+from app.datalake.utils import flatten, register_formatter
+from app.datalake.models import (
     SMSRioCnsProvisorio,
     SMSRioPaciente,
     SMSRioTelefone,
