@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import uuid
-from typing import Optional
+import shutil   
 import base64
+from typing import Optional
 
 import pandas as pd
 import basedosdados as bd
@@ -223,5 +224,4 @@ class DatalakeUploader:
         except Exception as e:
             logger.error(f"Error uploading data to BigQuery: {e}")
         finally:
-            for file in os.listdir(upload_folder):
-                os.remove(os.path.join(upload_folder, file))
+            shutil.rmtree(upload_folder)
