@@ -211,11 +211,17 @@ class DatalakeUploader:
                 )
             )
 
-        self._upload_files_in_folder(
-            folder_path=upload_folder,
-            dataset_id=dataset_id,
-            table_id=table_id,
-            biglake_table=biglake_table,
-            dataset_is_public=dataset_is_public,
-            source_format=source_format,
-        )
+        try:
+            self._upload_files_in_folder(
+                folder_path=upload_folder,
+                dataset_id=dataset_id,
+                table_id=table_id,
+                biglake_table=biglake_table,
+                dataset_is_public=dataset_is_public,
+                source_format=source_format,
+            )
+        except Exception as e:
+            logger.error(f"Error uploading data to BigQuery: {e}")
+        finally:
+            for file in os.listdir(upload_folder):
+                os.remove(os.path.join(upload_folder, file))
