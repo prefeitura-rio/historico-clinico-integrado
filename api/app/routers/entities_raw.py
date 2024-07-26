@@ -8,6 +8,7 @@ from datetime import (
 from typing import Annotated, Literal
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
+from loguru import logger
 from tortoise.exceptions import ValidationError
 
 from app.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawDataModel
@@ -76,26 +77,6 @@ async def create_raw_data(
     data_source = await DataSource.get(cnes=raw_data.cnes)
 
     # ====================
-    # SEND TO DATALAKE
-    # ====================
-    formatter = get_formatter(
-        system=data_source.system.value,
-        entity=entity_name
-    )
-
-    if upload_to_datalake and formatter:
-        uploader = DatalakeUploader(
-            dump_mode="append",
-            force_unique_file_name=True,
-        )
-
-        for config, dataframe in apply_formatter(records, formatter).items():
-            uploader.upload(
-                dataframe=dataframe,
-                **convert_model_config_to_dict(config)
-            )
-
-    # ====================
     # SAVE IN HCI DATABASE
     # ====================
     Entity = ENTITIES_CONFIG[entity_name]
@@ -115,13 +96,42 @@ async def create_raw_data(
             )
     except ValidationError as e:
         return HTMLResponse(status_code=400, content=str(e))
+    
     try:
         new_records = await Entity.bulk_create(records_to_create, ignore_conflicts=True)
-        return {
-            "count": len(new_records),
-        }
     except asyncpg.exceptions.DeadlockDetectedError as e:
         return HTMLResponse(status_code=400, content=str(e))
+    
+    # ====================
+    # SEND TO DATALAKE
+    # ====================
+    uploaded_to_datalake = False
+    
+    formatter = get_formatter(
+        system=data_source.system.value,
+        entity=entity_name
+    )
+
+    try:
+        if upload_to_datalake and formatter:
+            uploader = DatalakeUploader(
+                dump_mode="append",
+                force_unique_file_name=True,
+            )
+
+            for config, dataframe in apply_formatter(records, formatter).items():
+                uploader.upload(
+                    dataframe=dataframe,
+                    **convert_model_config_to_dict(config)
+                )
+            uploaded_to_datalake = True
+    except Exception as e:
+        logger.error(f"Error uploading to datalake: {e}")
+    finally:
+        return BulkInsertOutputModel(
+            inserted=len(new_records),
+            uploaded_to_datalake=uploaded_to_datalake,
+        )
 
 
 @router.post("/{entity_name}/setAsInvalid", status_code=200)
