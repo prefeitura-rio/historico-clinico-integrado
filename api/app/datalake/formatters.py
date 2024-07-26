@@ -19,6 +19,7 @@ from app.datalake.models import (
     VitacareIndicador,
     VitacarePrescricao,
     VitacareVacina,
+    VitacareProcedimentosClinicos
 )
 
 
@@ -77,7 +78,8 @@ def format_vitacare_encounter(raw_record: dict) -> List:
         ('exames_solicitados', VitacareExameSolicitado),
         ('indicadores', VitacareIndicador),
         ('prescricoes', VitacarePrescricao),
-        ('vacinas', VitacareVacina)
+        ('vacinas', VitacareVacina),
+        ('procedimentosClinicos', VitacareProcedimentosClinicos),
     ]:
         if field_name not in raw_record['data']:
             continue

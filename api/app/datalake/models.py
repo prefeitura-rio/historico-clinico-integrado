@@ -237,10 +237,14 @@ class VitacareAtendimento(BaseModel):
     data__profissional__cpf: Optional[str]
     data__profissional__nome: Optional[str]
     data__profissional__cbo: Optional[str]
+    data__profissional__cboDescricao: Optional[str]
     data__profissional__equipe__nome: Optional[str]
     data__profissional__equipe__cod_equipe: Optional[str]
     data__profissional__equipe__cod_ine: Optional[str]
     data__data_consulta: Optional[str]
+    data__planoObservacao: Optional[str]
+    data__objetivoDescricao: Optional[str]
+    data__procedimentosClinicos: Optional[str]
     data__tipo_consulta: Optional[str]
     data__eh_coleta: Optional[str]
     data__motivo: Optional[str]
@@ -259,6 +263,22 @@ class VitacareAtendimento(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "atendimento_eventos"
+        partition_by_date = True
+        partition_column = "source_updated_at"
+        biglake_table = True
+        dataset_is_public = False
+
+
+class VitacareProcedimentosClinicos(BaseModel):
+    patient_cpf: str
+    atendimento_id: str
+    source_updated_at: str
+    procedimentoClinico: str
+    observacao: Optional[str]
+
+    class Config:
+        dataset_id = "brutos_prontuario_vitacare"
+        table_id = "procedimentos_clinicos_eventos"
         partition_by_date = True
         partition_column = "source_updated_at"
         biglake_table = True
