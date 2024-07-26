@@ -110,11 +110,11 @@ def apply_formatter(records: list[dict], formatter: Callable) -> dict:
 
     Args:
         records (list[dict]): A list of records to be formatted.
-        formatter (Callable): A function that takes a record as input and returns a 
+        formatter (Callable): A function that takes a record as input and returns a
             list of formatted rows.
 
     Returns:
-        dict: A dictionary where the keys are table configurations and the values 
+        dict: A dictionary where the keys are table configurations and the values
             are DataFrames containing the formatted rows.
     """
     # Apply formatter to each record, saving result rows
