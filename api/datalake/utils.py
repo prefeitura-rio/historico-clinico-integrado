@@ -1,6 +1,5 @@
-import re
 import pandas as pd
-
+from typing import Callable
 from loguru import logger
 
 
@@ -55,8 +54,10 @@ def flatten(
 
     Args:
         record (dict): The nested dictionary to be flattened.
-        dict_max_depth (int, optional): The maximum depth to flatten dictionaries. Defaults to 2.
-        list_max_depth (int, optional): The maximum depth to flatten lists. Defaults to 1.
+        dict_max_depth (int, optional): The maximum depth to flatten dictionaries.
+            Defaults to 2.
+        list_max_depth (int, optional): The maximum depth to flatten lists.
+            Defaults to 1.
         depth (int, optional): The current depth of recursion. Defaults to 0.
 
     Returns:
@@ -84,34 +85,49 @@ def flatten(
     return updated_record
 
 
-def apply_formatter(records: list[dict], formatter) -> dict:
+def convert_model_config_to_dict(config):
     """
-    Applies a formatter function to a list of records and returns a dictionary of formatted tables.
+    Converts a model configuration object to a dictionary.
+
+    Args:
+        config: The model configuration object.
+
+    Returns:
+        A dictionary containing the configuration attributes and their values.
+    """
+    result = {}
+    for key, value in config.__dict__.items():
+        if not key.startswith("__"):
+            result[key] = value
+    return result
+
+
+def apply_formatter(records: list[dict], formatter: Callable) -> dict:
+    """
+    Apply a formatter function to each record in a list and return the formatted data as a dictionary of DataFrames.
 
     Args:
         records (list[dict]): A list of records to be formatted.
-        formatter (function): A formatter function that takes a record as input and returns a list of row sets.
+        formatter (Callable): A function that takes a record as input and returns a list of formatted rows.
 
     Returns:
-        dict: A dictionary where the keys are table configurations and the values are pandas DataFrames containing the formatted rows.
+        dict: A dictionary where the keys are table configurations and the values are DataFrames containing the formatted rows.
     """
-    tables = {}
-
+    # Apply formatter to each record, saving result rows
+    rows = []
     for record in records:
-        try:
-            formatted_record = formatter(record)
-        except Exception as e:
-            logger.error(f"An error occured during the process {e}")
-            raise e
+        rows.extend(formatter(record))
 
-        for row_set in formatted_record:
-            for row in row_set:
-                if row.Config in tables:
-                    tables[row.Config].append(row)
-                else:
-                    tables[row.Config] = [row]
+    # Group rows by table configuration
+    tables = {}
+    for row in rows:
+        if row.Config in tables:
+            tables[row.Config].append(row.dict())
+        else:
+            tables[row.Config] = [row.dict()]
 
+    # Convert each list of rows into a DataFrame
     for table_config, rows in tables.items():
-        tables[table_config] = pd.DataFrame([row.dict() for row in rows])
+        tables[table_config] = pd.DataFrame(rows)
 
     return tables

@@ -16,16 +16,12 @@ class DatalakeUploader:
         self,
         if_exists: str = "append",
         if_storage_data_exists: str = "replace",
-        biglake_table: bool = True,
-        dataset_is_public: bool = False,
         dump_mode: str = "append",
         csv_delimiter: str = ";",
         force_unique_file_name: bool = False,
     ) -> None:
         self.if_exists = if_exists
         self.if_storage_data_exists = if_storage_data_exists
-        self.biglake_table = biglake_table
-        self.dataset_is_public = dataset_is_public
         self.dump_mode = dump_mode
         self.csv_delimiter = csv_delimiter
         self.force_unique_file_name = force_unique_file_name
@@ -101,7 +97,9 @@ class DatalakeUploader:
         folder_path: str,
         dataset_id: str,
         table_id: str,
-        source_format: str = "parquet"
+        source_format: str = "parquet",
+        biglake_table: bool = True,
+        dataset_is_public: bool = False,
     ) -> None:
         self._prepare_gcp_credential()
 
@@ -115,11 +113,42 @@ class DatalakeUploader:
             f"/staging/{dataset_id}/{table_id}"
         )
 
-        try:
-            table_exists = tb.table_exists(mode="staging")
+        table_exists = tb.table_exists(mode="staging")
 
-            if not table_exists:
-                logger.info(f"CREATING TABLE: {dataset_id}.{table_id}")
+        if not table_exists:
+            logger.info(f"CREATING TABLE: {dataset_id}.{table_id}")
+            tb.create(
+                path=folder_path,
+                source_format=source_format,
+                csv_delimiter=self.csv_delimiter,
+                if_storage_data_exists=self.if_storage_data_exists,
+                biglake_table=biglake_table,
+                dataset_is_public=dataset_is_public,
+            )
+        else:
+            if self.dump_mode == "append":
+                logger.info(
+                    f"TABLE ALREADY EXISTS APPENDING DATA TO STORAGE: {dataset_id}.{table_id}"
+                )
+
+                tb.append(filepath=folder_path, if_exists=self.if_exists)
+            elif self.dump_mode == "overwrite":
+                logger.info(
+                    "MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n"
+                    f"{storage_path}\n"
+                    f"{storage_path_link}"
+                )  # pylint: disable=C0301
+                st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
+                logger.info(
+                    "MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n"
+                    f"{storage_path}\n"
+                    f"{storage_path_link}"
+                )  # pylint: disable=C0301
+                tb.delete(mode="all")
+                logger.info(
+                    "MODE OVERWRITE: Sucessfully DELETED TABLE:\n" f"{table_staging}\n"
+                )  # pylint: disable=C0301
+
                 tb.create(
                     path=folder_path,
                     source_format=source_format,
@@ -128,51 +157,18 @@ class DatalakeUploader:
                     biglake_table=self.biglake_table,
                     dataset_is_public=self.dataset_is_public,
                 )
-            else:
-                if self.dump_mode == "append":
-                    logger.info(
-                        f"TABLE ALREADY EXISTS APPENDING DATA TO STORAGE: {dataset_id}.{table_id}"
-                    )
-
-                    tb.append(filepath=folder_path, if_exists=self.if_exists)
-                elif self.dump_mode == "overwrite":
-                    logger.info(
-                        "MODE OVERWRITE: Table ALREADY EXISTS, DELETING OLD DATA!\n"
-                        f"{storage_path}\n"
-                        f"{storage_path_link}"
-                    )  # pylint: disable=C0301
-                    st.delete_table(mode="staging", bucket_name=st.bucket_name, not_found_ok=True)
-                    logger.info(
-                        "MODE OVERWRITE: Sucessfully DELETED OLD DATA from Storage:\n"
-                        f"{storage_path}\n"
-                        f"{storage_path_link}"
-                    )  # pylint: disable=C0301
-                    tb.delete(mode="all")
-                    logger.info(
-                        "MODE OVERWRITE: Sucessfully DELETED TABLE:\n" f"{table_staging}\n"
-                    )  # pylint: disable=C0301
-
-                    tb.create(
-                        path=folder_path,
-                        source_format=source_format,
-                        csv_delimiter=self.csv_delimiter,
-                        if_storage_data_exists=self.if_storage_data_exists,
-                        biglake_table=self.biglake_table,
-                        dataset_is_public=self.dataset_is_public,
-                    )
-            logger.info("Data uploaded to BigQuery")
-
-        except Exception as e:  # pylint: disable=W0703
-            logger.error(f"An error occurred: {e}", level="error")
-            raise RuntimeError() from e
+        logger.info("Data uploaded to BigQuery")
 
     def upload(
         self,
         dataframe: pd.DataFrame,
         dataset_id: str,
         table_id: str,
+        biglake_table: bool = True,
+        dataset_is_public: bool = False,
         partition_by_date: bool = False,
         partition_column: Optional[str] = None,
+        source_format: str = "parquet",
         **kwargs
     ) -> None:
         upload_id = uuid.uuid4()
@@ -208,10 +204,18 @@ class DatalakeUploader:
                     )
                 )
         else:
+            os.makedirs(upload_folder, exist_ok=True)
             dataframe.to_parquet(
                 os.path.join(
                     upload_folder, self._create_file_name(table_id, self.force_unique_file_name)
                 )
             )
 
-        self._upload_files_in_folder(upload_folder, dataset_id, table_id)
+        self._upload_files_in_folder(
+            folder_path=upload_folder,
+            dataset_id=dataset_id,
+            table_id=table_id,
+            biglake_table=biglake_table,
+            dataset_is_public=dataset_is_public,
+            source_format=source_format,
+        )

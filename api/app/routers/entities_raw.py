@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncpg
-import itertools
 
 from datetime import (
     datetime as dt,
@@ -14,32 +13,22 @@ from tortoise.exceptions import ValidationError
 from app.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawDataModel
 from app.dependencies import get_current_active_user
 from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
-from app.enums import SystemEnum
 
 from datalake.uploader import DatalakeUploader
-from datalake.utils import get_formatter, apply_formatter
+from datalake.utils import (
+    get_formatter,
+    apply_formatter,
+    convert_model_config_to_dict
+)
 
 
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
-entities_config = {
-    "patientrecords": {
-        "class": RawPatientRecord,
-    },
-    "patientconditions": {
-        "class": RawPatientCondition,
-    },
-    "encounter": {
-        "class": RawEncounter,
-    },
+ENTITIES_CONFIG = {
+    "patientrecords": RawPatientRecord,
+    "patientconditions": RawPatientCondition,
+    "encounter": RawEncounter,
 }
-
-datalake_config = {
-    SystemEnum.VITACARE: "brutos_prontuario_vitacare",
-    SystemEnum.VITAI: "brutos_prontuario_vitai",
-    SystemEnum.SMSRIO: "brutos_plataforma_smsrio",
-}
-
 
 @router.get("/{entity_name}/{filter_type}")
 async def get_raw_data(
@@ -51,7 +40,7 @@ async def get_raw_data(
     datasource_system: Literal["vitai", "vitacare", "smsrio"] = None,
 ) -> list[RawDataModel]:
 
-    Entity = entities_config[entity_name]["class"]
+    Entity = ENTITIES_CONFIG[entity_name]
 
     if filter_type == "fromEventDatetime":
         filtered = Entity.filter(
@@ -96,25 +85,20 @@ async def create_raw_data(
 
     if upload_to_datalake and formatter:
         uploader = DatalakeUploader(
-            biglake_table=True,
-            dataset_is_public=False,
             dump_mode="append",
             force_unique_file_name=True,
         )
 
-        for table_config, dataframe in apply_formatter(records, formatter).items():
+        for config, dataframe in apply_formatter(records, formatter).items():
             uploader.upload(
                 dataframe=dataframe,
-                dataset_id=table_config.dataset_id,
-                table_id=table_config.table_id,
-                partition_by_date=True,
-                partition_column=table_config.partition_column,
+                **convert_model_config_to_dict(config)
             )
 
     # ====================
     # SAVE IN HCI DATABASE
     # ====================
-    Entity = entities_config[entity_name]["class"]
+    Entity = ENTITIES_CONFIG[entity_name]
     try:
         records_to_create = []
         for record in records:
@@ -146,5 +130,5 @@ async def set_as_invalid_flag_records(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     raw_record_id_list: list[str],
 ):
-    Entity = entities_config[entity_name]["class"]
+    Entity = ENTITIES_CONFIG[entity_name]
     await Entity.filter(id__in=raw_record_id_list).update(is_valid=False)

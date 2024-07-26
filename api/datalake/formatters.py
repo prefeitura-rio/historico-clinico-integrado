@@ -23,23 +23,12 @@ from datalake.models import (
 
 
 @register_formatter(system="smsrio", entity="patientrecords")
-def format_smsrio_patient(
-    raw_record: dict
-) -> Tuple[List[SMSRioPaciente], List[SMSRioTelefone], List[SMSRioCnsProvisorio]]:
-    # Convert source_updated_at to string
+def format_smsrio_patient(raw_record: dict) -> List:
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
 
-    # Flatten Record
     flattened_patient = flatten(raw_record)
+    rows = [SMSRioPaciente(**flattened_patient)]
 
-    # Initialize Tables
-    rows = {
-        "pacientes": [SMSRioPaciente(**flattened_patient)],
-        "telefones": [],
-        "cns_provisorio": [],
-    }
-
-    # Create Tables for List Fields
     for field_name, FieldModel in [
         ('telefones', SMSRioTelefone),
         ('cns_provisorio', SMSRioCnsProvisorio)
@@ -49,7 +38,7 @@ def format_smsrio_patient(
             continue
 
         for value in raw_record['data'].pop(field_name) or []:
-            rows[field_name].append(
+            rows.append(
                 FieldModel(
                     value=value,
                     patient_cpf=raw_record.get("patient_cpf"),
@@ -57,60 +46,30 @@ def format_smsrio_patient(
                 )
             )
 
-    return rows['pacientes'], rows['telefones'], rows['cns_provisorio']
+    return rows
 
 
 @register_formatter(system="vitacare", entity="patientrecords")
-def format_vitacare_patient(
-    raw_record: dict
-) -> Tuple[List[VitacarePaciente | VitacarePacienteHistorico]]:
-    # Convert source_updated_at to string
+def format_vitacare_patient(raw_record: dict) -> List:
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
 
     flattened = flatten(raw_record, list_max_depth=0)
 
-    # Temp criterium to discriminate between Routine and Historic format
+    # Temporary criterium to discriminate between Routine and Historic format
     if 'AP' in raw_record['data'].keys():
-        return ([VitacarePacienteHistorico(**flattened)],) 
+        return [VitacarePacienteHistorico(**flattened)]
     else:
-        return ([VitacarePaciente(**flattened)],)
+        return [VitacarePaciente(**flattened)]
 
 
 @register_formatter(system="vitacare", entity="encounter")
-def format_vitacare_encounter(
-    raw_record: dict
-) -> Tuple[
-    List[VitacareAtendimento],
-    List[VitacareCondicao],
-    List[VitacareAlergia],
-    List[VitacareEncaminhamento],
-    List[VitacareExameSolicitado],
-    List[VitacareIndicador],
-    List[VitacarePrescricao],
-    List[VitacareVacina],
-]:
-    # Convert source_updated_at to string
+def format_vitacare_encounter(raw_record: dict) -> List:
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
 
-    # Flatten Record
-    flattened = flatten(
-        raw_record,
-        dict_max_depth=3,
-    )
+    flattened = flatten(raw_record,dict_max_depth=3)
 
-    # Initialize Tables
-    rows = {
-        "encounter": [VitacareAtendimento(**flattened)],
-        "condicoes": [],
-        "alergias_anamnese": [],
-        "encaminhamentos": [],
-        "exames_solicitados": [],
-        "indicadores": [],
-        "prescricoes": [],
-        "vacinas": [],
-    }
+    rows = [VitacareAtendimento(**flattened)]
 
-    # Create Tables for List Fields
     for field_name, FieldModel in [
         ('condicoes', VitacareCondicao),
         ('alergias_anamnese', VitacareAlergia),
@@ -120,12 +79,11 @@ def format_vitacare_encounter(
         ('prescricoes', VitacarePrescricao),
         ('vacinas', VitacareVacina)
     ]:
-        # If field not in record, skip
         if field_name not in raw_record['data']:
             continue
 
         for fields in raw_record['data'].pop(field_name) or []:
-            rows[field_name].append(
+            rows.append(
                 FieldModel(
                     patient_cpf=raw_record.get("patient_cpf"),
                     atendimento_id=raw_record.get("source_id"),
@@ -134,4 +92,4 @@ def format_vitacare_encounter(
                 )
             )
 
-    return tuple(rows.values())
+    return rows
