@@ -1,37 +1,34 @@
 # -*- coding: utf-8 -*-
+import asyncpg
+
 from datetime import (
     datetime as dt,
     timedelta as td,
 )
 from typing import Annotated, Literal
-import asyncpg
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from tortoise.exceptions import ValidationError
 
-from app.pydantic_models import (
-    RawDataListModel,
-    BulkInsertOutputModel,
-    RawDataModel
-)
+from app.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawDataModel
 from app.dependencies import get_current_active_user
-from app.models import (
-    User,
-    RawPatientRecord,
-    RawPatientCondition,
-    DataSource,
-    RawEncounter
+from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
+
+from app.datalake.uploader import DatalakeUploader
+from app.datalake.utils import (
+    get_formatter,
+    apply_formatter,
+    convert_model_config_to_dict
 )
 
 
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
-entity_from_name = {
+ENTITIES_CONFIG = {
     "patientrecords": RawPatientRecord,
     "patientconditions": RawPatientCondition,
-    "encounter": RawEncounter
+    "encounter": RawEncounter,
 }
-
 
 @router.get("/{entity_name}/{filter_type}")
 async def get_raw_data(
@@ -43,7 +40,7 @@ async def get_raw_data(
     datasource_system: Literal["vitai", "vitacare", "smsrio"] = None,
 ) -> list[RawDataModel]:
 
-    Entity = entity_from_name.get(entity_name)
+    Entity = ENTITIES_CONFIG[entity_name]
 
     if filter_type == "fromEventDatetime":
         filtered = Entity.filter(
@@ -72,14 +69,36 @@ async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     current_user: Annotated[User, Depends(get_current_active_user)],
     raw_data: RawDataListModel,
+    upload_to_datalake: bool = True,
 ) -> BulkInsertOutputModel:
 
-    Entity = entity_from_name.get(entity_name)
+    records = raw_data.dict().get("data_list")
+    data_source = await DataSource.get(cnes=raw_data.cnes)
 
-    raw_data = raw_data.dict()
-    cnes = raw_data.pop("cnes")
-    records = raw_data.pop("data_list")
+    # ====================
+    # SEND TO DATALAKE
+    # ====================
+    formatter = get_formatter(
+        system=data_source.system.value,
+        entity=entity_name
+    )
 
+    if upload_to_datalake and formatter:
+        uploader = DatalakeUploader(
+            dump_mode="append",
+            force_unique_file_name=True,
+        )
+
+        for config, dataframe in apply_formatter(records, formatter).items():
+            uploader.upload(
+                dataframe=dataframe,
+                **convert_model_config_to_dict(config)
+            )
+
+    # ====================
+    # SAVE IN HCI DATABASE
+    # ====================
+    Entity = ENTITIES_CONFIG[entity_name]
     try:
         records_to_create = []
         for record in records:
@@ -90,7 +109,7 @@ async def create_raw_data(
                     source_updated_at=record.get("source_updated_at"),
                     source_id=record.get("source_id"),
                     data=record.get("data"),
-                    data_source=await DataSource.get(cnes=cnes),
+                    data_source=data_source,
                     creator=current_user,
                 )
             )
@@ -98,7 +117,9 @@ async def create_raw_data(
         return HTMLResponse(status_code=400, content=str(e))
     try:
         new_records = await Entity.bulk_create(records_to_create, ignore_conflicts=True)
-        return {"count": len(new_records)}
+        return {
+            "count": len(new_records),
+        }
     except asyncpg.exceptions.DeadlockDetectedError as e:
         return HTMLResponse(status_code=400, content=str(e))
 
@@ -109,5 +130,5 @@ async def set_as_invalid_flag_records(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     raw_record_id_list: list[str],
 ):
-    Entity = entity_from_name.get(entity_name)
+    Entity = ENTITIES_CONFIG[entity_name]
     await Entity.filter(id__in=raw_record_id_list).update(is_valid=False)

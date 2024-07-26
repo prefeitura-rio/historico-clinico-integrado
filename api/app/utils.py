@@ -88,7 +88,8 @@ def generate_dictionary_fingerprint(dict_obj: dict) -> str:
 
     """
     serialized_obj = json.dumps(dict_obj, sort_keys=True)
-    return hashlib.md5(serialized_obj.encode('utf-8')).hexdigest()
+    return hashlib.md5(serialized_obj.encode("utf-8")).hexdigest()
+
 
 def merge_versions(current_objs, new_objs: dict) -> None:
     current_fingerprints = {obj.fingerprint: obj for obj in current_objs}
@@ -97,20 +98,16 @@ def merge_versions(current_objs, new_objs: dict) -> None:
     to_delete = current_fingerprints.keys() - new_fingerprints.keys()
     to_add = new_fingerprints.keys() - current_fingerprints.keys()
 
-    deletions = [
-        current_fingerprints[fingerprint]
-        for fingerprint in to_delete
-    ]
-    insertions = [
-        new_fingerprints[fingerprint]
-        for fingerprint in to_add
-    ]
+    deletions = [current_fingerprints[fingerprint] for fingerprint in to_delete]
+    insertions = [new_fingerprints[fingerprint] for fingerprint in to_add]
 
     return deletions, insertions
+
 
 async def update_and_return(instance, new_data):
     await instance.update_from_dict(new_data).save()
     return instance
+
 
 async def get_instance(Model, table, slug=None, code=None):
     if slug is None:
