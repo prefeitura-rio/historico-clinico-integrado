@@ -75,6 +75,7 @@ class RawDataListModel(BaseModel):
 
 class BulkInsertOutputModel(BaseModel):
     count: int
+    uploaded_to_datalake: Optional[bool] = False
 
 
 class ConditionListModel(BaseModel):
