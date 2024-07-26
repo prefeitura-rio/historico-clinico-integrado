@@ -6,9 +6,7 @@
 from typing import List
 from app.datalake.utils import flatten, register_formatter
 from app.datalake.models import (
-    SMSRioCnsProvisorio,
     SMSRioPaciente,
-    SMSRioTelefone,
     VitacarePaciente,
     VitacarePacienteHistorico,
     VitacareAtendimento,
