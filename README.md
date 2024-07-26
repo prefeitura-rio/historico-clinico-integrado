@@ -1,9 +1,14 @@
-# Prontuários Integrados
+# Histórico Clínico Integrado (HCI)
 - Responsável de Infraestrutura: Gabriel Milan (Escritório de Dados)
 - Administrador: Pedro Marques (SMS)
 
-## Resumo
-- O sistema de Prontuários Integrados possui dois componentes:
+## O que é o HCI
+- O HCI tem como objetivo integrar os dados de saúde municipais de diferentes unidades de saúde, seja da atenção primária, hospitalar, etc.
+- Existem diferentes tipos de prontuário sendo utilizados nas unidades, o que faz com que existem diferentes fonte, com formatos e dados diferentes.
+- Precisamos ler dados destas fontes e integrá-los em um formato consistente, que atenda os profissionais da área de saúde.
+
+### O Sistema
+- O HCI possui dois componentes:
    - API (desenvolvida em Fast API, Python 3.11)
    - Banco de Dados (PostgreSQL)
 
