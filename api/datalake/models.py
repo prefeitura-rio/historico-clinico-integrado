@@ -5,7 +5,7 @@
 # - Pydantic Models Representing Datalake Tables.
 # These models describe the format that every
 # row sent to the Datalake must follow.
-# - Also, configuration of the table name, 
+# - Also, configuration of the table name,
 # dataset, etc must be provided.
 # =============================================
 from typing import Optional
@@ -42,13 +42,16 @@ class SMSRioPaciente(BaseModel):
     data__cod_pais_nasc: Optional[str]
     data__email: Optional[str]
     data__timestamp: Optional[str]
-    data__cns_provisorio: list[str]
-    data__telefones: list[str]
+    data__cns_provisorio: Optional[str]
+    data__telefones: Optional[str]
 
     class Config:
         dataset_id = "brutos_plataforma_smsrio"
         table_id = "paciente_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
+        biglake_table = True
+        dataset_is_public = False
 
 
 class SMSRioTelefone(BaseModel):
@@ -59,7 +62,9 @@ class SMSRioTelefone(BaseModel):
     class Config:
         dataset_id = "brutos_plataforma_smsrio"
         table_id = "paciente_telefone_eventos"
-        partition_column = "source_updated_at"
+        partition_by_date = False
+        biglake_table = True
+        dataset_is_public = False
 
 
 class SMSRioCnsProvisorio(BaseModel):
@@ -70,7 +75,9 @@ class SMSRioCnsProvisorio(BaseModel):
     class Config:
         dataset_id = "brutos_plataforma_smsrio"
         table_id = "paciente_cns_eventos"
-        partition_column = "source_updated_at"
+        partition_by_date = False
+        biglake_table = True
+        dataset_is_public = False
 
 
 # ===============
@@ -159,7 +166,10 @@ class VitacarePaciente(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "paciente_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
+        biglake_table = True
+        dataset_is_public = False
 
 
 class VitacarePacienteHistorico(BaseModel):
@@ -209,7 +219,10 @@ class VitacarePacienteHistorico(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "paciente_historico_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
+        biglake_table = True
+        dataset_is_public = False
 
 
 class VitacareAtendimento(BaseModel):
@@ -246,7 +259,10 @@ class VitacareAtendimento(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "atendimento_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
+        biglake_table = True
+        dataset_is_public = False
 
 
 class VitacareCondicao(BaseModel):
@@ -261,7 +277,10 @@ class VitacareCondicao(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "condicoes_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
+        biglake_table = True
+        dataset_is_public = False
 
 
 class VitacareAlergia(BaseModel):
@@ -273,7 +292,10 @@ class VitacareAlergia(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "alergia_anamnese_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
+        biglake_table = True
+        dataset_is_public = False
 
 
 class VitacareEncaminhamento(BaseModel):
@@ -285,6 +307,7 @@ class VitacareEncaminhamento(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "encaminhamento_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
 
 
@@ -300,6 +323,7 @@ class VitacarePrescricao(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "prescricao_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
 
 
@@ -317,6 +341,7 @@ class VitacareExameSolicitado(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "exames_solicitados_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
 
 
@@ -339,6 +364,7 @@ class VitacareVacina(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "vacinas_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
 
 
@@ -352,4 +378,5 @@ class VitacareIndicador(BaseModel):
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
         table_id = "indicadores_eventos"
+        partition_by_date = True
         partition_column = "source_updated_at"
