@@ -111,10 +111,10 @@ async def get_patient_encounters(
             "active_cids": ["A10.2"],
             "responsible": {"name": "Dr. João da Silva", "role": "Médico(a)"},
             "description": (
-                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar sed nam libero eu."
-                "Leo arcu sit lacus nisl nullam eget et dignissim sed. Fames pretium cursus viverra "
-                "posuere arcu tortor sit lectus congue. Velit tempor ultricies pulvinar magna pulvinar "
-                "ridiculus consequat nibh..."
+                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar"
+                "sed nam libero eu. Leo arcu sit lacus nisl nullam eget et dignissim sed."
+                "Fames pretium cursus viverra posuere arcu tortor sit lectus congue. Velit"
+                "tempor ultricies pulvinar magna pulvinar ridiculus consequat nibh..."
             ),
             "filter_tags": ["UPA", "Emergência"],
         },
