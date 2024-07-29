@@ -8,7 +8,7 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError
 
 from app.dependencies import get_current_active_user
-from app.pydantic_models import (
+from app.types.pydantic_models import (
     CompletePatientModel,
     MergedPatient as PydanticMergedPatient,
     MergedPatientCns as PydanticMergedPatientCns,

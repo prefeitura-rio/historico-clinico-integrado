@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from app.dependencies import get_current_active_user
-from app.pydantic_models import UserRegisterInputModel, UserRegisterOutputModel
+from app.types.pydantic_models import UserRegisterInputModel, UserRegisterOutputModel
 from app.utils import password_hash
 from app.models import (
     User, DataSource

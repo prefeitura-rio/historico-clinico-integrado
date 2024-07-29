@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 from loguru import logger
 from tortoise.exceptions import ValidationError
 
-from app.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawDataModel
+from app.types.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawDataModel
 from app.dependencies import get_current_active_user
 from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
 
