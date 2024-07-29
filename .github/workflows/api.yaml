@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/api*"
-      - "api/**/*"
+      - "./**/*"
 
 jobs:
   lint:
@@ -21,14 +21,12 @@ jobs:
 
       - name: Set up dependencies
         run: |
-          cd api/
           pip install -U pip poetry
           poetry config virtualenvs.create false
           poetry install --with dev
 
       - name: Run linters
         run: |
-          cd api/
           task lint
 
   tests:
@@ -56,20 +54,17 @@ jobs:
 
       - name: Set up dependencies
         run: |
-          cd api/
           pip install -U pip poetry
           poetry config virtualenvs.create false
           poetry install --with dev
 
       - name: Set up database
         run: |
-          cd api/
           aerich init-db || true
           aerich upgrade || true
 
       - name: Run tests
         run: |
-          cd api/
           task test
 
   deploy:
@@ -106,11 +101,11 @@ jobs:
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
-      - name: Build and push image
+      - name: Build and Push image
         uses: docker/build-push-action@v2
         with:
-          context: api/
-          file: api/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: true
           tags: |
             us-central1-docker.pkg.dev/rj-sms/docker/prontuario-integrado:${{ github.sha }}
