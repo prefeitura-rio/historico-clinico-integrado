@@ -7,9 +7,6 @@ from app.dependencies import get_current_active_user
 from app.models import User
 from app.types.frontend import (
     PatientHeader,
-    FamilyClinic,
-    FamilyHealthTeam,
-    Responsible,
     PatientSummary,
     Encounter,
     UserInfo,
