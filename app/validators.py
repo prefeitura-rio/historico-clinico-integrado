@@ -28,7 +28,7 @@ class CPFValidator(Validator):
 
 class PatientCodeValidator(CPFValidator):
     """
-    A validator to validate whether the given value is a CPF number or not
+    A validator to validate whether the given value is a CPF number or not.
     """
     def __call__(self, value: str):
 
