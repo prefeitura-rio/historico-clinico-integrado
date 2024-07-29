@@ -29,4 +29,4 @@ COPY ./migrations /migrations
 COPY ./compose-entrypoint.sh /compose-entrypoint.sh
 
 # Inicializa banco, roda migrations e sobe servidor
-CMD ["./compose-entrypoint.sh"]
+ENTRYPOINT ["sh", "/compose-entrypoint.sh"]
