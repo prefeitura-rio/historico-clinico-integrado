@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app import config
 from app.models import User
-from app.pydantic_models import Token
+from app.types.pydantic_models import Token
 from app.utils import authenticate_user, create_access_token
 
 

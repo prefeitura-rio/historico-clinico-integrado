@@ -112,6 +112,7 @@ class PatientModel(BaseModel):
     telecom_list: Optional[List[TelecomModel]]
     address_list: Optional[List[AddressModel]]
 
+
 class CompletePatientModel(BaseModel):
     birth_date: date
     patient_cpf: str
@@ -180,9 +181,9 @@ class StandardizedPatientRecordModel(BaseModel):
 
 
 class StandardizedPatientConditionModel(BaseModel):
-    patient_cpf : str
+    patient_cpf: str
     patient_code: str
-    cid : str
+    cid: str
     ciap: Optional[str]
     clinical_status: Optional[str]
     category: Optional[str]
@@ -191,7 +192,10 @@ class StandardizedPatientConditionModel(BaseModel):
     is_valid: Optional[bool]
 
 
-PatientData = TypeVar('PatientData', StandardizedPatientRecordModel, StandardizedPatientConditionModel)
+PatientData = TypeVar(
+    "PatientData", StandardizedPatientRecordModel, StandardizedPatientConditionModel
+)
+
 
 class MergeableRecord(Generic[PatientData], BaseModel):
     standardized_record: PatientData
@@ -199,20 +203,26 @@ class MergeableRecord(Generic[PatientData], BaseModel):
     event_moment: datetime
     ingestion_moment: datetime
 
+
 class PatientMergeableRecord(Generic[PatientData], BaseModel):
     patient_code: str
     mergeable_records: List[MergeableRecord[PatientData]]
 
+
 class RecordListModel(Generic[PatientData], BaseModel):
     records: List[PatientData]
+
 
 class StandardizedPatientRecordListModel(BaseModel):
     records: List[StandardizedPatientRecordModel]
 
+
 class StandardizedPatientConditionListModel(BaseModel):
     conditions: List[StandardizedPatientConditionModel]
 
-PageableData = TypeVar('PageableData', PatientMergeableRecord, Any)
+
+PageableData = TypeVar("PageableData", PatientMergeableRecord, Any)
+
 
 class Page(Generic[PageableData], BaseModel):
     items: List[PageableData]
@@ -241,6 +251,7 @@ class MergedPatient(BaseModel):
     protected_person: Optional[bool]
     race: Optional[str]
 
+
 class MergedPatientAddress(BaseModel):
     patient_code: str
     line: str
@@ -251,10 +262,12 @@ class MergedPatientAddress(BaseModel):
     start: Optional[date]
     end: Optional[date]
 
+
 class MergedPatientCns(BaseModel):
     patient_code: str
     value: str
     is_main: bool
+
 
 class MergedPatientTelecom(BaseModel):
     patient_code: str
@@ -265,15 +278,18 @@ class MergedPatientTelecom(BaseModel):
     start: Optional[date]
     end: Optional[date]
 
+
 class OccupationModel(BaseModel):
     id_cbo: str
     cbo: str
     id_cbo_familia: Optional[str]
     cbo_familia: Optional[str]
 
+
 class RegistryModel(BaseModel):
     id_registro_conselho: str
     id_tipo_conselho: Optional[str]
+
 
 class ProfessionalModel(BaseModel):
     id_profissional_sus: str
@@ -282,6 +298,7 @@ class ProfessionalModel(BaseModel):
     nome: str
     cbo: List[OccupationModel]
     conselho: List[RegistryModel]
+
 
 class TeamModel(BaseModel):
     id_ine: str

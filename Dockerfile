@@ -21,6 +21,10 @@ RUN pip install --no-cache-dir -U poetry && \
 COPY poetry.lock pyproject.toml ./
 RUN poetry install --no-dev --no-interaction --no-ansi
 
+# Install dos2unix
+RUN apt-get update && apt-get install -y dos2unix
+
+
 # Copy the project files into the working directory
 COPY ./app /app
 COPY ./scripts .
@@ -28,5 +32,10 @@ COPY ./data /data
 COPY ./migrations /migrations
 COPY ./compose-entrypoint.sh /compose-entrypoint.sh
 
+RUN dos2unix /compose-entrypoint.sh
+
+# Grant execution permissions
+RUN chmod +x /compose-entrypoint.sh
+
 # Inicializa banco, roda migrations e sobe servidor
-ENTRYPOINT ["sh", "/compose-entrypoint.sh"]
+ENTRYPOINT ["sh", "compose-entrypoint.sh"]

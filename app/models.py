@@ -267,11 +267,13 @@ class MergedPatient(Model):
 class User(Model):
     id = fields.IntField(pk=True)
     username = fields.CharField(max_length=255, unique=True)
+    name = fields.CharField(max_length=255, null=True)
+    cpf = fields.CharField(max_length=11, unique=True, null=True, validators=[CPFValidator()])
     email = fields.CharField(max_length=255, unique=True)
-    data_source = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
     password = fields.CharField(max_length=255)
     is_active = fields.BooleanField(default=True)
     is_superuser = fields.BooleanField(default=False)
+    data_source = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
