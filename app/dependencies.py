@@ -7,7 +7,7 @@ import jwt
 
 from app import config
 from app.models import User
-from app.pydantic_models import TokenData
+from app.types.pydantic_models import TokenData
 from jwt import PyJWTError
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
