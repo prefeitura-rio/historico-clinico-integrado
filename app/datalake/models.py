@@ -44,6 +44,7 @@ class SMSRioPaciente(BaseModel):
     data__timestamp: Optional[str]
     data__cns_provisorio: Optional[str]
     data__telefones: Optional[str]
+    payload_cnes: str
 
     class Config:
         dataset_id = "brutos_plataforma_smsrio"
@@ -136,6 +137,7 @@ class VitacarePaciente(BaseModel):
     data__dataAtualizacaoVinculoEquipe: Optional[str]
     data__familiaBeneficiariaAuxilioBrasil: Optional[str]
     data__criancaMatriculadaCrechePreEscola: Optional[str]
+    payload_cnes: str
 
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
@@ -189,6 +191,7 @@ class VitacarePacienteHistorico(BaseModel):
     data__NOME_DA_PESSOA_CADASTRADA: Optional[str]
     data__N_CNS_DA_PESSOA_CADASTRADA: Optional[str]
     data__NOME_DA_MAE_PESSOA_CADASTRADA: Optional[str]
+    payload_cnes: str
 
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
@@ -232,6 +235,7 @@ class VitacareAtendimento(BaseModel):
     data__alergias_anamnese: str
     data__indicadores: str
     data__encaminhamentos: str
+    payload_cnes: str
 
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
