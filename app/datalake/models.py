@@ -204,35 +204,34 @@ class VitacareAtendimento(BaseModel):
     patient_code: str
     source_updated_at: str
     source_id: str
-    id: Optional[str]
-    data__unidade_ap: Optional[str]
-    data__unidade_cnes: Optional[str]
-    data__profissional__cns: Optional[str]
-    data__profissional__cpf: Optional[str]
-    data__profissional__nome: Optional[str]
-    data__profissional__cbo: Optional[str]
-    data__profissional__cboDescricao: Optional[str]
-    data__profissional__equipe__nome: Optional[str]
-    data__profissional__equipe__cod_equipe: Optional[str]
-    data__profissional__equipe__cod_ine: Optional[str]
-    data__data_consulta: Optional[str]
-    data__planoObservacao: Optional[str]
-    data__objetivoDescricao: Optional[str]
-    data__procedimentosClinicos: Optional[str]
-    data__tipo_consulta: Optional[str]
-    data__eh_coleta: Optional[str]
-    data__motivo: Optional[str]
-    data__observacao: Optional[str]
-    data__avaliacao: Optional[str]
-    data__evolucao: Optional[str]
-    data__observacoes_atendimento: Optional[str]
-    data__condicoes: Optional[str]
-    data__prescricoes: Optional[str]
-    data__exames_solicitados: Optional[str]
-    data__vacinas: Optional[str]
-    data__alergias_anamnese: Optional[str]
-    data__indicadores: Optional[str]
-    data__encaminhamentos: Optional[str]
+    data__unidade_ap: str
+    data__unidade_cnes: str
+    data__profissional__cns: str
+    data__profissional__cpf: str
+    data__profissional__nome: str
+    data__profissional__cbo: str
+    data__profissional__cbo_descricao: str
+    data__profissional__equipe__nome: str
+    data__profissional__equipe__cod_equipe: str
+    data__profissional__equipe__cod_ine: str
+    data__datahora_inicio_atendimento: str
+    data__datahora_fim_atendimento: str
+    data__datahora_marcacao_atendimento: Optional[str]
+    data__tipo_consulta: str
+    data__eh_coleta: str
+    data__soap_subjetivo_motivo: Optional[str]
+    data__soap_plano_procedimentos_clinicos: Optional[str]
+    data__soap_plano_observacoes: Optional[str]
+    data__soap_avaliacao_observacoes: Optional[str]
+    data__soap_objetivo_descricao: Optional[str]
+    data__notas_observacoes: Optional[str]
+    data__condicoes: str
+    data__prescricoes: str
+    data__exames_solicitados: str
+    data__vacinas: str
+    data__alergias_anamnese: str
+    data__indicadores: str
+    data__encaminhamentos: str
 
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
