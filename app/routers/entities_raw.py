@@ -107,11 +107,17 @@ async def create_raw_data(
     # ====================
     uploaded_to_datalake = False
 
+    # Inject CNES in records
+    for record in records:
+        record["payload_cnes"] = data_source.cnes
+
+    # Get Formatter
     formatter = get_formatter(
         system=data_source.system.value,
         entity=entity_name
     )
 
+    # Format and Upload
     try:
         if upload_to_datalake and formatter:
             uploader = DatalakeUploader(
