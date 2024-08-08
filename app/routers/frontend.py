@@ -47,11 +47,19 @@ async def get_patient_header(
         "birth_date": "1972-08-01",
         "gender": "masculino",
         "race": "parda",
-        "phone": "(21) 99999-9999",
-        "family_clinic": {"cnes": "1234567", "name": "Clinica da Familia XXX"},
-        "family_health_team": {"ine_code": "1234567", "name": "Equipe Roxo"},
-        "medical_responsible": "Roberta dos Santos",
-        "nursing_responsible": "Pedro da Nobrega",
+        "phone": "(21) 99999-0000",
+        "family_clinic": {
+            "cnes": "1234567",
+            "name": "Clinica da Familia XXX",
+            "phone": "(21) 95555-0001",
+        },
+        "family_health_team": [{
+            "ine_code": "1234567",
+            "name": "Equipe Roxo",
+            "phone": "(21) 95555-0001"
+        }],
+        "medical_responsible": [{"name": "Roberta dos Santos", "registry": "XXXXXXX"}],
+        "nursing_responsible": [{"name": "Pedro da Nobrega", "registry": "XXXXXXX"}],
         "validated": True,
     }
 
