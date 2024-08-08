@@ -53,11 +53,11 @@ async def get_patient_header(
             "name": "Clinica da Familia XXX",
             "phone": "(21) 95555-0001",
         },
-        "family_health_team": [{
+        "family_health_team": {
             "ine_code": "1234567",
             "name": "Equipe Roxo",
             "phone": "(21) 95555-0001"
-        }],
+        },
         "medical_responsible": [{"name": "Roberta dos Santos", "registry": "XXXXXXX"}],
         "nursing_responsible": [{"name": "Pedro da Nobrega", "registry": "XXXXXXX"}],
         "validated": True,

@@ -7,12 +7,14 @@ from pydantic import BaseModel
 class FamilyClinic(BaseModel):
     cnes: str
     name: str
+    phone: str
 
 
 # Family Health Team model
 class FamilyHealthTeam(BaseModel):
     ine_code: str
     name: str
+    phone: str
 
 
 # Medical Conditions model
@@ -46,6 +48,10 @@ class UserInfo(BaseModel):
     username: str
     email: str
 
+class Professional(BaseModel):
+    name: str
+    registry: str
+
 
 class PatientHeader(BaseModel):
     registration_name: str
@@ -58,6 +64,6 @@ class PatientHeader(BaseModel):
     phone: Optional[str]
     family_clinic: FamilyClinic
     family_health_team: FamilyHealthTeam
-    medical_responsible: Optional[str]
-    nursing_responsible: Optional[str]
+    medical_responsible: List[Professional]
+    nursing_responsible: List[Professional]
     validated: bool
