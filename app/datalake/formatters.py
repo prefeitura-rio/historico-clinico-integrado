@@ -8,7 +8,6 @@ from app.datalake.utils import flatten, register_formatter
 from app.datalake.models import (
     SMSRioPaciente,
     VitacarePaciente,
-    VitacarePacienteHistorico,
     VitacareAtendimento,
     VitacareCondicao,
     VitacareAlergia,
@@ -36,18 +35,14 @@ def format_vitacare_patient(raw_record: dict) -> List:
 
     flattened = flatten(raw_record, list_max_depth=0)
 
-    # Temporary criterium to discriminate between Routine and Historic format
-    if 'AP' in raw_record['data'].keys():
-        return [VitacarePacienteHistorico(**flattened)]
-    else:
-        return [VitacarePaciente(**flattened)]
+    return [VitacarePaciente(**flattened)]
 
 
 @register_formatter(system="vitacare", entity="encounter")
 def format_vitacare_encounter(raw_record: dict) -> List:
     raw_record['source_updated_at'] = str(raw_record['source_updated_at'])
 
-    flattened = flatten(raw_record,dict_max_depth=3)
+    flattened = flatten(raw_record, dict_max_depth=3)
 
     rows = [VitacareAtendimento(**flattened)]
 

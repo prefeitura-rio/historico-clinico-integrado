@@ -148,60 +148,6 @@ class VitacarePaciente(BaseModel):
         dataset_is_public = False
 
 
-class VitacarePacienteHistorico(BaseModel):
-    patient_cpf: str
-    patient_code: str
-    source_updated_at: str
-    source_id: Optional[str]
-    data__AP: Optional[str]
-    data__SEXO: Optional[str]
-    data__HIST_CID: Optional[str]
-    data__RACA_COR: Optional[str]
-    data__RELIGIAO: Optional[str]
-    data__cpfPaciente: Optional[str]
-    data__ESCOLARIDADE: Optional[str]
-    data__dataConsulta: Optional[str]
-    data__NACIONALIDADE: Optional[str]
-    data__FREQUENTA_ESCOLA: Optional[str]
-    data__SITUACAO_USUARIO: Optional[str]
-    data__TELEFONE_CONTATO: Optional[str]
-    data__dataNascPaciente: Optional[str]
-    data__SITUACAO_FAMILIAR: Optional[str]
-    data__TERRITORIO_SOCIAL: Optional[str]
-    data__NUMERO_CNES_UNIDADE: Optional[str]
-    data__N_DE_CONSULTAS_2018: Optional[str]
-    data__N_DE_CONSULTAS_2019: Optional[str]
-    data__N_DE_CONSULTAS_2020: Optional[str]
-    data__N_DE_CONSULTAS_2021: Optional[str]
-    data__N_DE_CONSULTAS_2022: Optional[str]
-    data__N_DE_CONSULTAS_2023: Optional[str]
-    data__PACIENTE_TEMPORARIO: Optional[str]
-    data__NOME_UNIDADE_DE_SAUDE: Optional[str]
-    data__POSSUI_PLANO_DE_SAUDE: Optional[str]
-    data__SITUACAO_PROFISSIONAL: Optional[str]
-    data__MUNICIPIO_DE_NASCIMENTO: Optional[str]
-    data__N_DE_PROCEDIMENTOS_2018: Optional[str]
-    data__N_DE_PROCEDIMENTOS_2019: Optional[str]
-    data__N_DE_PROCEDIMENTOS_2020: Optional[str]
-    data__N_DE_PROCEDIMENTOS_2021: Optional[str]
-    data__N_DE_PROCEDIMENTOS_2022: Optional[str]
-    data__N_DE_PROCEDIMENTOS_2023: Optional[str]
-    data__PACIENTE_SITUACAO_RUA: Optional[str]
-    data__CODIGO_DA_EQUIPE_DE_SAUDE: Optional[str]
-    data__NOME_DA_PESSOA_CADASTRADA: Optional[str]
-    data__N_CNS_DA_PESSOA_CADASTRADA: Optional[str]
-    data__NOME_DA_MAE_PESSOA_CADASTRADA: Optional[str]
-    payload_cnes: str
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "paciente_historico_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
-        biglake_table = True
-        dataset_is_public = False
-
-
 class VitacareAtendimento(BaseModel):
     patient_cpf: str
     patient_code: str
@@ -209,14 +155,14 @@ class VitacareAtendimento(BaseModel):
     source_id: str
     data__unidade_ap: str
     data__unidade_cnes: str
-    data__profissional__cns: str
-    data__profissional__cpf: str
-    data__profissional__nome: str
-    data__profissional__cbo: str
-    data__profissional__cbo_descricao: str
-    data__profissional__equipe__nome: str
-    data__profissional__equipe__cod_equipe: str
-    data__profissional__equipe__cod_ine: str
+    data__profissional__cns: Optional[str]
+    data__profissional__cpf: Optional[str]
+    data__profissional__nome: Optional[str]
+    data__profissional__cbo: Optional[str]
+    data__profissional__cbo_descricao: Optional[str]
+    data__profissional__equipe__nome: Optional[str]
+    data__profissional__equipe__cod_equipe: Optional[str]
+    data__profissional__equipe__cod_ine: Optional[str]
     data__datahora_inicio_atendimento: str
     data__datahora_fim_atendimento: str
     data__datahora_marcacao_atendimento: Optional[str]
