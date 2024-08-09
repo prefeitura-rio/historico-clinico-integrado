@@ -105,11 +105,11 @@ async def get_patient_encounters(
 ) -> List[Encounter]:
     return [
         {
-            "entry_datetime": "2023-09-01T10:00:00",
-            "exit_datetime": "2023-09-01T12:00:00",
+            "entry_datetime": "2023-09-05T10:00:00",
+            "exit_datetime": "2023-09-05T12:00:00",
             "location": "UPA 24h Magalhães Bastos",
             "type": "Consulta",
-            "subtype": "Emergência",
+            "subtype": "Marcada",
             "active_cids": ["A10.2", "B02.5"],
             "responsible": {"name": "Dr. João da Silva", "role": "Médico(a)"},
             "description": "Lorem ipsum dolor sit amet consectetur.",
@@ -131,4 +131,31 @@ async def get_patient_encounters(
             ),
             "filter_tags": ["UPA", "Emergência"],
         },
+        {
+            "entry_datetime": "2021-08-21T22:00:00",
+            "exit_datetime": "2021-08-22T02:50:00",
+            "location": "CMS RAPHAEL DE PAULA SOUZA",
+            "type": "Consulta",
+            "subtype": "Pediatria",
+            "active_cids": ["Z10.2"],
+            "responsible": {"name": "Mariana Gomes", "role": "Enfermeiro(a)"},
+            "description": (
+                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar"
+                "sed nam libero eu. Leo arcu sit lacus nisl nullam eget et dignissim sed."
+            ),
+            "filter_tags": ["Pediatria"],
+        },
+        {
+            "entry_datetime": "2021-05-11T12:00:00",
+            "exit_datetime": "2021-05-12T20:50:00",
+            "location": "CMS RAPHAEL DE PAULA SOUZA",
+            "type": "Consulta",
+            "subtype": "Cirurgia",
+            "active_cids": ["E01.3"],
+            "responsible": {"name": "Dra. Claudia Simas", "role": "Medico(a)"},
+            "description": (
+                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar."
+            ),
+            "filter_tags": [],
+        }
     ]
