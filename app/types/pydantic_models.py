@@ -80,7 +80,7 @@ class UploadToDatalakeStatusModel(BaseModel):
 
 class BulkInsertOutputModel(BaseModel):
     count: int
-    datalake_status: UploadToDatalakeStatusModel
+    datalake_status: Optional[UploadToDatalakeStatusModel]
 
 
 class ConditionListModel(BaseModel):
