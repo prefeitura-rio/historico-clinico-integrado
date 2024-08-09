@@ -73,9 +73,14 @@ class RawDataListModel(BaseModel):
     cnes: str
 
 
+class UploadToDatalakeStatusModel(BaseModel):
+    success: bool
+    message: Optional[str]
+
+
 class BulkInsertOutputModel(BaseModel):
     count: int
-    uploaded_to_datalake: Optional[bool] = False
+    datalake_status: Optional[UploadToDatalakeStatusModel]
 
 
 class ConditionListModel(BaseModel):
