@@ -105,39 +105,42 @@ async def create_raw_data(
     # ====================
     # SEND TO DATALAKE
     # ====================
-    uploaded_to_datalake = False
+    datalake_status = {
+        'success': False,
+        'message': None,
+    }
 
     # Inject CNES in records
     for record in records:
         record["payload_cnes"] = data_source.cnes
 
-    # Get Formatter
-    formatter = get_formatter(
-        system=data_source.system.value,
-        entity=entity_name
-    )
-
-    # Format and Upload
     try:
+        # Get Formatter
+        formatter = get_formatter(
+            system=data_source.system.value,
+            entity=entity_name
+        )
         if upload_to_datalake and formatter:
             uploader = DatalakeUploader(
                 dump_mode="append",
                 force_unique_file_name=True,
             )
-
             for config, dataframe in apply_formatter(records, formatter).items():
                 uploader.upload(
                     dataframe=dataframe,
                     **convert_model_config_to_dict(config)
                 )
-            uploaded_to_datalake = True
+            datalake_status['success'] = True
+            datalake_status['message'] = "Data uploaded to Datalake"
     except Exception as e:
-        logger.error(f"Error uploading to datalake: {e}")
-    finally:
-        return BulkInsertOutputModel(
-            count=len(new_records),
-            uploaded_to_datalake=uploaded_to_datalake,
-        )
+        datalake_status['success'] = True
+        datalake_status['message'] = f"Error in upload ({entity_name, data_source.cnes}): {e}"
+        logger.error(datalake_status['message'])
+
+    return BulkInsertOutputModel(
+        count=len(new_records),
+        datalake_status=datalake_status,
+    )
 
 
 @router.post("/{entity_name}/setAsInvalid", status_code=200)
