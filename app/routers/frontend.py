@@ -58,8 +58,13 @@ async def get_patient_header(
             "name": "Equipe Roxo",
             "phone": "(21) 95555-0001"
         },
-        "medical_responsible": [{"name": "Roberta dos Santos", "registry": "XXXXXXX"}],
-        "nursing_responsible": [{"name": "Pedro da Nobrega", "registry": "XXXXXXX"}],
+        "medical_responsible": [
+            {"name": "Roberta dos Santos", "registry": "XXXXX"},
+            {"name": "Lucas da Silva", "registry": "YYYYY"}
+        ],
+        "nursing_responsible": [
+            {"name": "Pedro da Nobrega", "registry": "WWWWW"}
+        ],
         "validated": True,
     }
 
