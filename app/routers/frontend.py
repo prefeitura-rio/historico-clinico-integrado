@@ -147,7 +147,7 @@ async def get_patient_encounters(
                 "Fames pretium cursus viverra posuere arcu tortor sit lectus congue. Velit"
                 "tempor ultricies pulvinar magna pulvinar ridiculus consequat nibh..."
             ),
-            "filter_tags": ["UPA", "Emergência"],
+            "filter_tags": ["UPA"],
         },
         {
             "entry_datetime": "2021-08-21T22:00:00",
@@ -161,12 +161,12 @@ async def get_patient_encounters(
                 "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar"
                 "sed nam libero eu. Leo arcu sit lacus nisl nullam eget et dignissim sed."
             ),
-            "filter_tags": ["CF", "Agendada"],
+            "filter_tags": ["CF/CMS"],
         },
         {
             "entry_datetime": "2021-05-11T12:00:00",
             "exit_datetime": "2021-05-12T20:50:00",
-            "location": "CMS RAPHAEL DE PAULA SOUZA",
+            "location": "Hospital Municipal Rocha Faria",
             "type": "Consulta",
             "subtype": "Cirurgia",
             "active_cids": ["E01.3"],
@@ -174,6 +174,6 @@ async def get_patient_encounters(
             "description": (
                 "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar."
             ),
-            "filter_tags": ["CMS"],
+            "filter_tags": ["Hospital"],
         }
     ]
