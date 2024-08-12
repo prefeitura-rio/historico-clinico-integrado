@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import get_current_active_user
 from app.models import User
@@ -39,6 +39,12 @@ async def get_patient_header(
     _: Annotated[User, Depends(get_current_active_user)],
     cpf: str,
 ) -> PatientHeader:
+
+    if cpf == '19530236069':
+        raise HTTPException(status_code=404, detail="Patient not found")
+    elif cpf == '11111111111':
+        raise HTTPException(status_code=400, detail="Invalid CPF")
+
     return {
         "registration_name": "José da Silva Xavier",
         "social_name": None,
@@ -74,6 +80,12 @@ async def get_patient_summary(
     _: Annotated[User, Depends(get_current_active_user)],
     cpf: str,
 ) -> PatientSummary:
+
+    if cpf == '19530236069':
+        raise HTTPException(status_code=404, detail="Patient not found")
+    elif cpf == '11111111111':
+        raise HTTPException(status_code=400, detail="Invalid CPF")
+
     return {
         "allergies": [
             "Sulfonamidas",
@@ -103,6 +115,12 @@ async def get_patient_encounters(
     _: Annotated[User, Depends(get_current_active_user)],
     cpf: str,
 ) -> List[Encounter]:
+
+    if cpf == '19530236069':
+        raise HTTPException(status_code=404, detail="Patient not found")
+    elif cpf == '11111111111':
+        raise HTTPException(status_code=400, detail="Invalid CPF")
+
     return [
         {
             "entry_datetime": "2023-09-05T10:00:00",
@@ -143,7 +161,7 @@ async def get_patient_encounters(
                 "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar"
                 "sed nam libero eu. Leo arcu sit lacus nisl nullam eget et dignissim sed."
             ),
-            "filter_tags": ["Pediatria"],
+            "filter_tags": ["CF", "Agendada"],
         },
         {
             "entry_datetime": "2021-05-11T12:00:00",
@@ -156,6 +174,6 @@ async def get_patient_encounters(
             "description": (
                 "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar."
             ),
-            "filter_tags": [],
+            "filter_tags": ["CMS"],
         }
     ]
