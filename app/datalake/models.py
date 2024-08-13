@@ -9,6 +9,7 @@
 # dataset, etc must be provided.
 # =============================================
 from typing import Optional
+from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -19,6 +20,7 @@ class SMSRioPaciente(BaseModel):
     patient_cpf: str
     source_updated_at: str
     source_id: Optional[str]
+    datalake_loaded_at: str = datetime.now().isoformat()
     data__nome: Optional[str]
     data__nome_mae: Optional[str]
     data__nome_pai: Optional[str]
@@ -63,6 +65,7 @@ class VitacarePaciente(BaseModel):
     patient_code: str
     source_updated_at: str
     source_id: Optional[str]
+    datalake_loaded_at: str = datetime.now().isoformat()
     data__ap: Optional[str]
     data__id: Optional[str]
     data__cep: Optional[str]
@@ -153,6 +156,7 @@ class VitacareAtendimento(BaseModel):
     patient_code: str
     source_updated_at: str
     source_id: str
+    datalake_loaded_at: str = datetime.now().isoformat()
     data__unidade_ap: str
     data__unidade_cnes: str
     data__profissional__cns: Optional[str]
@@ -190,136 +194,3 @@ class VitacareAtendimento(BaseModel):
         partition_column = "source_updated_at"
         biglake_table = True
         dataset_is_public = False
-
-
-class VitacareProcedimentosClinicos(BaseModel):
-    patient_cpf: str
-    atendimento_id: str
-    source_updated_at: str
-    procedimentoClinico: str
-    observacao: Optional[str]
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "procedimentos_clinicos_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
-        biglake_table = True
-        dataset_is_public = False
-
-
-class VitacareCondicao(BaseModel):
-    patient_cpf: str
-    atendimento_id: str
-    source_updated_at: str
-    cod_cid10: str
-    cod_ciap2: Optional[str]
-    estado: str
-    data_diagnostico: str
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "condicoes_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
-        biglake_table = True
-        dataset_is_public = False
-
-
-class VitacareAlergia(BaseModel):
-    patient_cpf: str
-    atendimento_id: str
-    source_updated_at: str
-    descricao: str
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "alergia_anamnese_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
-        biglake_table = True
-        dataset_is_public = False
-
-
-class VitacareEncaminhamento(BaseModel):
-    patient_cpf: str
-    atendimento_id: str
-    source_updated_at: str
-    descricao: str
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "encaminhamento_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
-
-
-class VitacarePrescricao(BaseModel):
-    patient_cpf: str
-    atendimento_id: str
-    source_updated_at: str
-    nome_medicamento: str
-    cod_medicamento: str
-    quantidade: str
-    uso_continuado: bool
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "prescricao_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
-
-
-class VitacareExameSolicitado(BaseModel):
-    patient_cpf: str
-    atendimento_id: str
-    source_updated_at: str
-    nome_exame: str
-    cod_exame: str
-    quantidade: str
-    material: str
-    url_resultado: Optional[str]
-    data_solicitacao: str
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "exames_solicitados_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
-
-
-class VitacareVacina(BaseModel):
-    patient_cpf: str
-    atendimento_id: str
-    source_updated_at: str
-    nome_vacina: str
-    cod_vacina: str
-    dose: str
-    lote: str
-    datahora_aplicacao: str
-    datahora_registro: str
-    diff: str
-    calendario_vacinal_atualizado: bool
-    dose_vtc: str
-    tipo_registro: str
-    estrategia_imunizacao: str
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "vacinas_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
-
-
-class VitacareIndicador(BaseModel):
-    patient_cpf: str
-    atendimento_id: str
-    source_updated_at: str
-    nome: str
-    valor: str
-
-    class Config:
-        dataset_id = "brutos_prontuario_vitacare"
-        table_id = "indicadores_eventos"
-        partition_by_date = True
-        partition_column = "source_updated_at"
