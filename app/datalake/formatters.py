@@ -8,15 +8,7 @@ from app.datalake.utils import flatten, register_formatter
 from app.datalake.models import (
     SMSRioPaciente,
     VitacarePaciente,
-    VitacareAtendimento,
-    VitacareCondicao,
-    VitacareAlergia,
-    VitacareEncaminhamento,
-    VitacareExameSolicitado,
-    VitacareIndicador,
-    VitacarePrescricao,
-    VitacareVacina,
-    VitacareProcedimentosClinicos
+    VitacareAtendimento
 )
 
 
@@ -44,29 +36,4 @@ def format_vitacare_encounter(raw_record: dict) -> List:
 
     flattened = flatten(raw_record, dict_max_depth=3)
 
-    rows = [VitacareAtendimento(**flattened)]
-
-    for field_name, FieldModel in [
-        ('condicoes', VitacareCondicao),
-        ('alergias_anamnese', VitacareAlergia),
-        ('encaminhamentos', VitacareEncaminhamento),
-        ('exames_solicitados', VitacareExameSolicitado),
-        ('indicadores', VitacareIndicador),
-        ('prescricoes', VitacarePrescricao),
-        ('vacinas', VitacareVacina),
-        ('procedimentosClinicos', VitacareProcedimentosClinicos),
-    ]:
-        if field_name not in raw_record['data']:
-            continue
-
-        for fields in raw_record['data'].pop(field_name) or []:
-            rows.append(
-                FieldModel(
-                    patient_cpf=raw_record.get("patient_cpf"),
-                    atendimento_id=raw_record.get("source_id"),
-                    source_updated_at=raw_record.get("source_updated_at"),
-                    **fields
-                )
-            )
-
-    return rows
+    return [VitacareAtendimento(**flattened)]
