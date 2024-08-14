@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-from typing import Annotated, List
+import json
+import datetime
+import pytz
 
+from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
+from basedosdados import read_sql
 
 from app.dependencies import get_current_active_user
 from app.models import User
@@ -11,7 +15,7 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
-
+from app.config import BIGQUERY_PROJECT
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
@@ -39,40 +43,75 @@ async def get_patient_header(
     _: Annotated[User, Depends(get_current_active_user)],
     cpf: str,
 ) -> PatientHeader:
+    results_json = read_sql(
+        f"""
+        SELECT *
+        FROM `{BIGQUERY_PROJECT}`.`saude_dados_mestres`.`paciente`
+        WHERE cpf = '{cpf}'
+        """,
+        from_file="/tmp/credentials.json",
+    ).to_json(orient="records")
 
-    if cpf == '19530236069':
+    results = json.loads(results_json)
+
+    if len(results) > 0:
+        patient_record = results[0]
+    else:
         raise HTTPException(status_code=404, detail="Patient not found")
-    elif cpf == '11111111111':
-        raise HTTPException(status_code=400, detail="Invalid CPF")
+
+    data = patient_record["dados"][0]
+
+    cns_principal = None
+    if len(patient_record["cns"]) > 0:
+        cns_principal = patient_record["cns"][0]["cns"]
+
+    telefone_principal = None
+    if len(patient_record["contato"]["telefone"]) > 0:
+        telefone_principal = patient_record["contato"]["telefone"][0]["valor"]
+
+    clinica_principal = {}
+    if len(patient_record["clinica_familia"]) > 0:
+        clinica_principal = patient_record["clinica_familia"][0]
+
+    equipe_principal = {}
+    if len(patient_record["equipe_saude_familia"]) > 0:
+        equipe_principal = patient_record["equipe_saude_familia"][0]
+
+    data_nascimento = None
+    if data.get("data_nascimento") is not None:
+        data_nascimento_timestamp = data.get("data_nascimento")/1000
+        data_nascimento = datetime.datetime.fromtimestamp(
+            data_nascimento_timestamp,
+            tz=pytz.utc
+        ).strftime("%Y-%m-%d")
 
     return {
-        "registration_name": "José da Silva Xavier",
-        "social_name": None,
+        "registration_name": data.get("nome"),
+        "social_name": data.get("nome_social"),
         "cpf": f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}",
-        "cns": "123456789012345",
-        "birth_date": "1972-08-01",
-        "gender": "masculino",
-        "race": "parda",
-        "phone": "(21) 99999-0000",
+        "cns": cns_principal,
+        "birth_date": data_nascimento,
+        "gender": data.get("genero"),
+        "race": data.get("raca"),
+        "phone": telefone_principal,
         "family_clinic": {
-            "cnes": "1234567",
-            "name": "Clinica da Familia XXX",
-            "phone": "(21) 95555-0001",
+            "cnes": clinica_principal.get("id_cnes"),
+            "name": clinica_principal.get("nome"),
+            "phone": clinica_principal.get("telefone"),
         },
         "family_health_team": {
-            "ine_code": "1234567",
-            "name": "Equipe Roxo",
-            "phone": "(21) 95555-0001"
+            "ine_code": equipe_principal.get("id_ine"),
+            "name": equipe_principal.get("nome"),
+            "phone": equipe_principal.get("telefone"),
         },
         "medical_responsible": [
             {"name": "Roberta dos Santos", "registry": "XXXXX"},
-            {"name": "Lucas da Silva", "registry": "YYYYY"}
+            {"name": "Lucas da Silva", "registry": "YYYYY"},
         ],
-        "nursing_responsible": [
-            {"name": "Pedro da Nobrega", "registry": "WWWWW"}
-        ],
-        "validated": True,
+        "nursing_responsible": [{"name": "Pedro da Nobrega", "registry": "WWWWW"}],
+        "validated": data.get("cadastro_validado_indicador"),
     }
+
 
 
 @router.get("/patient/summary/{cpf}")
