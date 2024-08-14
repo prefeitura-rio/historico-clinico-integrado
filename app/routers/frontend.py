@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
+import datetime
+import pytz
+
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
 from basedosdados import read_sql
@@ -58,13 +61,13 @@ async def get_patient_header(
 
     data = patient_record["dados"][0]
 
-    cns_principal = "?"
+    cns_principal = None
     if len(patient_record["cns"]) > 0:
         cns_principal = patient_record["cns"][0]["cns"]
 
-    telefone_principal = "?"
+    telefone_principal = None
     if len(patient_record["contato"]["telefone"]) > 0:
-        telefone_principal = patient_record["contato"]["telefone"][0]["numero"]
+        telefone_principal = patient_record["contato"]["telefone"][0]["valor"]
 
     clinica_principal = {}
     if len(patient_record["clinica_familia"]) > 0:
@@ -74,24 +77,32 @@ async def get_patient_header(
     if len(patient_record["equipe_saude_familia"]) > 0:
         equipe_principal = patient_record["equipe_saude_familia"][0]
 
+    data_nascimento = None
+    if data.get("data_nascimento") is not None:
+        data_nascimento_timestamp = data.get("data_nascimento")/1000
+        data_nascimento = datetime.datetime.fromtimestamp(
+            data_nascimento_timestamp,
+            tz=pytz.utc
+        ).strftime("%Y-%m-%d")
+
     return {
-        "registration_name": data.get("nome", "?"),
-        "social_name": data.get("nome_social", "?"),
+        "registration_name": data.get("nome"),
+        "social_name": data.get("nome_social"),
         "cpf": f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}",
         "cns": cns_principal,
-        "birth_date": data.get("data_nascimento", "?"),
-        "gender": data.get("genero", "?"),
-        "race": data.get("raca", "?"),
+        "birth_date": data_nascimento,
+        "gender": data.get("genero"),
+        "race": data.get("raca"),
         "phone": telefone_principal,
         "family_clinic": {
-            "cnes": clinica_principal.get("id_cnes", "?"),
-            "name": clinica_principal.get("nome", "?"),
-            "phone": clinica_principal.get("telefone", "?"),
+            "cnes": clinica_principal.get("id_cnes"),
+            "name": clinica_principal.get("nome"),
+            "phone": clinica_principal.get("telefone"),
         },
         "family_health_team": {
-            "ine_code": equipe_principal.get("id_ine", "?"),
-            "name": equipe_principal.get("nome", "?"),
-            "phone": equipe_principal.get("telefone", "?"),
+            "ine_code": equipe_principal.get("id_ine"),
+            "name": equipe_principal.get("nome"),
+            "phone": equipe_principal.get("telefone"),
         },
         "medical_responsible": [
             {"name": "Roberta dos Santos", "registry": "XXXXX"},
