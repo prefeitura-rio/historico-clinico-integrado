@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime, timedelta
+import jwt
 import hashlib
 import json
+from datetime import datetime, timedelta
 from typing import Literal
-import jwt
+from loguru import logger
 from passlib.context import CryptContext
 
 from app import config
@@ -123,11 +124,16 @@ async def get_instance(Model, table, slug=None, code=None):
     return table[slug]
 
 
-def read_timestamp(timestamp: int, format=Literal['date','datetime']) -> str:
-    value = datetime(1970, 1, 1) + timedelta(seconds=timestamp)
-    if format == 'datetime':
+def read_timestamp(timestamp: int, output_format=Literal['date','datetime']) -> str:
+    try:
+        value = datetime(1970, 1, 1) + timedelta(seconds=timestamp)
+    except Exception as exc:
+        logger.error(f"Invalid timestamp: {timestamp} from {exc}")
+        return None
+
+    if output_format == 'datetime':
         return value.strftime("%Y-%m-%d %H:%M:%S")
-    elif format == 'date':
+    elif output_format == 'date':
         return value.strftime("%Y-%m-%d")
     else:
         raise ValueError("Invalid format")

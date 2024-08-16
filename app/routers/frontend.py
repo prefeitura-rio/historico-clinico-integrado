@@ -92,7 +92,7 @@ async def get_patient_header(
 
     data_nascimento = None
     if data.get("data_nascimento") is not None:
-        data_nascimento = read_timestamp(data.get("data_nascimento"), format='date')
+        data_nascimento = read_timestamp(data.get("data_nascimento"), output_format='date')
 
     return {
         "registration_name": data.get("nome"),
@@ -204,8 +204,8 @@ async def get_patient_encounters(
             unit_type = 'CF/CMS'
 
         encounter = {
-            "entry_datetime": read_timestamp(result['entrada_datahora'], format='datetime'),
-            "exit_datetime": read_timestamp(result['saida_datahora'], format='datetime'),
+            "entry_datetime": read_timestamp(result['entrada_datahora'], output_format='datetime'),
+            "exit_datetime": read_timestamp(result['saida_datahora'], output_format='datetime'),
             "location": result['estabelecimento']['nome'],
             "type": result['tipo'],
             "subtype": result['subtipo'],
