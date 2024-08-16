@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import datetime
-import pytz
 
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
