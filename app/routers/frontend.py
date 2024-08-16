@@ -164,64 +164,44 @@ async def get_patient_encounters(
     cpf: str,
 ) -> List[Encounter]:
 
-    if cpf == '19530236069':
-        raise HTTPException(status_code=404, detail="Patient not found")
-    elif cpf == '11111111111':
-        raise HTTPException(status_code=400, detail="Invalid CPF")
+    results_json = read_sql(
+        f"""
+        SELECT *
+        FROM `{BIGQUERY_PROJECT}`.`saude_historico_clinico`.`episodio_assistencial`
+        WHERE paciente.cpf = '{cpf}'
+        """,
+        from_file="/tmp/credentials.json",
+    ).to_json(orient="records")
 
-    return [
-        {
-            "entry_datetime": "2023-09-05T10:00:00",
-            "exit_datetime": "2023-09-05T12:00:00",
-            "location": "UPA 24h Magalhães Bastos",
-            "type": "Consulta",
-            "subtype": "Marcada",
-            "active_cids": ["A10.2", "B02.5"],
-            "responsible": {"name": "Dr. João da Silva", "role": "Médico(a)"},
-            "description": "Lorem ipsum dolor sit amet consectetur.",
-            "filter_tags": ["UPA"],
-        },
-        {
-            "entry_datetime": "2021-09-01T10:00:00",
-            "exit_datetime": "2021-09-01T12:00:00",
-            "location": "UPA 24h Magalhães Bastos",
-            "type": "Consulta",
-            "subtype": "Emergência",
-            "active_cids": ["A10.2"],
-            "responsible": {"name": "Dr. João da Silva", "role": "Médico(a)"},
-            "description": (
-                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar"
-                "sed nam libero eu. Leo arcu sit lacus nisl nullam eget et dignissim sed."
-                "Fames pretium cursus viverra posuere arcu tortor sit lectus congue. Velit"
-                "tempor ultricies pulvinar magna pulvinar ridiculus consequat nibh..."
-            ),
-            "filter_tags": ["UPA"],
-        },
-        {
-            "entry_datetime": "2021-08-21T22:00:00",
-            "exit_datetime": "2021-08-22T02:50:00",
-            "location": "CMS RAPHAEL DE PAULA SOUZA",
-            "type": "Consulta",
-            "subtype": "Pediatria",
-            "active_cids": ["Z10.2"],
-            "responsible": {"name": "Mariana Gomes", "role": "Enfermeiro(a)"},
-            "description": (
-                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar"
-                "sed nam libero eu. Leo arcu sit lacus nisl nullam eget et dignissim sed."
-            ),
-            "filter_tags": ["CF/CMS"],
-        },
-        {
-            "entry_datetime": "2021-05-11T12:00:00",
-            "exit_datetime": "2021-05-12T20:50:00",
-            "location": "Hospital Municipal Rocha Faria",
-            "type": "Consulta",
-            "subtype": "Cirurgia",
-            "active_cids": ["E01.3"],
-            "responsible": {"name": "Dra. Claudia Simas", "role": "Medico(a)"},
-            "description": (
-                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar."
-            ),
-            "filter_tags": ["Hospital"],
+    encounters = []
+    for result in json.loads(results_json):
+        # Responsible professional
+        professional = result.get('profissional_saude_responsavel')
+        if professional:
+            professional = {
+                "name": professional.get('nome'),
+                "role": professional.get('especialidade')
+            }
+
+        # CIDs
+        cids = []
+        for cid in result['condicoes']:
+            if cid.get('descricao') is not None:
+                cids.append(cid['descricao'])
+
+        encounter = {
+            "entry_datetime": result['entrada_datahora'],
+            "exit_datetime": result['saida_datahora'],
+            "location": result['estabelecimento']['nome'],
+            "type": result['tipo'],
+            "subtype": result['subtipo'],
+            "active_cids": cids,
+            "responsible": professional,
+            "description": result['motivo_atendimento'],
+            "motivation": result['motivo_atendimento'],
+            "summary": result['desfecho_atendimento'],
+            "filter_tags": [result['estabelecimento']['estabelecimento_tipo']],
         }
-    ]
+        encounters.append(encounter)
+
+    return encounters
