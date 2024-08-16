@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import hashlib
 import json
+from typing import Literal
 import jwt
 from passlib.context import CryptContext
 
@@ -120,3 +121,13 @@ async def get_instance(Model, table, slug=None, code=None):
             table[slug] = await Model.get_or_none(slug=slug)
 
     return table[slug]
+
+
+def read_timestamp(timestamp: int, format=Literal['date','datetime']) -> str:
+    value = datetime(1970, 1, 1) + timedelta(milliseconds=timestamp)
+    if format == 'datetime':
+        return value.strftime("%Y-%m-%d %H:%M:%S")
+    elif format == 'date':
+        return value.strftime("%Y-%m-%d")
+    else:
+        raise ValueError("Invalid format")

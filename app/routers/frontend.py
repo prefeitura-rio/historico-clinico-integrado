@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-import datetime
 
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,6 +14,7 @@ from app.types.frontend import (
     UserInfo,
 )
 from app.config import BIGQUERY_PROJECT
+from app.utils import read_timestamp
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
@@ -91,11 +91,7 @@ async def get_patient_header(
 
     data_nascimento = None
     if data.get("data_nascimento") is not None:
-        data_nascimento = (
-            datetime.datetime(1970, 1, 1) + datetime.timedelta(
-                milliseconds=data.get("data_nascimento")
-            )
-        ).strftime("%Y-%m-%d")
+        data_nascimento = read_timestamp(data.get("data_nascimento"), format='date')
 
     return {
         "registration_name": data.get("nome"),
@@ -190,8 +186,8 @@ async def get_patient_encounters(
                 cids.append(cid['descricao'])
 
         encounter = {
-            "entry_datetime": result['entrada_datahora'],
-            "exit_datetime": result['saida_datahora'],
+            "entry_datetime": read_timestamp(result['entrada_datahora'], format='datetime'),
+            "exit_datetime": read_timestamp(result['saida_datahora'], format='datetime'),
             "location": result['estabelecimento']['nome'],
             "type": result['tipo'],
             "subtype": result['subtipo'],
