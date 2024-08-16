@@ -267,6 +267,7 @@ class MergedPatient(Model):
 class User(Model):
     id = fields.IntField(pk=True)
     username = fields.CharField(max_length=255, unique=True)
+    role = fields.CharField(max_length=255, null=True)
     name = fields.CharField(max_length=255, null=True)
     cpf = fields.CharField(max_length=11, unique=True, null=True, validators=[CPFValidator()])
     email = fields.CharField(max_length=255, unique=True)
