@@ -182,8 +182,10 @@ async def get_patient_encounters(
         # CIDs
         cids = []
         for cid in result['condicoes']:
-            if cid.get('descricao') is not None:
-                cids.append(cid['descricao'])
+            nome, descricao = cid.get('id'), cid.get('descricao')
+            if nome is None or descricao is None:
+                continue
+            cids.append(f"{nome} - {descricao}")
 
         encounter = {
             "entry_datetime": read_timestamp(result['entrada_datahora'], format='datetime'),
