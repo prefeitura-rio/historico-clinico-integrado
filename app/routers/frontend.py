@@ -59,11 +59,11 @@ async def get_patient_header(
     else:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    data = patient_record["dados"][0]
+    data = patient_record["dados"]
 
     cns_principal = None
     if len(patient_record["cns"]) > 0:
-        cns_principal = patient_record["cns"][0]["cns"]
+        cns_principal = patient_record["cns"][0]
 
     telefone_principal = None
     if len(patient_record["contato"]["telefone"]) > 0:
@@ -74,15 +74,28 @@ async def get_patient_header(
         clinica_principal = patient_record["clinica_familia"][0]
 
     equipe_principal = {}
+    medicos, enfermeiros = [], []
     if len(patient_record["equipe_saude_familia"]) > 0:
         equipe_principal = patient_record["equipe_saude_familia"][0]
 
+        for equipe in patient_record["equipe_saude_familia"]:
+            medicos.extend(equipe["medicos"])
+            enfermeiros.extend(equipe["enfermeiros"])
+
+    for medico in medicos:
+        medico['registry'] = medico.pop('id_profissional_sus')
+        medico['name'] = medico.pop('nome')
+
+    for enfermeiro in enfermeiros:
+        enfermeiro['registry'] = enfermeiro.pop('id_profissional_sus')
+        enfermeiro['name'] = enfermeiro.pop('nome')
+
     data_nascimento = None
     if data.get("data_nascimento") is not None:
-        data_nascimento_timestamp = data.get("data_nascimento")/1000
-        data_nascimento = datetime.datetime.fromtimestamp(
-            data_nascimento_timestamp,
-            tz=pytz.utc
+        data_nascimento = (
+            datetime.datetime(1970, 1, 1) + datetime.timedelta(
+                milliseconds=data.get("data_nascimento")
+            )
         ).strftime("%Y-%m-%d")
 
     return {
@@ -104,12 +117,9 @@ async def get_patient_header(
             "name": equipe_principal.get("nome"),
             "phone": equipe_principal.get("telefone"),
         },
-        "medical_responsible": [
-            {"name": "Roberta dos Santos", "registry": "XXXXX"},
-            {"name": "Lucas da Silva", "registry": "YYYYY"},
-        ],
-        "nursing_responsible": [{"name": "Pedro da Nobrega", "registry": "WWWWW"}],
-        "validated": data.get("cadastro_validado_indicador"),
+        "medical_responsible": medicos,
+        "nursing_responsible": enfermeiros,
+        "validated": data.get("identidade_validada_indicador"),
     }
 
 
