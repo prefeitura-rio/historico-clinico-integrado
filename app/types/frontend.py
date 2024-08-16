@@ -48,6 +48,7 @@ class UserInfo(BaseModel):
     cpf: Optional[str]
     username: Optional[str]
     email: Optional[str]
+    role: Optional[str]
 
 class Professional(BaseModel):
     name: str
