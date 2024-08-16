@@ -124,7 +124,7 @@ async def get_instance(Model, table, slug=None, code=None):
 
 
 def read_timestamp(timestamp: int, format=Literal['date','datetime']) -> str:
-    value = datetime(1970, 1, 1) + timedelta(milliseconds=timestamp)
+    value = datetime(1970, 1, 1) + timedelta(seconds=timestamp)
     if format == 'datetime':
         return value.strftime("%Y-%m-%d %H:%M:%S")
     elif format == 'date':

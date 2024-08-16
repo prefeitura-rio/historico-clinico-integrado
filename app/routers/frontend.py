@@ -153,6 +153,21 @@ async def get_patient_summary(
         ],
     }
 
+@router.get("/patient/filter_tags")
+async def get_filter_tags(
+    _: Annotated[User, Depends(get_current_active_user)]
+) -> List[str]:
+    return [
+        "CF/CMS",
+        "HOSPITAL",
+        "CENTRO SAUDE ESCOLA",
+        "UPA",
+        "CCO",
+        "MATERNIDADE",
+        "CER",
+        "POLICLINICA",
+    ]
+
 
 @router.get("/patient/encounters/{cpf}")
 async def get_patient_encounters(
@@ -179,13 +194,13 @@ async def get_patient_encounters(
                 "role": professional.get('especialidade')
             }
 
-        # CIDs
-        cids = []
-        for cid in result['condicoes']:
-            nome, descricao = cid.get('id'), cid.get('descricao')
-            if nome is None or descricao is None:
-                continue
-            cids.append(f"{nome} - {descricao}")
+        # Filter Tags
+        unit_type = result['estabelecimento']['estabelecimento_tipo']
+        if unit_type in [
+            'CLINICA DA FAMILIA',
+            'CENTRO MUNICIPAL DE SAUDE'
+        ]:
+            unit_type = 'CF/CMS'
 
         encounter = {
             "entry_datetime": read_timestamp(result['entrada_datahora'], format='datetime'),
@@ -193,12 +208,11 @@ async def get_patient_encounters(
             "location": result['estabelecimento']['nome'],
             "type": result['tipo'],
             "subtype": result['subtipo'],
-            "active_cids": cids,
+            "active_cids": [cid['descricao'] for cid in result['condicoes'] if cid['descricao']],
             "responsible": professional,
-            "description": result['motivo_atendimento'],
-            "motivation": result['motivo_atendimento'],
-            "summary": result['desfecho_atendimento'],
-            "filter_tags": [result['estabelecimento']['estabelecimento_tipo']],
+            "clinical_motivation": result['motivo_atendimento'],
+            "clinical_outcome": result['desfecho_atendimento'],
+            "filter_tags": [unit_type],
         }
         encounters.append(encounter)
 

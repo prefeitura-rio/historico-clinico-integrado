@@ -38,9 +38,8 @@ class Encounter(BaseModel):
     subtype: Optional[str]
     active_cids: List[str]
     responsible: Optional[Responsible]
-    description: Optional[str]
-    motivation: Optional[str]
-    summary: Optional[str]
+    clinical_motivation: Optional[str]
+    clinical_outcome: Optional[str]
     filter_tags: List[str]
 
 
