@@ -37,8 +37,10 @@ class Encounter(BaseModel):
     type: str
     subtype: Optional[str]
     active_cids: List[str]
-    responsible: Responsible
+    responsible: Optional[Responsible]
     description: Optional[str]
+    motivation: Optional[str]
+    summary: Optional[str]
     filter_tags: List[str]
 
 
