@@ -14,7 +14,7 @@ from app.types.frontend import (
     UserInfo,
 )
 from app.config import BIGQUERY_PROJECT
-from app.utils import read_timestamp
+from app.utils import read_timestamp, normalize_case
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
@@ -217,8 +217,8 @@ async def get_patient_encounters(
             "subtype": result['subtipo'],
             "active_cids": [cid['descricao'] for cid in result['condicoes'] if cid['descricao']],
             "responsible": professional,
-            "clinical_motivation": result['motivo_atendimento'],
-            "clinical_outcome": result['desfecho_atendimento'],
+            "clinical_motivation": normalize_case(result['motivo_atendimento']),
+            "clinical_outcome": normalize_case(result['desfecho_atendimento']),
             "filter_tags": [unit_type],
         }
         encounters.append(encounter)
