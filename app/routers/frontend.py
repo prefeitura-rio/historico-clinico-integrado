@@ -190,6 +190,8 @@ async def get_patient_encounters(
         # Responsible professional
         professional = result.get('profissional_saude_responsavel')
         if professional:
+            if isinstance(professional, list):
+                professional = professional[0] if len(professional) > 0 else {}
             professional = {
                 "name": professional.get('nome'),
                 "role": professional.get('especialidade')
