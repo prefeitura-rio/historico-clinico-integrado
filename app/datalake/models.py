@@ -164,9 +164,9 @@ class VitacareAtendimento(BaseModel):
     data__profissional__nome: Optional[str]
     data__profissional__cbo: Optional[str]
     data__profissional__cbo_descricao: Optional[str]
-    data__profissional__equipe__nome: str
-    data__profissional__equipe__cod_equipe: str
-    data__profissional__equipe__cod_ine: str
+    data__profissional__equipe__nome: Optional[str]
+    data__profissional__equipe__cod_equipe: Optional[str]
+    data__profissional__equipe__cod_ine: Optional[str]
     data__datahora_inicio_atendimento: str
     data__datahora_fim_atendimento: str
     data__datahora_marcacao_atendimento: Optional[str]
