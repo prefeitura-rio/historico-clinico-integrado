@@ -5,7 +5,9 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
 from basedosdados import read_sql
 
-from app.dependencies import get_current_active_user
+from app.dependencies import (
+    get_current_frontend_user
+)
 from app.models import User
 from app.types.frontend import (
     PatientHeader,
@@ -21,7 +23,7 @@ router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
 @router.get("/user")
 async def get_user_info(
-    user: Annotated[User, Depends(get_current_active_user)],
+    user: Annotated[User, Depends(get_current_frontend_user)],
 ) -> UserInfo:
     if user.cpf:
         cpf = user.cpf
@@ -40,7 +42,7 @@ async def get_user_info(
 
 @router.get("/patient/header/{cpf}")
 async def get_patient_header(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
 ) -> PatientHeader:
     results_json = read_sql(
@@ -122,7 +124,7 @@ async def get_patient_header(
 
 @router.get("/patient/summary/{cpf}")
 async def get_patient_summary(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
 ) -> PatientSummary:
 
@@ -156,7 +158,7 @@ async def get_patient_summary(
 
 @router.get("/patient/filter_tags")
 async def get_filter_tags(
-    _: Annotated[User, Depends(get_current_active_user)]
+    _: Annotated[User, Depends(get_current_frontend_user)]
 ) -> List[str]:
     return [
         "CF/CMS",
@@ -172,7 +174,7 @@ async def get_filter_tags(
 
 @router.get("/patient/encounters/{cpf}")
 async def get_patient_encounters(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
 ) -> List[Encounter]:
 

@@ -12,7 +12,7 @@ from loguru import logger
 from tortoise.exceptions import ValidationError
 
 from app.types.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawDataModel
-from app.dependencies import get_current_active_user
+from app.dependencies import get_current_pipeline_user
 from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
 
 from app.datalake.uploader import DatalakeUploader
@@ -33,7 +33,7 @@ ENTITIES_CONFIG = {
 
 @router.get("/{entity_name}/{filter_type}")
 async def get_raw_data(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_pipeline_user)],
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     filter_type: Literal["fromEventDatetime", "fromInsertionDatetime"],
     start_datetime: dt = dt.now() - td(hours=1),
@@ -68,7 +68,7 @@ async def get_raw_data(
 @router.post("/{entity_name}", status_code=201)
 async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_pipeline_user)],
     raw_data: RawDataListModel,
     upload_to_datalake: bool = True,
 ) -> BulkInsertOutputModel:
@@ -145,7 +145,7 @@ async def create_raw_data(
 
 @router.post("/{entity_name}/setAsInvalid", status_code=200)
 async def set_as_invalid_flag_records(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_pipeline_user)],
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     raw_record_id_list: list[str],
 ):

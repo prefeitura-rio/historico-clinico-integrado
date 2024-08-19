@@ -13,7 +13,7 @@ from tortoise import Tortoise
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError, DoesNotExist
 
-from app.dependencies import get_current_active_user
+from app.dependencies import get_current_pipeline_user
 from app.types.pydantic_models import (
     PatientMergeableRecord, StandardizedPatientRecordModel, StandardizedPatientConditionModel,
     BulkInsertOutputModel, MergeableRecord, Page
@@ -37,7 +37,7 @@ StandardizedPatientConditionOutput = pydantic_model_creator(
 
 @router.get("/patientrecords/updated")
 async def get_patientrecords_of_updated_patients(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_pipeline_user)],
     start_datetime: datetime.datetime = datetime.datetime.now() -
     datetime.timedelta(hours=1),
     end_datetime: datetime.datetime = datetime.datetime.now(),
@@ -100,7 +100,7 @@ async def get_patientrecords_of_updated_patients(
 
 @router.post("/patientrecords", status_code=201)
 async def create_standardized_patientrecords(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_pipeline_user)],
     records: list[StandardizedPatientRecordModel],
 ) -> BulkInsertOutputModel:
 
@@ -164,7 +164,7 @@ async def create_standardized_patientrecords(
 
 @router.get("/patientconditions")
 async def get_standardized_patientconditions(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_pipeline_user)],
     patient_cpf: str,
 ) -> list[MergeableRecord[StandardizedPatientConditionModel]]:
 
@@ -188,7 +188,7 @@ async def get_standardized_patientconditions(
 
 @router.post("/patientconditions", status_code=201)
 async def create_standardized_patientconditions(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_pipeline_user)],
     conditions: list[StandardizedPatientConditionModel],
 ) -> BulkInsertOutputModel:
 
