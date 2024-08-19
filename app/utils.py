@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime, timedelta
 import jwt
 import hashlib
 import json
-from datetime import datetime, timedelta
+import nltk
 from typing import Literal
 from loguru import logger
 from passlib.context import CryptContext
@@ -11,6 +12,7 @@ from app import config
 from app.models import User
 
 
+nltk.download('punkt_tab')
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -137,3 +139,26 @@ def read_timestamp(timestamp: int, output_format=Literal['date','datetime']) -> 
         return value.strftime("%Y-%m-%d")
     else:
         raise ValueError("Invalid format")
+
+def normalize_case(text):
+    if not text:
+        return None
+
+    processed_lines = []
+    for line in text.splitlines():
+        pre_symbol = ''
+        if line.startswith('#'):
+            pre_symbol = '#'
+            line = line[1:]
+        if line.startswith('-'):
+            pre_symbol = '-'
+            line = line[1:]
+        line = line.strip()
+
+        sentences = nltk.tokenize.sent_tokenize(line)
+        normalized_sentences = [sentence.capitalize() for sentence in sentences]
+        normalized_text = pre_symbol + ' ' + ' '.join(normalized_sentences)
+
+        processed_lines.append(normalized_text)
+
+    return '\n'.join(processed_lines)
