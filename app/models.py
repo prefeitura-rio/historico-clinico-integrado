@@ -10,6 +10,7 @@ from app.enums import (
     CategoryEnum,
     ClinicalStatusEnum,
     SystemEnum,
+    UserClassEnum
 )
 from app.validators import CPFValidator, PatientCodeValidator
 
@@ -267,12 +268,14 @@ class MergedPatient(Model):
 class User(Model):
     id = fields.IntField(pk=True)
     username = fields.CharField(max_length=255, unique=True)
+    role = fields.CharField(max_length=255, null=True)
     name = fields.CharField(max_length=255, null=True)
     cpf = fields.CharField(max_length=11, unique=True, null=True, validators=[CPFValidator()])
     email = fields.CharField(max_length=255, unique=True)
     password = fields.CharField(max_length=255)
     is_active = fields.BooleanField(default=True)
     is_superuser = fields.BooleanField(default=False)
+    user_class = fields.CharEnumField(enum_type=UserClassEnum, null=True, default=UserClassEnum.PIPELINE_USER)
     data_source = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)

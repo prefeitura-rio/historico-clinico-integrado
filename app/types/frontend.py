@@ -5,16 +5,16 @@ from pydantic import BaseModel
 
 # Clinic Family model
 class FamilyClinic(BaseModel):
-    cnes: str
-    name: str
-    phone: str
+    cnes: Optional[str]
+    name: Optional[str]
+    phone: Optional[str]
 
 
 # Family Health Team model
 class FamilyHealthTeam(BaseModel):
-    ine_code: str
-    name: str
-    phone: str
+    ine_code: Optional[str]
+    name: Optional[str]
+    phone: Optional[str]
 
 
 # Medical Conditions model
@@ -37,26 +37,28 @@ class Encounter(BaseModel):
     type: str
     subtype: Optional[str]
     active_cids: List[str]
-    responsible: Responsible
-    description: Optional[str]
+    responsible: Optional[Responsible]
+    clinical_motivation: Optional[str]
+    clinical_outcome: Optional[str]
     filter_tags: List[str]
 
 
 class UserInfo(BaseModel):
     name: Optional[str]
     cpf: Optional[str]
-    username: str
-    email: str
+    username: Optional[str]
+    email: Optional[str]
+    role: Optional[str]
 
 class Professional(BaseModel):
     name: str
-    registry: str
+    registry: Optional[str]
 
 
 class PatientHeader(BaseModel):
     registration_name: str
     social_name: Optional[str]
-    cpf: Optional[str]
+    cpf: str
     cns: Optional[str]
     birth_date: Optional[str]
     gender: Optional[str]

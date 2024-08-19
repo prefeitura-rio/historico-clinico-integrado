@@ -6,6 +6,9 @@ from . import getenv_or_action
 # Logging
 LOG_LEVEL = getenv_or_action("LOG_LEVEL", default="INFO")
 
+# BigQuery Project
+BIGQUERY_PROJECT = getenv_or_action("BIGQUERY_PROJECT", action="raise")
+
 # JWT configuration
 JWT_SECRET_KEY = getenv_or_action("JWT_SECRET_KEY", default=token_bytes(32).hex())
 JWT_ALGORITHM = getenv_or_action("JWT_ALGORITHM", default="HS256")

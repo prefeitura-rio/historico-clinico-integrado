@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
+import jwt
 import hashlib
 import json
-import jwt
+from typing import Literal
+from loguru import logger
 from passlib.context import CryptContext
 
 from app import config
@@ -120,3 +122,22 @@ async def get_instance(Model, table, slug=None, code=None):
             table[slug] = await Model.get_or_none(slug=slug)
 
     return table[slug]
+
+
+def read_timestamp(timestamp: int, output_format=Literal['date','datetime']) -> str:
+    try:
+        value = datetime(1970, 1, 1) + timedelta(seconds=timestamp)
+    except Exception as exc:
+        logger.error(f"Invalid timestamp: {timestamp} from {exc}")
+        return None
+
+    if output_format == 'datetime':
+        return value.strftime("%Y-%m-%d %H:%M:%S")
+    elif output_format == 'date':
+        return value.strftime("%Y-%m-%d")
+    else:
+        raise ValueError("Invalid format")
+
+def normalize_case(text):
+    # TODO
+    return text

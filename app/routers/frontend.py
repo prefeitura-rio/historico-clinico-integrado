@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
+import json
+
 from typing import Annotated, List
-
 from fastapi import APIRouter, Depends, HTTPException
+from basedosdados import read_sql
 
-from app.dependencies import get_current_active_user
+from app.dependencies import (
+    get_current_frontend_user
+)
 from app.models import User
 from app.types.frontend import (
     PatientHeader,
@@ -11,14 +15,15 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
-
+from app.config import BIGQUERY_PROJECT
+from app.utils import read_timestamp, normalize_case
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
 
 @router.get("/user")
 async def get_user_info(
-    user: Annotated[User, Depends(get_current_active_user)],
+    user: Annotated[User, Depends(get_current_frontend_user)],
 ) -> UserInfo:
     if user.cpf:
         cpf = user.cpf
@@ -28,6 +33,7 @@ async def get_user_info(
 
     return {
         "name": user.name,
+        "role": user.role,
         "email": user.email,
         "username": user.username,
         "cpf": cpf,
@@ -36,48 +42,89 @@ async def get_user_info(
 
 @router.get("/patient/header/{cpf}")
 async def get_patient_header(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
 ) -> PatientHeader:
+    results_json = read_sql(
+        f"""
+        SELECT *
+        FROM `{BIGQUERY_PROJECT}`.`saude_dados_mestres`.`paciente`
+        WHERE cpf = '{cpf}'
+        """,
+        from_file="/tmp/credentials.json",
+    ).to_json(orient="records")
 
-    if cpf == '19530236069':
+    results = json.loads(results_json)
+
+    if len(results) > 0:
+        patient_record = results[0]
+    else:
         raise HTTPException(status_code=404, detail="Patient not found")
-    elif cpf == '11111111111':
-        raise HTTPException(status_code=400, detail="Invalid CPF")
+
+    data = patient_record["dados"]
+
+    cns_principal = None
+    if len(patient_record["cns"]) > 0:
+        cns_principal = patient_record["cns"][0]
+
+    telefone_principal = None
+    if len(patient_record["contato"]["telefone"]) > 0:
+        telefone_principal = patient_record["contato"]["telefone"][0]["valor"]
+
+    clinica_principal = {}
+    if len(patient_record["clinica_familia"]) > 0:
+        clinica_principal = patient_record["clinica_familia"][0]
+
+    equipe_principal = {}
+    medicos, enfermeiros = [], []
+    if len(patient_record["equipe_saude_familia"]) > 0:
+        equipe_principal = patient_record["equipe_saude_familia"][0]
+
+        for equipe in patient_record["equipe_saude_familia"]:
+            medicos.extend(equipe["medicos"])
+            enfermeiros.extend(equipe["enfermeiros"])
+
+    for medico in medicos:
+        medico['registry'] = medico.pop('id_profissional_sus')
+        medico['name'] = medico.pop('nome')
+
+    for enfermeiro in enfermeiros:
+        enfermeiro['registry'] = enfermeiro.pop('id_profissional_sus')
+        enfermeiro['name'] = enfermeiro.pop('nome')
+
+    data_nascimento = None
+    if data.get("data_nascimento") is not None:
+        data_nascimento = read_timestamp(data.get("data_nascimento"), output_format='date')
 
     return {
-        "registration_name": "José da Silva Xavier",
-        "social_name": None,
+        "registration_name": data.get("nome"),
+        "social_name": data.get("nome_social"),
         "cpf": f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}",
-        "cns": "123456789012345",
-        "birth_date": "1972-08-01",
-        "gender": "masculino",
-        "race": "parda",
-        "phone": "(21) 99999-0000",
+        "cns": cns_principal,
+        "birth_date": data_nascimento,
+        "gender": data.get("genero"),
+        "race": data.get("raca"),
+        "phone": telefone_principal,
         "family_clinic": {
-            "cnes": "1234567",
-            "name": "Clinica da Familia XXX",
-            "phone": "(21) 95555-0001",
+            "cnes": clinica_principal.get("id_cnes"),
+            "name": clinica_principal.get("nome"),
+            "phone": clinica_principal.get("telefone"),
         },
         "family_health_team": {
-            "ine_code": "1234567",
-            "name": "Equipe Roxo",
-            "phone": "(21) 95555-0001"
+            "ine_code": equipe_principal.get("id_ine"),
+            "name": equipe_principal.get("nome"),
+            "phone": equipe_principal.get("telefone"),
         },
-        "medical_responsible": [
-            {"name": "Roberta dos Santos", "registry": "XXXXX"},
-            {"name": "Lucas da Silva", "registry": "YYYYY"}
-        ],
-        "nursing_responsible": [
-            {"name": "Pedro da Nobrega", "registry": "WWWWW"}
-        ],
-        "validated": True,
+        "medical_responsible": medicos,
+        "nursing_responsible": enfermeiros,
+        "validated": data.get("identidade_validada_indicador"),
     }
+
 
 
 @router.get("/patient/summary/{cpf}")
 async def get_patient_summary(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
 ) -> PatientSummary:
 
@@ -109,71 +156,73 @@ async def get_patient_summary(
         ],
     }
 
+@router.get("/patient/filter_tags")
+async def get_filter_tags(
+    _: Annotated[User, Depends(get_current_frontend_user)]
+) -> List[str]:
+    return [
+        "CF/CMS",
+        "HOSPITAL",
+        "CENTRO SAUDE ESCOLA",
+        "UPA",
+        "CCO",
+        "MATERNIDADE",
+        "CER",
+        "POLICLINICA",
+    ]
+
 
 @router.get("/patient/encounters/{cpf}")
 async def get_patient_encounters(
-    _: Annotated[User, Depends(get_current_active_user)],
+    _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
 ) -> List[Encounter]:
 
-    if cpf == '19530236069':
-        raise HTTPException(status_code=404, detail="Patient not found")
-    elif cpf == '11111111111':
-        raise HTTPException(status_code=400, detail="Invalid CPF")
+    results_json = read_sql(
+        f"""
+        SELECT *
+        FROM `{BIGQUERY_PROJECT}`.`saude_historico_clinico`.`episodio_assistencial`
+        WHERE paciente.cpf = '{cpf}'
+        """,
+        from_file="/tmp/credentials.json",
+    ).to_json(orient="records")
 
-    return [
-        {
-            "entry_datetime": "2023-09-05T10:00:00",
-            "exit_datetime": "2023-09-05T12:00:00",
-            "location": "UPA 24h Magalhães Bastos",
-            "type": "Consulta",
-            "subtype": "Marcada",
-            "active_cids": ["A10.2", "B02.5"],
-            "responsible": {"name": "Dr. João da Silva", "role": "Médico(a)"},
-            "description": "Lorem ipsum dolor sit amet consectetur.",
-            "filter_tags": ["UPA"],
-        },
-        {
-            "entry_datetime": "2021-09-01T10:00:00",
-            "exit_datetime": "2021-09-01T12:00:00",
-            "location": "UPA 24h Magalhães Bastos",
-            "type": "Consulta",
-            "subtype": "Emergência",
-            "active_cids": ["A10.2"],
-            "responsible": {"name": "Dr. João da Silva", "role": "Médico(a)"},
-            "description": (
-                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar"
-                "sed nam libero eu. Leo arcu sit lacus nisl nullam eget et dignissim sed."
-                "Fames pretium cursus viverra posuere arcu tortor sit lectus congue. Velit"
-                "tempor ultricies pulvinar magna pulvinar ridiculus consequat nibh..."
-            ),
-            "filter_tags": ["UPA"],
-        },
-        {
-            "entry_datetime": "2021-08-21T22:00:00",
-            "exit_datetime": "2021-08-22T02:50:00",
-            "location": "CMS RAPHAEL DE PAULA SOUZA",
-            "type": "Consulta",
-            "subtype": "Pediatria",
-            "active_cids": ["Z10.2"],
-            "responsible": {"name": "Mariana Gomes", "role": "Enfermeiro(a)"},
-            "description": (
-                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar"
-                "sed nam libero eu. Leo arcu sit lacus nisl nullam eget et dignissim sed."
-            ),
-            "filter_tags": ["CF/CMS"],
-        },
-        {
-            "entry_datetime": "2021-05-11T12:00:00",
-            "exit_datetime": "2021-05-12T20:50:00",
-            "location": "Hospital Municipal Rocha Faria",
-            "type": "Consulta",
-            "subtype": "Cirurgia",
-            "active_cids": ["E01.3"],
-            "responsible": {"name": "Dra. Claudia Simas", "role": "Medico(a)"},
-            "description": (
-                "Lorem ipsum dolor sit amet consectetur. Sed vel suscipit id pulvinar."
-            ),
-            "filter_tags": ["Hospital"],
+    encounters = []
+    for result in json.loads(results_json):
+        # Responsible professional
+        professional = result.get('profissional_saude_responsavel')
+        if professional:
+            if isinstance(professional, list):
+                professional = professional[0] if len(professional) > 0 else {}
+
+            if not professional['nome'] and not professional['especialidade']:
+                professional = None
+            else:
+                professional = {
+                    "name": professional.get('nome'),
+                    "role": professional.get('especialidade')
+                }
+
+        # Filter Tags
+        unit_type = result['estabelecimento']['estabelecimento_tipo']
+        if unit_type in [
+            'CLINICA DA FAMILIA',
+            'CENTRO MUNICIPAL DE SAUDE'
+        ]:
+            unit_type = 'CF/CMS'
+
+        encounter = {
+            "entry_datetime": read_timestamp(result['entrada_datahora'], output_format='datetime'),
+            "exit_datetime": read_timestamp(result['saida_datahora'], output_format='datetime'),
+            "location": result['estabelecimento']['nome'],
+            "type": result['tipo'],
+            "subtype": result['subtipo'],
+            "active_cids": [cid['descricao'] for cid in result['condicoes'] if cid['descricao']],
+            "responsible": professional,
+            "clinical_motivation": normalize_case(result['motivo_atendimento']),
+            "clinical_outcome": normalize_case(result['desfecho_atendimento']),
+            "filter_tags": [unit_type],
         }
-    ]
+        encounters.append(encounter)
+
+    return encounters

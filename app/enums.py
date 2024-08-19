@@ -2,6 +2,11 @@
 from enum import Enum
 
 
+class UserClassEnum(str, Enum):
+    WEBAPP_USER = "frontend_user"
+    PIPELINE_USER = "pipeline_user"
+
+
 class ConditionCodeTypeEnum(str, Enum):
     CID = "cid"
     CIAP = "ciap"

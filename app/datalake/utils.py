@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+import json
 import pandas as pd
 from typing import Callable
 from loguru import logger
-
 
 REGISTERED_FORMATTERS = {}
 
@@ -77,9 +77,9 @@ def flatten(
                 for key, value in flattened.items():
                     updated_record[f"{field}__{key}"] = value
             else:
-                updated_record[field] = str(content)
+                updated_record[field] = json.dumps(content)
         elif isinstance(content, list) and depth >= list_max_depth:
-            updated_record[field] = str(content)
+            updated_record[field] = json.dumps(content)
         else:
             updated_record[field] = content
 
