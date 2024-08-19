@@ -192,10 +192,14 @@ async def get_patient_encounters(
         if professional:
             if isinstance(professional, list):
                 professional = professional[0] if len(professional) > 0 else {}
-            professional = {
-                "name": professional.get('nome'),
-                "role": professional.get('especialidade')
-            }
+
+            if not professional['nome'] and not professional['especialidade']:
+                professional = None
+            else:
+                professional = {
+                    "name": professional.get('nome'),
+                    "role": professional.get('especialidade')
+                }
 
         # Filter Tags
         unit_type = result['estabelecimento']['estabelecimento_tipo']
