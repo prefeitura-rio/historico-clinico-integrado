@@ -125,18 +125,22 @@ async def get_instance(Model, table, slug=None, code=None):
 
 
 def read_timestamp(timestamp: int, output_format=Literal['date','datetime']) -> str:
+    if output_format == 'date':
+        denominator = 1000
+        str_format = "%Y-%m-%d"
+    elif output_format == 'datetime':
+        denominator = 1
+        str_format = "%Y-%m-%d %H:%M:%S"
+    else:
+        raise ValueError("Invalid format")
+
     try:
-        value = datetime(1970, 1, 1) + timedelta(seconds=timestamp)
+        value = datetime(1970, 1, 1) + timedelta(seconds=timestamp/denominator)
     except Exception as exc:
         logger.error(f"Invalid timestamp: {timestamp} from {exc}")
         return None
 
-    if output_format == 'datetime':
-        return value.strftime("%Y-%m-%d %H:%M:%S")
-    elif output_format == 'date':
-        return value.strftime("%Y-%m-%d")
-    else:
-        raise ValueError("Invalid format")
+    return value.strftime(str_format)
 
 def normalize_case(text):
     # TODO

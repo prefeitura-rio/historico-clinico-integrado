@@ -71,14 +71,14 @@ async def get_patient_header(
     if len(patient_record["contato"]["telefone"]) > 0:
         telefone_principal = patient_record["contato"]["telefone"][0]["valor"]
 
-    clinica_principal = {}
-    if len(patient_record["clinica_familia"]) > 0:
-        clinica_principal = patient_record["clinica_familia"][0]
-
-    equipe_principal = {}
+    clinica_principal, equipe_principal = {}, {}
     medicos, enfermeiros = [], []
     if len(patient_record["equipe_saude_familia"]) > 0:
         equipe_principal = patient_record["equipe_saude_familia"][0]
+
+        # Pega Clínica da Família
+        if equipe_principal["clinica_familia"]:
+            clinica_principal = equipe_principal["clinica_familia"]
 
         for equipe in patient_record["equipe_saude_familia"]:
             medicos.extend(equipe["medicos"])
@@ -128,32 +128,50 @@ async def get_patient_summary(
     cpf: str,
 ) -> PatientSummary:
 
-    if cpf == '19530236069':
-        raise HTTPException(status_code=404, detail="Patient not found")
-    elif cpf == '11111111111':
-        raise HTTPException(status_code=400, detail="Invalid CPF")
+    query = f"""
+        with
+        base as (select '{cpf}' as cpf),
+        alergias_grouped as (
+            select
+            cpf,
+            alergias as allergies
+            from `saude_historico_clinico.alergia`
+            where cpf = '{cpf}'
+        ),
+        medicamentos_cronicos_single as (
+            select
+                cpf,
+                med.nome as nome_medicamento
+            from `saude_historico_clinico.medicamentos_cronicos`,
+                unnest(medicamentos) as med
+            where cpf = '{cpf}'
+        ),
+        medicamentos_cronicos_grouped as (
+            select
+            cpf,
+            array_agg(nome_medicamento) as continuous_use_medications
+            from medicamentos_cronicos_single
+            group by cpf
+        )
+    select
+        alergias_grouped.allergies,
+        medicamentos_cronicos_grouped.continuous_use_medications
+    from base
+        left join alergias_grouped on alergias_grouped.cpf = base.cpf
+        left join medicamentos_cronicos_grouped on medicamentos_cronicos_grouped.cpf = base.cpf
+    """
+    results_json = read_sql(
+        query,
+        from_file="/tmp/credentials.json"
+    ).to_json(orient="records")
+
+    result = json.loads(results_json)
+    if len(result) > 0:
+        return result[0]
 
     return {
-        "allergies": [
-            "Sulfonamidas",
-            "Ácaros do pó",
-            "Penicilina",
-            "Medicamentos anticonvulsivantes",
-            "Gatos",
-            "Gramíneas",
-            "Picadas de abelhas",
-            "Picadas de vespas",
-            "Preservativos",
-            "Luvas de látex",
-        ],
-        "continuous_use_medications": [
-            "Losartana potássica",
-            "Enalapril maleato",
-            "Besilato de anlodipino",
-            "Captopril",
-            "Clonazepam",
-            "Enalapril",
-        ],
+        "allergies": [],
+        "continuous_use_medications": []
     }
 
 @router.get("/patient/filter_tags")
