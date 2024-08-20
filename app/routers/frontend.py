@@ -71,14 +71,14 @@ async def get_patient_header(
     if len(patient_record["contato"]["telefone"]) > 0:
         telefone_principal = patient_record["contato"]["telefone"][0]["valor"]
 
-    clinica_principal = {}
-    if len(patient_record["clinica_familia"]) > 0:
-        clinica_principal = patient_record["clinica_familia"][0]
-
-    equipe_principal = {}
+    clinica_principal, equipe_principal = {}, {}
     medicos, enfermeiros = [], []
     if len(patient_record["equipe_saude_familia"]) > 0:
         equipe_principal = patient_record["equipe_saude_familia"][0]
+
+        # Pega Clínica da Família
+        if equipe_principal["clinica_familia"]:
+            clinica_principal = equipe_principal["clinica_familia"]
 
         for equipe in patient_record["equipe_saude_familia"]:
             medicos.extend(equipe["medicos"])
