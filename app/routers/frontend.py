@@ -243,4 +243,7 @@ async def get_patient_encounters(
         }
         encounters.append(encounter)
 
+    # Sort Encounters by entry_datetime
+    encounters = sorted(encounters, key=lambda x: x['entry_datetime'], reverse=True)
+
     return encounters
