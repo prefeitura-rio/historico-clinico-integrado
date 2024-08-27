@@ -36,6 +36,7 @@ class Encounter(BaseModel):
     location: str
     type: str
     subtype: Optional[str]
+    exhibition_type: str = 'default'
     active_cids: List[str]
     responsible: Optional[Responsible]
     clinical_motivation: Optional[str]
