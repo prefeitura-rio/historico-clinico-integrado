@@ -81,7 +81,7 @@ def inject_environment_variables(environment: str):
         f"Injecting {len(secrets)} environment variables from Infisical:")
     for secret in secrets:
         logger.info(
-            f" - {secret.secret_name}: {'*' * len(secret.secret_value)}")
+            f" - {secret.secret_name}: {len(secret.secret_value)} chars")
 
 
 environment = getenv_or_action("ENVIRONMENT", action="warn", default="dev")

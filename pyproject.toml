@@ -30,6 +30,7 @@ urllib3 = "2.0.7"
 idna = "3.7"
 basedosdados = "^2.0.0b16"
 nltk = "^3.9.1"
+asyncer = "^0.0.8"
 
 
 [tool.poetry.group.dev.dependencies]
