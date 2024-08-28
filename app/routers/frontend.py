@@ -72,8 +72,15 @@ async def get_patient_header(
 
     if len(results) == 0:
         raise HTTPException(status_code=404, detail="Patient not found")
-    else:
-        return results[0]
+
+    dados = results[0]
+    configuracao_exibicao = dados.get('exibicao', {})
+
+    if configuracao_exibicao.get('indicador', False) is False:
+        message = ",".join(configuracao_exibicao.get('motivos', []))
+        raise HTTPException(status_code=204, detail=message)
+
+    return dados
 
 
 
@@ -123,7 +130,7 @@ async def get_patient_encounters(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
-        WHERE cpf = '{cpf}'
+        WHERE cpf = '{cpf}' and exibicao.indicador = true
         """,
         from_file="/tmp/credentials.json",
     ).to_json(orient="records")
