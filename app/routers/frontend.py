@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-import json
-
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
-from basedosdados import read_sql
 from tortoise.exceptions import ValidationError
 
 from app.dependencies import (
@@ -16,6 +13,7 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
+from app.utils import read_bq
 from app.validators import CPFValidator
 from app.config import (
     BIGQUERY_PROJECT,
@@ -57,18 +55,14 @@ async def get_patient_header(
     except ValidationError:
         raise HTTPException(status_code=400, detail="Invalid CPF")
 
-    results_json = read_sql(
+    results = await read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
         WHERE cpf = '{cpf}'
         """,
         from_file="/tmp/credentials.json",
-    ).to_json(orient="records")
-    try:
-        results = json.loads(results_json)
-    except Exception:
-        results = []
+    )
 
     if len(results) == 0:
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -90,15 +84,14 @@ async def get_patient_summary(
     cpf: str,
 ) -> PatientSummary:
 
-    results_json = read_sql(
+    results = await read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
         WHERE cpf = '{cpf}'
         """,
         from_file="/tmp/credentials.json",
-    ).to_json(orient="records")
-    results = json.loads(results_json)
+    )
     if len(results) == 0:
         raise HTTPException(status_code=404, detail="Patient not found")
     else:
@@ -126,13 +119,12 @@ async def get_patient_encounters(
     cpf: str,
 ) -> List[Encounter]:
 
-    results_json = read_sql(
+    results = await read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
         WHERE cpf = '{cpf}' and exibicao.indicador = true
         """,
         from_file="/tmp/credentials.json",
-    ).to_json(orient="records")
-    results = json.loads(results_json)
+    )
     return results
