@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
-
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
 from tortoise.exceptions import ValidationError
