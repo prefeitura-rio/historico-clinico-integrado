@@ -32,7 +32,7 @@ class Responsible(BaseModel):
 # Medical Visit model
 class Encounter(BaseModel):
     entry_datetime: str
-    exit_datetime: str
+    exit_datetime: Optional[str]
     location: str
     type: str
     subtype: Optional[str]
