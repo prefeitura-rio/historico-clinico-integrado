@@ -45,7 +45,7 @@ class Encounter(BaseModel):
     responsible: Optional[Responsible]
     clinical_motivation: Optional[str]
     clinical_outcome: Optional[str]
-    clinical_exames: List[ClinicalExam]
+    clinical_exams: List[ClinicalExam]
     filter_tags: List[str]
 
 
