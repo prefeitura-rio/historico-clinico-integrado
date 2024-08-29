@@ -72,7 +72,7 @@ async def get_patient_header(
 
     if configuracao_exibicao.get('indicador', False) is False:
         message = ",".join(configuracao_exibicao.get('motivos', []))
-        raise HTTPException(status_code=204, detail=message)
+        raise HTTPException(status_code=403, detail=message)
 
     return dados
 
