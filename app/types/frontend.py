@@ -16,6 +16,10 @@ class FamilyHealthTeam(BaseModel):
     name: Optional[str]
     phone: Optional[str]
 
+# Clinical Exam Model
+class ClinicalExam(BaseModel):
+    type: str
+    description: Optional[str]
 
 # Medical Conditions model
 class PatientSummary(BaseModel):
@@ -41,6 +45,7 @@ class Encounter(BaseModel):
     responsible: Optional[Responsible]
     clinical_motivation: Optional[str]
     clinical_outcome: Optional[str]
+    clinical_exames: List[ClinicalExam]
     filter_tags: List[str]
 
 
