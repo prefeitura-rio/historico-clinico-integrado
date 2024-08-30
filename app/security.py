@@ -44,18 +44,18 @@ class TwoFactorAuth:
         if not user.secret_key:
             secret_key = TwoFactorAuth._generate_secret_key()
             user.secret_key = secret_key
-            user.save()
+            await user.save()
 
         return user.secret_key
 
     def _create_qr_code(self) -> bytes:
         uri = self.totp.provisioning_uri(
-            name=self._user_id,
+            name=str(self._user_id),
             issuer_name="2FA",
         )
         img = qrcode.make(uri)
         img_byte_array = io.BytesIO()
-        img.save(img_byte_array, format="PNG")
+        img.save(img_byte_array)
         img_byte_array.seek(0)
         return img_byte_array.getvalue()
 
