@@ -18,6 +18,15 @@ from app.models import User
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def generate_user_token(user: User) -> str:
+    access_token_expires = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+
+    return access_token
+
 async def authenticate_user(username: str, password: str) -> User:
     """Authenticate a user.
 
