@@ -273,6 +273,7 @@ class User(Model):
     cpf = fields.CharField(max_length=11, unique=True, null=True, validators=[CPFValidator()])
     email = fields.CharField(max_length=255, unique=True)
     password = fields.CharField(max_length=255)
+    #secret_key = fields.CharField(max_length=255, null=True)
     is_active = fields.BooleanField(default=True)
     is_superuser = fields.BooleanField(default=False)
     user_class = fields.CharEnumField(enum_type=UserClassEnum, null=True, default=UserClassEnum.PIPELINE_USER)
