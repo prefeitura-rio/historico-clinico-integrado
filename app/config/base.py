@@ -6,8 +6,17 @@ from . import getenv_or_action
 # Logging
 LOG_LEVEL = getenv_or_action("LOG_LEVEL", default="INFO")
 
-# BigQuery Project
+# BigQuery Integration
 BIGQUERY_PROJECT = getenv_or_action("BIGQUERY_PROJECT", action="raise")
+BIGQUERY_PATIENT_HEADER_TABLE_ID = getenv_or_action(
+    "BIGQUERY_PATIENT_HEADER_TABLE_ID", action="raise"
+)
+BIGQUERY_PATIENT_SUMMARY_TABLE_ID = getenv_or_action(
+    "BIGQUERY_PATIENT_SUMMARY_TABLE_ID", action="raise"
+)
+BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID = getenv_or_action(
+    "BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID", action="raise"
+)
 
 # JWT configuration
 JWT_SECRET_KEY = getenv_or_action("JWT_SECRET_KEY", default=token_bytes(32).hex())
