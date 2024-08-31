@@ -44,6 +44,21 @@ async def login_without_2fa(
     }
 
 
+@router.post("/2fa/is-2fa-active/")
+async def is_2fa_active(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+) -> bool:
+    user = await authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user.is_2fa_activated
+
+
 @router.post("/2fa/login/")
 async def login_with_2fa(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -58,15 +73,6 @@ async def login_with_2fa(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Caso 1: Usuário não registrou 2FA e está tentando logar
-    if user.is_2fa_required and not user.is_2fa_activated:
-        raise HTTPException(
-            status_code=status.HTTP_412_PRECONDITION_FAILED,
-            detail="2FA not activated. Use the /2fa/enable/ endpoint",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Caso 2: Usuário registrou 2FA e está tentando logar
     secret_key = await TwoFactorAuth.get_or_create_secret_key(user.id)
     two_factor_auth = TwoFactorAuth(user.id, secret_key)
 
@@ -77,10 +83,15 @@ async def login_with_2fa(
             detail="Incorrect OTP",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if not user.is_2fa_activated:
+        user.is_2fa_activated = True
+        await user.save()
+
     return {
         "access_token": generate_user_token(user),
         "token_type": "bearer",
     }
+
 
 @router.post("/2fa/enable/")
 async def enable_2fa(
@@ -94,7 +105,7 @@ async def enable_2fa(
     }
 
 
-@router.get("/2fa/activate/generate-qrcode/")
+@router.get("/2fa/generate-qrcode/")
 async def generate_qrcode(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ):
@@ -114,22 +125,3 @@ async def generate_qrcode(
         raise HTTPException(status_code=404, detail="User not found")
 
     return StreamingResponse(io.BytesIO(qr_code), media_type="image/png")
-
-
-@router.post('/2fa/activate/verify-code/')
-async def verify_code(
-    totp_code: str,
-    current_user: Annotated[User, Depends(get_current_frontend_user)],
-):
-    secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user.id)
-    two_factor_auth = TwoFactorAuth(current_user.id, secret_key)
-
-    is_valid_totp = two_factor_auth.verify_totp_code(totp_code)
-
-    if is_valid_totp:
-        current_user.is_2fa_activated = True
-        await current_user.save()
-
-    return {
-        'success': is_valid_totp
-    }
