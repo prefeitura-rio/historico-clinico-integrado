@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import StreamingResponse
 
 from app.models import User
-from app.types.pydantic_models import Token
+from app.types.pydantic_models import Token, Enable2FA
 from app.utils import authenticate_user, generate_user_token
 from app.security import TwoFactorAuth
 from app.dependencies import (
@@ -96,7 +96,7 @@ async def login_with_2fa(
 @router.post("/2fa/enable/")
 async def enable_2fa(
     current_user: Annotated[User, Depends(get_current_frontend_user)],
-):
+) -> Enable2FA:
     secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user.id)
     two_factor_auth = TwoFactorAuth(current_user.id, secret_key)
 
@@ -108,7 +108,7 @@ async def enable_2fa(
 @router.get("/2fa/generate-qrcode/")
 async def generate_qrcode(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-):
+) -> bytes:
     current_user = await authenticate_user(form_data.username, form_data.password)
     if not current_user:
         raise HTTPException(
