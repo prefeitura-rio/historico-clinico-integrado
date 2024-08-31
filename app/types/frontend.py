@@ -16,6 +16,10 @@ class FamilyHealthTeam(BaseModel):
     name: Optional[str]
     phone: Optional[str]
 
+# Clinical Exam Model
+class ClinicalExam(BaseModel):
+    type: str
+    description: Optional[str]
 
 # Medical Conditions model
 class PatientSummary(BaseModel):
@@ -32,14 +36,16 @@ class Responsible(BaseModel):
 # Medical Visit model
 class Encounter(BaseModel):
     entry_datetime: str
-    exit_datetime: str
+    exit_datetime: Optional[str]
     location: str
     type: str
     subtype: Optional[str]
+    exhibition_type: str = 'default'
     active_cids: List[str]
     responsible: Optional[Responsible]
     clinical_motivation: Optional[str]
     clinical_outcome: Optional[str]
+    clinical_exams: List[ClinicalExam]
     filter_tags: List[str]
 
 

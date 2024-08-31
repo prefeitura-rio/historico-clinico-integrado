@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-import json
-
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
-from basedosdados import read_sql
+from tortoise.exceptions import ValidationError
 
 from app.dependencies import (
     get_current_frontend_user
@@ -15,8 +13,14 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
-from app.config import BIGQUERY_PROJECT
-from app.utils import read_timestamp, normalize_case
+from app.utils import read_bq
+from app.validators import CPFValidator
+from app.config import (
+    BIGQUERY_PROJECT,
+    BIGQUERY_PATIENT_HEADER_TABLE_ID,
+    BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
+    BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID
+)
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
@@ -45,80 +49,32 @@ async def get_patient_header(
     _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
 ) -> PatientHeader:
-    results_json = read_sql(
+    validator = CPFValidator()
+    try:
+        validator(cpf)
+    except ValidationError:
+        raise HTTPException(status_code=400, detail="Invalid CPF")
+
+    results = await read_bq(
         f"""
         SELECT *
-        FROM `{BIGQUERY_PROJECT}`.`saude_dados_mestres`.`paciente`
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
         WHERE cpf = '{cpf}'
         """,
         from_file="/tmp/credentials.json",
-    ).to_json(orient="records")
+    )
 
-    results = json.loads(results_json)
-
-    if len(results) > 0:
-        patient_record = results[0]
-    else:
+    if len(results) == 0:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    data = patient_record["dados"]
+    dados = results[0]
+    configuracao_exibicao = dados.get('exibicao', {})
 
-    cns_principal = None
-    if len(patient_record["cns"]) > 0:
-        cns_principal = patient_record["cns"][0]
+    if configuracao_exibicao.get('indicador', False) is False:
+        message = ",".join(configuracao_exibicao.get('motivos', []))
+        raise HTTPException(status_code=403, detail=message)
 
-    telefone_principal = None
-    if len(patient_record["contato"]["telefone"]) > 0:
-        telefone_principal = patient_record["contato"]["telefone"][0]["valor"]
-
-    clinica_principal, equipe_principal = {}, {}
-    medicos, enfermeiros = [], []
-    if len(patient_record["equipe_saude_familia"]) > 0:
-        equipe_principal = patient_record["equipe_saude_familia"][0]
-
-        # Pega Clínica da Família
-        if equipe_principal["clinica_familia"]:
-            clinica_principal = equipe_principal["clinica_familia"]
-
-        for equipe in patient_record["equipe_saude_familia"]:
-            medicos.extend(equipe["medicos"])
-            enfermeiros.extend(equipe["enfermeiros"])
-
-    for medico in medicos:
-        medico['registry'] = medico.pop('id_profissional_sus')
-        medico['name'] = medico.pop('nome')
-
-    for enfermeiro in enfermeiros:
-        enfermeiro['registry'] = enfermeiro.pop('id_profissional_sus')
-        enfermeiro['name'] = enfermeiro.pop('nome')
-
-    data_nascimento = None
-    if data.get("data_nascimento") is not None:
-        data_nascimento = read_timestamp(data.get("data_nascimento"), output_format='date')
-
-    return {
-        "registration_name": data.get("nome"),
-        "social_name": data.get("nome_social"),
-        "cpf": f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}",
-        "cns": cns_principal,
-        "birth_date": data_nascimento,
-        "gender": data.get("genero"),
-        "race": data.get("raca"),
-        "phone": telefone_principal,
-        "family_clinic": {
-            "cnes": clinica_principal.get("id_cnes"),
-            "name": clinica_principal.get("nome"),
-            "phone": clinica_principal.get("telefone"),
-        },
-        "family_health_team": {
-            "ine_code": equipe_principal.get("id_ine"),
-            "name": equipe_principal.get("nome"),
-            "phone": equipe_principal.get("telefone"),
-        },
-        "medical_responsible": medicos,
-        "nursing_responsible": enfermeiros,
-        "validated": data.get("identidade_validada_indicador"),
-    }
+    return dados
 
 
 
@@ -128,51 +84,18 @@ async def get_patient_summary(
     cpf: str,
 ) -> PatientSummary:
 
-    query = f"""
-        with
-        base as (select '{cpf}' as cpf),
-        alergias_grouped as (
-            select
-            cpf,
-            alergias as allergies
-            from `saude_historico_clinico.alergia`
-            where cpf = '{cpf}'
-        ),
-        medicamentos_cronicos_single as (
-            select
-                cpf,
-                med.nome as nome_medicamento
-            from `saude_historico_clinico.medicamentos_cronicos`,
-                unnest(medicamentos) as med
-            where cpf = '{cpf}'
-        ),
-        medicamentos_cronicos_grouped as (
-            select
-            cpf,
-            array_agg(nome_medicamento) as continuous_use_medications
-            from medicamentos_cronicos_single
-            group by cpf
-        )
-    select
-        alergias_grouped.allergies,
-        medicamentos_cronicos_grouped.continuous_use_medications
-    from base
-        left join alergias_grouped on alergias_grouped.cpf = base.cpf
-        left join medicamentos_cronicos_grouped on medicamentos_cronicos_grouped.cpf = base.cpf
-    """
-    results_json = read_sql(
-        query,
-        from_file="/tmp/credentials.json"
-    ).to_json(orient="records")
-
-    result = json.loads(results_json)
-    if len(result) > 0:
-        return result[0]
-
-    return {
-        "allergies": [],
-        "continuous_use_medications": []
-    }
+    results = await read_bq(
+        f"""
+        SELECT *
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
+        WHERE cpf = '{cpf}'
+        """,
+        from_file="/tmp/credentials.json",
+    )
+    if len(results) == 0:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    else:
+        return results[0]
 
 @router.get("/patient/filter_tags")
 async def get_filter_tags(
@@ -196,54 +119,12 @@ async def get_patient_encounters(
     cpf: str,
 ) -> List[Encounter]:
 
-    results_json = read_sql(
+    results = await read_bq(
         f"""
         SELECT *
-        FROM `{BIGQUERY_PROJECT}`.`saude_historico_clinico`.`episodio_assistencial`
-        WHERE paciente.cpf = '{cpf}'
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
+        WHERE cpf = '{cpf}' and exibicao.indicador = true
         """,
         from_file="/tmp/credentials.json",
-    ).to_json(orient="records")
-
-    encounters = []
-    for result in json.loads(results_json):
-        # Responsible professional
-        professional = result.get('profissional_saude_responsavel')
-        if professional:
-            if isinstance(professional, list):
-                professional = professional[0] if len(professional) > 0 else {}
-
-            if not professional['nome'] and not professional['especialidade']:
-                professional = None
-            else:
-                professional = {
-                    "name": professional.get('nome'),
-                    "role": professional.get('especialidade')
-                }
-
-        # Filter Tags
-        unit_type = result['estabelecimento']['estabelecimento_tipo']
-        if unit_type in [
-            'CLINICA DA FAMILIA',
-            'CENTRO MUNICIPAL DE SAUDE'
-        ]:
-            unit_type = 'CF/CMS'
-
-        encounter = {
-            "entry_datetime": read_timestamp(result['entrada_datahora'], output_format='datetime'),
-            "exit_datetime": read_timestamp(result['saida_datahora'], output_format='datetime'),
-            "location": result['estabelecimento']['nome'],
-            "type": result['tipo'],
-            "subtype": result['subtipo'],
-            "active_cids": [cid['descricao'] for cid in result['condicoes'] if cid['descricao']],
-            "responsible": professional,
-            "clinical_motivation": normalize_case(result['motivo_atendimento']),
-            "clinical_outcome": normalize_case(result['desfecho_atendimento']),
-            "filter_tags": [unit_type],
-        }
-        encounters.append(encounter)
-
-    # Sort Encounters by entry_datetime
-    encounters = sorted(encounters, key=lambda x: x['entry_datetime'], reverse=True)
-
-    return encounters
+    )
+    return results

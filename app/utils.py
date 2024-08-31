@@ -3,7 +3,11 @@ from datetime import datetime, timedelta
 import jwt
 import hashlib
 import json
-from typing import Literal
+import os
+
+from google.cloud import bigquery
+from google.oauth2 import service_account
+from asyncer import asyncify
 from loguru import logger
 from passlib.context import CryptContext
 
@@ -13,6 +17,15 @@ from app.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
+def generate_user_token(user: User) -> str:
+    access_token_expires = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+
+    return access_token
 
 async def authenticate_user(username: str, password: str) -> User:
     """Authenticate a user.
@@ -124,24 +137,19 @@ async def get_instance(Model, table, slug=None, code=None):
     return table[slug]
 
 
-def read_timestamp(timestamp: int, output_format=Literal['date','datetime']) -> str:
-    if output_format == 'date':
-        denominator = 1000
-        str_format = "%Y-%m-%d"
-    elif output_format == 'datetime':
-        denominator = 1
-        str_format = "%Y-%m-%d %H:%M:%S"
-    else:
-        raise ValueError("Invalid format")
+async def read_bq(query, from_file="/tmp/credentials.json"):
+    logger.debug(f"""Reading BigQuery with query (QUERY_PREVIEW_ENABLED={
+        os.environ['QUERY_PREVIEW_ENABLED']
+    }): {query}""")
 
-    try:
-        value = datetime(1970, 1, 1) + timedelta(seconds=timestamp/denominator)
-    except Exception as exc:
-        logger.error(f"Invalid timestamp: {timestamp} from {exc}")
-        return None
+    def execute_job():
+        credentials = service_account.Credentials.from_service_account_file(
+            from_file,
+        )
+        client = bigquery.Client(credentials=credentials)
+        row_iterator = client.query_and_wait(query)
+        return [dict(row) for row in row_iterator]
 
-    return value.strftime(str_format)
+    rows = await asyncify(execute_job)()
 
-def normalize_case(text):
-    # TODO
-    return text
+    return rows

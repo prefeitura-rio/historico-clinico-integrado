@@ -277,6 +277,10 @@ class User(Model):
     is_superuser = fields.BooleanField(default=False)
     user_class = fields.CharEnumField(enum_type=UserClassEnum, null=True, default=UserClassEnum.PIPELINE_USER)
     data_source = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
+    # 2FA
+    secret_key = fields.CharField(max_length=255, null=True)
+    is_2fa_required = fields.BooleanField(default=False)
+    is_2fa_activated = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
