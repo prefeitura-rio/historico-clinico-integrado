@@ -5,7 +5,6 @@ import secrets
 from typing import Optional
 
 import qrcode
-from fastapi import Depends
 from pyotp import TOTP
 
 from app.models import User
