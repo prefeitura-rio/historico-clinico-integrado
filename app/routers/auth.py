@@ -107,7 +107,7 @@ async def enable_2fa(
 
 @router.post("/2fa/generate-qrcode/")
 async def generate_qrcode(
-    form_data: Annotated[LoginFormWith2FA, Depends()],
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> bytes:
     current_user = await authenticate_user(form_data.username, form_data.password)
     if not current_user:
