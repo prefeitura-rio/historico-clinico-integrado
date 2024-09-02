@@ -10,10 +10,10 @@ class LoginFormWith2FA(OAuth2PasswordRequestForm):
         self,
         username: str,
         password: str,
-        totp: str,
+        totp_code: str,
     ):
         super().__init__(username=username, password=password)
-        self.totp = totp
+        self.totp_code = totp_code
 
 
 # Clinic Family model
