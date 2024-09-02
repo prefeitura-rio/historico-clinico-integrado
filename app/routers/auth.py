@@ -105,7 +105,7 @@ async def enable_2fa(
     }
 
 
-@router.get("/2fa/generate-qrcode/")
+@router.post("/2fa/generate-qrcode/")
 async def generate_qrcode(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> bytes:
