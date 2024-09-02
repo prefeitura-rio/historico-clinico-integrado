@@ -2,6 +2,19 @@
 from typing import Optional, List
 from pydantic import BaseModel
 
+from fastapi.security import OAuth2PasswordRequestForm
+
+
+class LoginFormWith2FA(OAuth2PasswordRequestForm):
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        totp: str,
+    ):
+        super().__init__(username=username, password=password)
+        self.totp = totp
+
 
 # Clinic Family model
 class FamilyClinic(BaseModel):
@@ -16,10 +29,12 @@ class FamilyHealthTeam(BaseModel):
     name: Optional[str]
     phone: Optional[str]
 
+
 # Clinical Exam Model
 class ClinicalExam(BaseModel):
     type: str
     description: Optional[str]
+
 
 # Medical Conditions model
 class PatientSummary(BaseModel):
@@ -29,7 +44,7 @@ class PatientSummary(BaseModel):
 
 # Responsible model
 class Responsible(BaseModel):
-    name: str
+    name: Optional[str]  # Temporary
     role: str
 
 
@@ -40,7 +55,7 @@ class Encounter(BaseModel):
     location: str
     type: str
     subtype: Optional[str]
-    exhibition_type: str = 'default'
+    exhibition_type: str = "default"
     active_cids: List[str]
     responsible: Optional[Responsible]
     clinical_motivation: Optional[str]
@@ -56,8 +71,9 @@ class UserInfo(BaseModel):
     email: Optional[str]
     role: Optional[str]
 
+
 class Professional(BaseModel):
-    name: str
+    name: Optional[str]
     registry: Optional[str]
 
 
