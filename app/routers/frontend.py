@@ -59,7 +59,7 @@ async def get_patient_header(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
-        WHERE cpf = '{cpf}'
+        WHERE cpf_particao = {cpf}
         """,
         from_file="/tmp/credentials.json",
     )
@@ -88,7 +88,7 @@ async def get_patient_summary(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
-        WHERE cpf = '{cpf}'
+        WHERE cpf_particao = {cpf}
         """,
         from_file="/tmp/credentials.json",
     )
@@ -123,7 +123,7 @@ async def get_patient_encounters(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
-        WHERE cpf = '{cpf}' and exibicao.indicador = true
+        WHERE cpf_particao = {cpf} and exibicao.indicador = true
         """,
         from_file="/tmp/credentials.json",
     )
