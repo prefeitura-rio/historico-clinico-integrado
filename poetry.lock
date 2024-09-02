@@ -614,6 +614,20 @@ typing-extensions = ">=4.8.0"
 all = ["email-validator (>=2.0.0)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)", "jinja2 (>=2.11.2)", "orjson (>=3.2.1)", "pydantic-extra-types (>=2.0.0)", "pydantic-settings (>=2.0.0)", "python-multipart (>=0.0.7)", "pyyaml (>=5.3.1)", "ujson (>=4.0.1,!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0)", "uvicorn[standard] (>=0.12.0)"]
 
 [[package]]
+name = "fastapi-simple-rate-limiter"
+version = "0.0.4"
+description = "Rate limiter to limit the number of API requests in FastAPI"
+optional = false
+python-versions = "<4.0,>=3.10"
+files = [
+    {file = "fastapi_simple_rate_limiter-0.0.4-py3-none-any.whl", hash = "sha256:2e7e23897793a1e22ad31c4c4674c2f2ace464624c16f998265d9fe36e0f0faa"},
+    {file = "fastapi_simple_rate_limiter-0.0.4.tar.gz", hash = "sha256:fa4e473728ecded6f433240697f7422d84ceeaa92521d0c72b00989c0a573cc8"},
+]
+
+[package.dependencies]
+redis = ">=5.0.1,<6.0.0"
+
+[[package]]
 name = "filelock"
 version = "3.13.1"
 description = "A platform independent file lock."
@@ -2195,6 +2209,24 @@ pil = ["pillow (>=9.1.0)"]
 test = ["coverage", "pytest"]
 
 [[package]]
+name = "redis"
+version = "5.0.8"
+description = "Python client for Redis database and key-value store"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "redis-5.0.8-py3-none-any.whl", hash = "sha256:56134ee08ea909106090934adc36f65c9bcbbaecea5b21ba704ba6fb561f8eb4"},
+    {file = "redis-5.0.8.tar.gz", hash = "sha256:0c5b10d387568dfe0698c6fad6615750c24170e548ca2deac10c649d463e9870"},
+]
+
+[package.dependencies]
+async-timeout = {version = ">=4.0.3", markers = "python_full_version < \"3.11.3\""}
+
+[package.extras]
+hiredis = ["hiredis (>1.0.0)"]
+ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"]
+
+[[package]]
 name = "regex"
 version = "2024.7.24"
 description = "Alternative regular expression module, to replace re."
@@ -2855,4 +2887,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "5715de4721d690e2ecff456af1ed2d255f810d0c660d5cb7f26bd307d92e4199"
+content-hash = "5fc1242cb6d7fb62f1eb325524eab82ec4506e439623f47e82bf1dbcf4ba0a8e"
