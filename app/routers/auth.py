@@ -47,7 +47,7 @@ async def login_without_2fa(
 
 @router.post("/2fa/is-2fa-active/")
 async def is_2fa_active(
-    form_data: Annotated[LoginFormWith2FA, Depends()],
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> bool:
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
