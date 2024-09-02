@@ -323,3 +323,7 @@ class TeamModel(BaseModel):
     outros_profissionais: List[str]
     ultima_atualizacao_profissionais: date
     ultima_atualizacao_infos_equipe: date
+
+
+class Enable2FA(BaseModel):
+    secret_key: str
