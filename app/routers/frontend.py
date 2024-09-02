@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated, List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from tortoise.exceptions import ValidationError
-
+from fastapi_simple_rate_limiter import rate_limiter
 from app.dependencies import (
     get_current_frontend_user
 )
@@ -45,9 +45,11 @@ async def get_user_info(
 
 
 @router.get("/patient/header/{cpf}")
+@rate_limiter(limit=5, seconds=60)
 async def get_patient_header(
     _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
+    request: Request,
 ) -> PatientHeader:
     validator = CPFValidator()
     try:
@@ -59,7 +61,7 @@ async def get_patient_header(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
-        WHERE cpf = '{cpf}'
+        WHERE cpf_particao = {cpf}
         """,
         from_file="/tmp/credentials.json",
     )
@@ -79,16 +81,18 @@ async def get_patient_header(
 
 
 @router.get("/patient/summary/{cpf}")
+@rate_limiter(limit=5, seconds=60)
 async def get_patient_summary(
     _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
+    request: Request,
 ) -> PatientSummary:
 
     results = await read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
-        WHERE cpf = '{cpf}'
+        WHERE cpf_particao = {cpf}
         """,
         from_file="/tmp/credentials.json",
     )
@@ -114,16 +118,18 @@ async def get_filter_tags(
 
 
 @router.get("/patient/encounters/{cpf}")
+@rate_limiter(limit=5, seconds=60)
 async def get_patient_encounters(
     _: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
+    request: Request,
 ) -> List[Encounter]:
 
     results = await read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
-        WHERE cpf = '{cpf}' and exibicao.indicador = true
+        WHERE cpf_particao = {cpf} and exibicao.indicador = true
         """,
         from_file="/tmp/credentials.json",
     )
