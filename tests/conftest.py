@@ -8,25 +8,20 @@ from tortoise import Tortoise
 from app.db import TORTOISE_ORM
 from app.main import app
 from app.models import (
-    City,
-    Country,
     DataSource,
-    State,
     User,
-    Gender,
-    Race,
-    Nationality,
     RawPatientRecord,
     RawPatientCondition,
-    StandardizedPatientRecord,
-    MergedPatient,
-    MergedPatientCns,
-    MergedPatientAddress,
-    MergedPatientTelecom,
     Occupation,
     OccupationFamily
 )
 from app.utils import password_hash, read_bq, prepare_gcp_credential
+from app.config import (
+    BIGQUERY_PROJECT,
+    BIGQUERY_PATIENT_HEADER_TABLE_ID,
+    BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
+    BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID
+)
 
 
 @pytest.fixture(scope="session")
@@ -119,9 +114,9 @@ async def initialize_tests(
 async def cpf_with_header():
     prepare_gcp_credential()
 
-    response = await read_bq("""
+    response = await read_bq(f"""
         SELECT cpf
-        FROM `rj-sms-dev.app_historico_clinico.paciente`
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
         WHERE exibicao.indicador = True
         ORDER BY RAND()
         LIMIT 1
@@ -135,9 +130,9 @@ async def cpf_with_header():
 async def cpf_with_summary():
     prepare_gcp_credential()
 
-    response = await read_bq("""
+    response = await read_bq(f"""
         SELECT cpf
-        FROM `rj-sms-dev.app_historico_clinico.sumario`
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
         WHERE 
             array_length(continuous_use_medications) > 0 or 
             array_length(allergies) > 0
@@ -153,9 +148,9 @@ async def cpf_with_summary():
 async def cpf_with_encounters():
     prepare_gcp_credential()
 
-    response = await read_bq("""
+    response = await read_bq(f"""
         SELECT cpf
-        FROM `rj-sms-dev.app_historico_clinico.episodio_assistencial`
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
         WHERE exibicao.indicador = True
         ORDER BY RAND()
         LIMIT 1
