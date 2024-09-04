@@ -4,6 +4,7 @@ import jwt
 import hashlib
 import json
 import os
+import base64
 
 from google.cloud import bigquery
 from google.oauth2 import service_account
@@ -135,6 +136,15 @@ async def get_instance(Model, table, slug=None, code=None):
             table[slug] = await Model.get_or_none(slug=slug)
 
     return table[slug]
+
+def prepare_gcp_credential() -> None:
+    base64_credential = os.environ["BASEDOSDADOS_CREDENTIALS_PROD"]
+
+    with open("/tmp/credentials.json", "wb") as f:
+        f.write(base64.b64decode(base64_credential))
+
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/tmp/credentials.json"
+    return
 
 
 async def read_bq(query, from_file="/tmp/credentials.json"):
