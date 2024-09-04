@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from httpx import AsyncClient  # noqa
 import pytest  # noqa
-import datetime
-import pytz
 import sys
 sys.path.insert(0, "../")
 

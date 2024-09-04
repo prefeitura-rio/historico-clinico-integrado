@@ -43,7 +43,7 @@ async def test_filtertags(
     token_frontend: str,
 ):
     response = await client.get(
-        f"/frontend/patient/filter_tags",
+        "/frontend/patient/filter_tags",
         headers={"Authorization": f"Bearer {token_frontend}"}
     )
 
