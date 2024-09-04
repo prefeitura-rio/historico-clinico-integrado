@@ -133,8 +133,8 @@ async def cpf_with_summary():
     response = await read_bq(f"""
         SELECT cpf
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
-        WHERE 
-            array_length(continuous_use_medications) > 0 or 
+        WHERE
+            array_length(continuous_use_medications) > 0 or
             array_length(allergies) > 0
         ORDER BY RAND()
         LIMIT 1
