@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import StreamingResponse
 
 from app.models import User
-from app.types.frontend import LoginFormWith2FA
+from app.types.frontend import LoginFormWith2FA, LoginForm
 from app.types.pydantic_models import Token, Enable2FA
 from app.utils import authenticate_user, generate_user_token
 from app.security import TwoFactorAuth
@@ -47,7 +47,7 @@ async def login_without_2fa(
 
 @router.post("/2fa/is-2fa-active/")
 async def is_2fa_active(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    form_data: LoginForm,
 ) -> bool:
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -62,7 +62,7 @@ async def is_2fa_active(
 
 @router.post("/2fa/login/")
 async def login_with_2fa(
-    form_data: Annotated[LoginFormWith2FA, Depends()],
+    form_data: LoginFormWith2FA,
 ) -> Token:
 
     user = await authenticate_user(form_data.username, form_data.password)
@@ -107,7 +107,7 @@ async def enable_2fa(
 
 @router.post("/2fa/generate-qrcode/")
 async def generate_qrcode(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    form_data: LoginForm,
 ) -> bytes:
     current_user = await authenticate_user(form_data.username, form_data.password)
     if not current_user:
