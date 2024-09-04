@@ -13,7 +13,7 @@ async def test_patientheader(
     cpf_with_header: str,
 ):
     response = await client.get(
-        f"/frontend/patient/header?cpf={cpf_with_header}",
+        f"/frontend/patient/header/{cpf_with_header}",
         headers={"Authorization": f"Bearer {token_frontend}"}
     )
 
@@ -28,10 +28,11 @@ async def test_patientsummary(
     cpf_with_summary: str,
 ):
     response = await client.get(
-        f"/frontend/patient/summary?cpf={cpf_with_summary}",
+        f"/frontend/patient/summary/{cpf_with_summary}",
         headers={"Authorization": f"Bearer {token_frontend}"}
     )
 
+    print("RESPONSE:", response.text)
     assert response.status_code == 200
 
 
@@ -57,7 +58,7 @@ async def test_patientencounters(
     cpf_with_encounters: str,
 ):
     response = await client.get(
-        f"/frontend/patient/encounters?cpf={cpf_with_encounters}",
+        f"/frontend/patient/encounters/{cpf_with_encounters}",
         headers={"Authorization": f"Bearer {token_frontend}"}
     )
 
