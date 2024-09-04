@@ -8,25 +8,20 @@ from tortoise import Tortoise
 from app.db import TORTOISE_ORM
 from app.main import app
 from app.models import (
-    City,
-    Country,
     DataSource,
-    State,
     User,
-    Gender,
-    Race,
-    Nationality,
     RawPatientRecord,
     RawPatientCondition,
-    StandardizedPatientRecord,
-    MergedPatient,
-    MergedPatientCns,
-    MergedPatientAddress,
-    MergedPatientTelecom,
     Occupation,
     OccupationFamily
 )
-from app.utils import password_hash
+from app.utils import password_hash, read_bq, prepare_gcp_credential
+from app.config import (
+    BIGQUERY_PROJECT,
+    BIGQUERY_PATIENT_HEADER_TABLE_ID,
+    BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
+    BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID
+)
 
 
 @pytest.fixture(scope="session")
@@ -52,8 +47,6 @@ async def client():
 
 @pytest.fixture(scope="session", autouse=True)
 async def initialize_tests(
-    patient_cpf: str,
-    patient_code: str,
     other_patient_cpf: str,
     other_patient_code: str
 ):
@@ -61,30 +54,11 @@ async def initialize_tests(
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
-    await City.all().delete()
-    await Country.all().delete()
-    await DataSource.all().delete()
-    await Gender.all().delete()
-    await Race.all().delete()
-    await Nationality.all().delete()
-    await State.all().delete()
-    await User.all().delete()
-    await MergedPatient.all().delete()
-    await MergedPatientCns.all().delete()
-    await MergedPatientAddress.all().delete()
-    await MergedPatientTelecom.all().delete()
-
-    datasource = await DataSource.create(
+    datasource, _ = await DataSource.get_or_create(
         description="test_datasource",
         system="vitacare",
         cnes="1234567"
     )
-    country = await Country.create(name="Brasil", code="00001")
-    state = await State.create(name="Rio de Janeiro", country=country, code="00001")
-    city = await City.create(name="Rio de Janeiro", state=state, code="00001")
-    gender = await Gender.create(slug="male", name="male")
-    race = await Race.create(slug="parda", name="parda")
-    nationality = await Nationality.create(slug="B", name="B")
     occupation_family, _ = await OccupationFamily.get_or_create(
         code="1114", defaults={"name": "Test occupation family"}
     )
@@ -94,71 +68,38 @@ async def initialize_tests(
             "family": occupation_family
         }
     )
-
-    await User.create(
-        username="test",
-        email="test@example.com",
+    pipeline_user = await User.get_or_none(username="pipeline")
+    if pipeline_user:
+        await pipeline_user.delete()
+    await User.update_or_create(
+        username="pipeline",
+        email="test1@example.com",
         password=password_hash("testpassword"),
         is_active=True,
         is_superuser=False,
+        user_class="pipeline_user",
         data_source=datasource,
     )
-    patient = await MergedPatient.create(
-        name="João da Silva",
-        patient_code=patient_code,
-        patient_cpf=patient_cpf,
-        birth_date="2021-01-01",
-        active=True,
-        protected_person=False,
-        deceased=False,
-        deceased_date=None,
-        mother_name="Maria",
-        father_name="João",
-        nationality=nationality,
-        race=race,
-        birth_city=city,
-        gender=gender
+    frontend_user = await User.get_or_none(username="frontend")
+    if frontend_user:
+        await frontend_user.delete()
+    await User.update_or_create(
+        username="frontend",
+        email="test2@example.com",
+        password=password_hash("testpassword"),
+        is_active=True,
+        is_superuser=False,
+        user_class="frontend_user",
+        data_source=datasource,
     )
-    await MergedPatientCns.create(
-        value="123456789012345",
-        patient=patient,
-        is_main=True,
-    )
-    await MergedPatientAddress.create(
-        patient=patient,
-        city=city,
-        state=state,
-        country=country,
-        postal_code="00000000",
-        line="Rua 1",
-        type="home",
-        use="home",
-        period_start="2021-01-01"
-    )
-    await MergedPatientTelecom.create(
-        patient=patient,
-        system="phone",
-        use="home",
-        value="21999999999",
-        period_start="2021-01-01"
-    )
-    raw_record = await RawPatientRecord.create(
+    await RawPatientRecord.get_or_create(
         patient_cpf=other_patient_cpf,
         patient_code=other_patient_code,
         source_updated_at="2021-06-07T00:00:00Z",
         data={"name": "Maria"},
         data_source=datasource
     )
-    await StandardizedPatientRecord.create(
-        patient_cpf=other_patient_cpf,
-        patient_code=other_patient_code,
-        name="Maria",
-        gender='female',
-        birth_date="2021-01-01",
-        raw_source=raw_record,
-        created_at="2024-01-11T10:00:00Z",
-    )
-    await RawPatientCondition.create(
+    await RawPatientCondition.get_or_create(
         patient_cpf=other_patient_cpf,
         patient_code=other_patient_code,
         source_updated_at="2021-06-07T00:00:00Z",
@@ -170,13 +111,54 @@ async def initialize_tests(
 
 
 @pytest.fixture(scope="session")
-async def username():
-    yield "test"
+async def cpf_with_header():
+    prepare_gcp_credential()
 
+    response = await read_bq(f"""
+        SELECT cpf
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
+        WHERE exibicao.indicador = True
+        ORDER BY RAND()
+        LIMIT 1
+        """,
+        from_file="/tmp/credentials.json"
+    )
+    cpf = response[0]["cpf"]
+    yield cpf
 
 @pytest.fixture(scope="session")
-async def email():
-    yield "test@example.com"
+async def cpf_with_summary():
+    prepare_gcp_credential()
+
+    response = await read_bq(f"""
+        SELECT cpf
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
+        WHERE
+            array_length(continuous_use_medications) > 0 or
+            array_length(allergies) > 0
+        ORDER BY RAND()
+        LIMIT 1
+        """,
+        from_file="/tmp/credentials.json"
+    )
+    cpf = response[0]["cpf"]
+    yield cpf
+
+@pytest.fixture(scope="session")
+async def cpf_with_encounters():
+    prepare_gcp_credential()
+
+    response = await read_bq(f"""
+        SELECT cpf
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
+        WHERE exibicao.indicador = True
+        ORDER BY RAND()
+        LIMIT 1
+        """,
+        from_file="/tmp/credentials.json"
+    )
+    cpf = response[0]["cpf"]
+    yield cpf
 
 
 @pytest.fixture(scope="session")
@@ -215,11 +197,20 @@ async def patient_invalid_code():
 
 
 @pytest.fixture(scope="session")
-async def token(client: AsyncClient, username: str, password: str):
+async def token_frontend(client: AsyncClient):
     response = await client.post(
         "/auth/token",
         headers={"content-type": "application/x-www-form-urlencoded"},
-        data={"username": username, "password": password},
+        data={"username": "frontend", "password": "testpassword"},
+    )
+    yield response.json().get("access_token")
+
+@pytest.fixture(scope="session")
+async def token_pipeline(client: AsyncClient):
+    response = await client.post(
+        "/auth/token",
+        headers={"content-type": "application/x-www-form-urlencoded"},
+        data={"username": "pipeline", "password": "testpassword"},
     )
     yield response.json().get("access_token")
 
