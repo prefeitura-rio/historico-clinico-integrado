@@ -73,8 +73,8 @@ async def login_with_2fa(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    secret_key = await TwoFactorAuth.get_or_create_secret_key(user.id)
-    two_factor_auth = TwoFactorAuth(user.id, secret_key)
+    secret_key = await TwoFactorAuth.get_or_create_secret_key(user)
+    two_factor_auth = TwoFactorAuth(user, secret_key)
 
     is_valid = two_factor_auth.verify_totp_code(form_data.totp_code)
     if not is_valid:
@@ -97,8 +97,14 @@ async def login_with_2fa(
 async def enable_2fa(
     current_user: Annotated[User, Depends(get_current_frontend_user)],
 ) -> Enable2FA:
-    secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user.id)
-    two_factor_auth = TwoFactorAuth(current_user.id, secret_key)
+    if current_user.is_2fa_activated:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="2FA already enabled",
+        )
+
+    secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user)
+    two_factor_auth = TwoFactorAuth(current_user, secret_key)
 
     return {
         "secret_key": two_factor_auth.secret_key
@@ -117,8 +123,14 @@ async def generate_qrcode(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user.id)
-    two_factor_auth = TwoFactorAuth(current_user.id, secret_key)
+    if current_user.is_2fa_activated:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="2FA already activated using QR Code",
+        )
+
+    secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user)
+    two_factor_auth = TwoFactorAuth(current_user, secret_key)
 
     qr_code = two_factor_auth.qr_code
     if qr_code is None:
