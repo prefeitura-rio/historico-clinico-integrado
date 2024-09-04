@@ -102,7 +102,7 @@ async def enable_2fa(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="2FA already enabled",
         )
-    
+
     secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user)
     two_factor_auth = TwoFactorAuth(current_user, secret_key)
 
