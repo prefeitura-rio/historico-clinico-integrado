@@ -2,18 +2,16 @@
 from typing import Optional, List
 from pydantic import BaseModel
 
-from fastapi.security import OAuth2PasswordRequestForm
+
+class LoginForm(BaseModel):
+    username: str
+    password: str
 
 
-class LoginFormWith2FA(OAuth2PasswordRequestForm):
-    def __init__(
-        self,
-        username: str,
-        password: str,
-        totp_code: str,
-    ):
-        super().__init__(username=username, password=password)
-        self.totp_code = totp_code
+class LoginFormWith2FA(BaseModel):
+    username: str
+    password: str
+    totp_code: str
 
 
 # Clinic Family model

@@ -8,12 +8,13 @@ import qrcode
 from pyotp import TOTP
 
 from app.models import User
+from app.types.pydantic_models import User2FA as UserPydantic
 
 
 class TwoFactorAuth:
 
-    def __init__(self, user_id: str, secret_key: str):
-        self._user_id = user_id
+    def __init__(self, user: UserPydantic, secret_key: str):
+        self._user = user
         self._secret_key = secret_key
         self._totp = TOTP(self._secret_key)
         self._qr_cache: Optional[bytes] = None
@@ -33,11 +34,11 @@ class TwoFactorAuth:
         return secret_key
 
     @staticmethod
-    async def get_or_create_secret_key(user_id: str) -> str:
-        user = await User.get_or_none(id=user_id)
+    async def get_or_create_secret_key(user: UserPydantic) -> str:
+        user = await User.get_or_none(id=user.id)
 
         if not user:
-            raise ValueError(f"User with id {user_id} not found")
+            raise ValueError(f"User with id {user.id} not found")
 
         # If User doesn't have a secret_key, create one
         if not user.secret_key:
@@ -49,8 +50,8 @@ class TwoFactorAuth:
 
     def _create_qr_code(self) -> bytes:
         uri = self.totp.provisioning_uri(
-            name=str(self._user_id),
-            issuer_name="2FA",
+            name=str(self._user.username),
+            issuer_name="HCI",
         )
         img = qrcode.make(uri)
         img_byte_array = io.BytesIO()
@@ -69,9 +70,9 @@ class TwoFactorAuth:
 
 
 async def get_two_factor_auth(
-    user_id: str
+    user: UserPydantic
 ) -> TwoFactorAuth:
     secret_key = await TwoFactorAuth.get_or_create_secret_key(
-        user_id
+        user
     )
-    return TwoFactorAuth(user_id, secret_key)
+    return TwoFactorAuth(user, secret_key)
