@@ -55,6 +55,7 @@ class Encounter(BaseModel):
     subtype: Optional[str]
     exhibition_type: str = "default"
     active_cids: List[str]
+    active_cids_summarized: List[str]
     responsible: Optional[Responsible]
     clinical_motivation: Optional[str]
     clinical_outcome: Optional[str]

@@ -3,9 +3,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, Request
 from tortoise.exceptions import ValidationError
 from fastapi_simple_rate_limiter import rate_limiter
-from app.dependencies import (
-    get_current_frontend_user
-)
+from app.dependencies import get_current_frontend_user
 from app.models import User
 from app.types.frontend import (
     PatientHeader,
@@ -19,7 +17,7 @@ from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
     BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
-    BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID
+    BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID,
 )
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
@@ -70,14 +68,13 @@ async def get_patient_header(
         raise HTTPException(status_code=404, detail="Patient not found")
 
     dados = results[0]
-    configuracao_exibicao = dados.get('exibicao', {})
+    configuracao_exibicao = dados.get("exibicao", {})
 
-    if configuracao_exibicao.get('indicador', False) is False:
-        message = ",".join(configuracao_exibicao.get('motivos', []))
+    if configuracao_exibicao.get("indicador", False) is False:
+        message = ",".join(configuracao_exibicao.get("motivos", []))
         raise HTTPException(status_code=403, detail=message)
 
     return dados
-
 
 
 @router.get("/patient/summary/{cpf}")
@@ -101,10 +98,9 @@ async def get_patient_summary(
     else:
         return results[0]
 
+
 @router.get("/patient/filter_tags")
-async def get_filter_tags(
-    _: Annotated[User, Depends(get_current_frontend_user)]
-) -> List[str]:
+async def get_filter_tags(_: Annotated[User, Depends(get_current_frontend_user)]) -> List[str]:
     return [
         "CF/CMS",
         "HOSPITAL",
