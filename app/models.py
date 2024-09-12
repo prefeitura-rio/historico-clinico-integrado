@@ -285,6 +285,17 @@ class User(Model):
     updated_at = fields.DatetimeField(auto_now=True)
 
 
+class UserHistory(Model):
+    id = fields.UUIDField(pk=True)
+    user = fields.ForeignKeyField("app.User", related_name="histories")
+    method = fields.CharField(max_length=10)
+    path = fields.CharField(max_length=100)
+    query_params = fields.JSONField(null=True)
+    body = fields.JSONField(null=True)
+    status_code = fields.IntField()
+    timestamp = fields.DatetimeField(auto_now_add=True)
+
+
 class TableInitialization(Model):
     id = fields.IntField(pk=True)
     table_name = fields.CharField(max_length=255, unique=True)
