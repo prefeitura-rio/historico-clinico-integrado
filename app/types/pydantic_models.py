@@ -3,11 +3,13 @@ from datetime import date, datetime
 from typing import Generic, Optional, List, TypeVar, Any
 from pydantic import BaseModel
 
+
 class User2FA(BaseModel):
     id: int
     username: str
     is_2fa_required: bool
     is_2fa_activated: bool
+
 
 class AddressModel(BaseModel):
     use: Optional[str]
@@ -58,6 +60,7 @@ class CnsModel(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    token_expire_minutes: int
 
 
 class TokenData(BaseModel):

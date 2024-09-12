@@ -6,14 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import StreamingResponse
 
+from app import config
 from app.models import User
 from app.types.frontend import LoginFormWith2FA, LoginForm
 from app.types.pydantic_models import Token, Enable2FA
 from app.utils import authenticate_user, generate_user_token
 from app.security import TwoFactorAuth
-from app.dependencies import (
-    get_current_frontend_user
-)
+from app.dependencies import get_current_frontend_user
 
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -41,7 +40,8 @@ async def login_without_2fa(
 
     return {
         "access_token": generate_user_token(user),
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
     }
 
 
@@ -90,6 +90,7 @@ async def login_with_2fa(
     return {
         "access_token": generate_user_token(user),
         "token_type": "bearer",
+        "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
     }
 
 
@@ -106,9 +107,7 @@ async def enable_2fa(
     secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user)
     two_factor_auth = TwoFactorAuth(current_user, secret_key)
 
-    return {
-        "secret_key": two_factor_auth.secret_key
-    }
+    return {"secret_key": two_factor_auth.secret_key}
 
 
 @router.post("/2fa/generate-qrcode/")
