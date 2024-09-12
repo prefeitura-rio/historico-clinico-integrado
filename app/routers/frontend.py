@@ -3,6 +3,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, Request
 from tortoise.exceptions import ValidationError
 from fastapi_simple_rate_limiter import rate_limiter
+from app.decorators import router_request
 from app.dependencies import get_current_frontend_user
 from app.models import User
 from app.types.frontend import (
@@ -42,10 +43,10 @@ async def get_user_info(
     }
 
 
-@router.get("/patient/header/{cpf}")
+@router_request(method="GET", router=router, path="/patient/header/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_header(
-    _: Annotated[User, Depends(get_current_frontend_user)],
+    user: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
     request: Request,
 ) -> PatientHeader:
@@ -77,10 +78,10 @@ async def get_patient_header(
     return dados
 
 
-@router.get("/patient/summary/{cpf}")
+@router_request(method="GET", router=router, path="/patient/summary/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_summary(
-    _: Annotated[User, Depends(get_current_frontend_user)],
+    user: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
     request: Request,
 ) -> PatientSummary:
@@ -113,10 +114,10 @@ async def get_filter_tags(_: Annotated[User, Depends(get_current_frontend_user)]
     ]
 
 
-@router.get("/patient/encounters/{cpf}")
+@router_request(method="GET", router=router, path="/patient/encounters/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_encounters(
-    _: Annotated[User, Depends(get_current_frontend_user)],
+    user: Annotated[User, Depends(get_current_frontend_user)],
     cpf: str,
     request: Request,
 ) -> List[Encounter]:
