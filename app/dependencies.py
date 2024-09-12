@@ -66,3 +66,9 @@ async def get_current_frontend_user(current_user: Annotated[User, Depends(get_cu
         return current_user
     else:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have permition to access Front-end Endpoints")
+
+
+async def is_superuser(current_user: Annotated[User, Depends(get_current_user)]):
+    if current_user.is_superuser:
+        return current_user
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have permition to access this endpoint")
