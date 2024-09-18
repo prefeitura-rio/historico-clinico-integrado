@@ -6,14 +6,14 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
     return """
         CREATE TABLE IF NOT EXISTS "systemrole" (
     "id" SERIAL NOT NULL PRIMARY KEY,
-    "type" VARCHAR(13)   DEFAULT 'pipeline_user',
     "slug" VARCHAR(255) NOT NULL UNIQUE,
     "job_title" VARCHAR(255),
     "role_title" VARCHAR(255),
+    "permition" VARCHAR(19)   DEFAULT 'only_from_same_cpf',
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP
 );
-COMMENT ON COLUMN "systemrole"."type" IS 'WEBAPP_USER: frontend_user\nPIPELINE_USER: pipeline_user';
+COMMENT ON COLUMN "systemrole"."permition" IS 'PIPELINE_READ: pipeline_read\nPIPELINE_WRITE: pipeline_write\nPIPELINE_READWRITE: pipeline_readwrite\nHCI_SAME_CPF: only_from_same_cpf\nHCI_SAME_HEALTHUNIT: only_from_same_unit\nHCI_SAME_AP: only_from_same_ap\nHCI_FULL_PERMITION: full_permition';
         ALTER TABLE "user" ADD "role_id" INT;
         ALTER TABLE "user" DROP COLUMN "role";
         ALTER TABLE "user" DROP COLUMN "user_class";

@@ -38,7 +38,7 @@ async def authenticate_user(username: str, password: str) -> User:
     Returns:
         User: The authenticated user.
     """
-    user = await User.get_or_none(username=username)
+    user = await User.get_or_none(username=username).prefetch_related("role")
     if not user:
         return None
     if not password_verify(password, user.password):
