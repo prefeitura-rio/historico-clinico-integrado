@@ -265,37 +265,6 @@ class MergedPatient(Model):
         table = "mrg__patient"
 
 
-class User(Model):
-    id = fields.IntField(pk=True)
-    username = fields.CharField(max_length=255, unique=True)
-    role = fields.CharField(max_length=255, null=True)
-    name = fields.CharField(max_length=255, null=True)
-    cpf = fields.CharField(max_length=11, unique=True, null=True, validators=[CPFValidator()])
-    email = fields.CharField(max_length=255, unique=True)
-    password = fields.CharField(max_length=255)
-    is_active = fields.BooleanField(default=True)
-    is_superuser = fields.BooleanField(default=False)
-    user_class = fields.CharEnumField(enum_type=UserClassEnum, null=True, default=UserClassEnum.PIPELINE_USER)
-    data_source = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
-    # 2FA
-    secret_key = fields.CharField(max_length=255, null=True)
-    is_2fa_required = fields.BooleanField(default=False)
-    is_2fa_activated = fields.BooleanField(default=False)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
-
-
-class UserHistory(Model):
-    id = fields.UUIDField(pk=True)
-    user = fields.ForeignKeyField("app.User", related_name="histories")
-    method = fields.CharField(max_length=10)
-    path = fields.CharField(max_length=100)
-    query_params = fields.JSONField(null=True)
-    body = fields.JSONField(null=True)
-    status_code = fields.IntField()
-    timestamp = fields.DatetimeField(auto_now_add=True)
-
-
 class TableInitialization(Model):
     id = fields.IntField(pk=True)
     table_name = fields.CharField(max_length=255, unique=True)
@@ -361,3 +330,48 @@ class HealthCareProfessionalTeam(Model):
     class Meta:
         table = "healthcareprofessional_team"
         unique_together = ("professional", "team")
+
+
+# ============================================
+# User Management
+# ============================================
+
+class User(Model):
+    id = fields.IntField(pk=True)
+    username = fields.CharField(max_length=255, unique=True)
+    name = fields.CharField(max_length=255, null=True)
+    cpf = fields.CharField(max_length=11, unique=True, null=True, validators=[CPFValidator()])
+    email = fields.CharField(max_length=255, unique=True)
+    password = fields.CharField(max_length=255)
+    data_source = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
+    role = fields.ForeignKeyField("app.SystemRole", related_name="user_role", null=True)
+    # 2FA
+    secret_key = fields.CharField(max_length=255, null=True)
+    is_2fa_required = fields.BooleanField(default=False)
+    is_2fa_activated = fields.BooleanField(default=False)
+    # Metadata
+    is_active = fields.BooleanField(default=True)
+    is_superuser = fields.BooleanField(default=False)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
+
+
+class UserHistory(Model):
+    id = fields.UUIDField(pk=True)
+    user = fields.ForeignKeyField("app.User", related_name="histories")
+    method = fields.CharField(max_length=10)
+    path = fields.CharField(max_length=100)
+    query_params = fields.JSONField(null=True)
+    body = fields.JSONField(null=True)
+    status_code = fields.IntField()
+    timestamp = fields.DatetimeField(auto_now_add=True)
+
+
+class SystemRole(Model):
+    id = fields.IntField(pk=True)
+    type = fields.CharEnumField(enum_type=UserClassEnum, null=True, default=UserClassEnum.PIPELINE_USER)
+    slug = fields.CharField(max_length=255, unique=True)
+    job_title = fields.CharField(max_length=255, null=True)
+    role_title = fields.CharField(max_length=255, null=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)

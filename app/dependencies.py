@@ -52,23 +52,44 @@ async def get_current_pipeline_user(current_user: Annotated[User, Depends(get_cu
     if current_user.is_superuser:
         return current_user
 
-    if current_user.user_class.value in ["pipeline_user"]:
+    if not current_user.role:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have a role")
+
+    user_with_role = await User.get(id=current_user.id).prefetch_related("user_role")
+    role = user_with_role.role
+
+    if role.type.value in ["pipeline_user"]:
         return current_user
     else:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have permition to access Pipeline Endpoints")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User don't have permition to access Pipeline Endpoints",
+        )
 
 
 async def get_current_frontend_user(current_user: Annotated[User, Depends(get_current_user)]):
     if current_user.is_superuser:
         return current_user
 
-    if current_user.user_class.value in ["frontend_user"]:
+    if not current_user.role:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have a role")
+
+    user_with_role = await User.get(id=current_user.id).prefetch_related("user_role")
+    role = user_with_role.role
+
+    if role.type.value in ["frontend_user"]:
         return current_user
     else:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have permition to access Front-end Endpoints")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User don't have permition to access Frontend Endpoints",
+        )
 
 
 async def is_superuser(current_user: Annotated[User, Depends(get_current_user)]):
     if current_user.is_superuser:
         return current_user
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have permition to access this endpoint")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="User don't have permition to access this endpoint",
+    )

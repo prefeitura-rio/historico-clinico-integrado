@@ -28,17 +28,20 @@ router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 async def get_user_info(
     user: Annotated[User, Depends(get_current_frontend_user)],
 ) -> UserInfo:
-    if user.cpf:
-        cpf = user.cpf
+    user_with_role = await User.get(id=user.id).prefetch_related("user_role")
+
+    if user_with_role.cpf:
+        cpf = user_with_role.cpf
         cpf = f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
     else:
         cpf = None
 
+
     return {
-        "name": user.name,
-        "role": user.role,
-        "email": user.email,
-        "username": user.username,
+        "name": user_with_role.name,
+        "role": user_with_role.role.job_title if user_with_role.role else None,
+        "email": user_with_role.email,
+        "username": user_with_role.username,
         "cpf": cpf,
     }
 
