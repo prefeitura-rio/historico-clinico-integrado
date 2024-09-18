@@ -32,7 +32,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 
-    user = await User.get_or_none(username=token_data.username)
+    user = await User.get_or_none(username=token_data.username).prefetch_related("user_role")
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -46,45 +46,6 @@ async def get_current_active_user(current_user: Annotated[User, Depends(get_curr
     if not current_user.is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
     return current_user
-
-
-async def get_current_pipeline_user(current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.is_superuser:
-        return current_user
-
-    if not current_user.role:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have a role")
-
-    user_with_role = await User.get(id=current_user.id).prefetch_related("user_role")
-    role = user_with_role.role
-
-    if role.type.value in ["pipeline_user"]:
-        return current_user
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User don't have permition to access Pipeline Endpoints",
-        )
-
-
-async def get_current_frontend_user(current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.is_superuser:
-        return current_user
-
-    if not current_user.role:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User don't have a role")
-
-    user_with_role = await User.get(id=current_user.id).prefetch_related("user_role")
-    role = user_with_role.role
-
-    if role.type.value in ["frontend_user"]:
-        return current_user
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User don't have permition to access Frontend Endpoints",
-        )
-
 
 async def is_superuser(current_user: Annotated[User, Depends(get_current_user)]):
     if current_user.is_superuser:

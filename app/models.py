@@ -10,7 +10,7 @@ from app.enums import (
     CategoryEnum,
     ClinicalStatusEnum,
     SystemEnum,
-    UserClassEnum
+    PermitionEnum
 )
 from app.validators import CPFValidator, PatientCodeValidator
 
@@ -368,10 +368,12 @@ class UserHistory(Model):
 
 
 class SystemRole(Model):
+    # Information
     id = fields.IntField(pk=True)
-    type = fields.CharEnumField(enum_type=UserClassEnum, null=True, default=UserClassEnum.PIPELINE_USER)
     slug = fields.CharField(max_length=255, unique=True)
     job_title = fields.CharField(max_length=255, null=True)
     role_title = fields.CharField(max_length=255, null=True)
+    permition = fields.CharEnumField(enum_type=PermitionEnum, null=True, default=PermitionEnum.HCI_SAME_CPF)
+    # Metadata
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)

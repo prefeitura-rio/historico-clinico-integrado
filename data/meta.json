@@ -68,5 +68,12 @@
         "source_csv_name": "./data/datasource.csv",
         "conflict_columns": ["cnes"],
         "version": 5
+    },
+    {
+        "entity_model_name": "SystemRole",
+        "table_name": "systemrole",
+        "source_csv_name": "./data/systemrole.csv",
+        "conflict_columns": ["slug"],
+        "version": 3
     }
 ]

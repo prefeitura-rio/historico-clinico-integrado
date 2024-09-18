@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from tortoise.exceptions import ValidationError
 from fastapi_simple_rate_limiter import rate_limiter
 from app.decorators import router_request
-from app.dependencies import get_current_frontend_user
+from app.dependencies import get_current_active_user
 from app.models import User
 from app.types.frontend import (
     PatientHeader,
@@ -26,22 +26,21 @@ router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
 @router.get("/user")
 async def get_user_info(
-    user: Annotated[User, Depends(get_current_frontend_user)],
+    user: Annotated[User, Depends(get_current_active_user)],
 ) -> UserInfo:
-    user_with_role = await User.get(id=user.id).prefetch_related("user_role")
 
-    if user_with_role.cpf:
-        cpf = user_with_role.cpf
+    if user.cpf:
+        cpf = user.cpf
         cpf = f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
     else:
         cpf = None
 
 
     return {
-        "name": user_with_role.name,
-        "role": user_with_role.role.job_title if user_with_role.role else None,
-        "email": user_with_role.email,
-        "username": user_with_role.username,
+        "name": user.name,
+        "role": user.role.job_title if user.role else None,
+        "email": user.email,
+        "username": user.username,
         "cpf": cpf,
     }
 
@@ -49,7 +48,7 @@ async def get_user_info(
 @router_request(method="GET", router=router, path="/patient/header/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_header(
-    user: Annotated[User, Depends(get_current_frontend_user)],
+    user: Annotated[User, Depends(get_current_active_user)],
     cpf: str,
     request: Request,
 ) -> PatientHeader:
@@ -84,7 +83,7 @@ async def get_patient_header(
 @router_request(method="GET", router=router, path="/patient/summary/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_summary(
-    user: Annotated[User, Depends(get_current_frontend_user)],
+    user: Annotated[User, Depends(get_current_active_user)],
     cpf: str,
     request: Request,
 ) -> PatientSummary:
@@ -104,7 +103,7 @@ async def get_patient_summary(
 
 
 @router.get("/patient/filter_tags")
-async def get_filter_tags(_: Annotated[User, Depends(get_current_frontend_user)]) -> List[str]:
+async def get_filter_tags(_: Annotated[User, Depends(get_current_active_user)]) -> List[str]:
     return [
         "CF/CMS",
         "HOSPITAL",
@@ -120,7 +119,7 @@ async def get_filter_tags(_: Annotated[User, Depends(get_current_frontend_user)]
 @router_request(method="GET", router=router, path="/patient/encounters/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_encounters(
-    user: Annotated[User, Depends(get_current_frontend_user)],
+    user: Annotated[User, Depends(get_current_active_user)],
     cpf: str,
     request: Request,
 ) -> List[Encounter]:
