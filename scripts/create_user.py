@@ -57,7 +57,7 @@ async def create_any_user(
     user_with_same_username = await User.get_or_none(username=username)
     if user_with_same_username:
         await user_with_same_username.delete()
-    
+
     user_with_same_cpf = await User.get_or_none(cpf=cpf)
     if user_with_same_cpf:
         await user_with_same_cpf.delete()
