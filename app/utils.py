@@ -173,7 +173,7 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
     return rows
 
 
-async def validate_access(user: User, cpf: str):
+async def validate_user_access_to_patient_data(user: User, cpf: str):
     # Build the filter clause based on the user's role
     user_permition_filter = user.role.permition.filter_clause.format(
         user_cpf=user.cpf,

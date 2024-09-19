@@ -68,16 +68,16 @@ async def initialize_tests(
             "family": occupation_family
         }
     )
-    pipeline_user = await User.get_or_none(username="pipeline")
+    pipeline_user = await User.get_or_none(username="pipeliner")
     if pipeline_user:
         await pipeline_user.delete()
     await User.update_or_create(
-        username="pipeline",
+        username="pipeliner",
         email="test1@example.com",
         password=password_hash("testpassword"),
         is_active=True,
         is_superuser=False,
-        user_class="pipeline_user",
+        role_id="pipeliner",
         data_source=datasource,
     )
     frontend_user = await User.get_or_none(username="frontend")
@@ -89,7 +89,7 @@ async def initialize_tests(
         password=password_hash("testpassword"),
         is_active=True,
         is_superuser=False,
-        user_class="frontend_user",
+        role_id="desenvolvedor",
         data_source=datasource,
     )
     await RawPatientRecord.get_or_create(

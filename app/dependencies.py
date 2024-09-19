@@ -46,13 +46,12 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         )
     return user
 
-
-async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
+async def assert_user_is_active(current_user: Annotated[User, Depends(get_current_user)]):
     if not current_user.is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
     return current_user
 
-async def is_superuser(current_user: Annotated[User, Depends(get_current_user)]):
+async def assert_user_is_superuser(current_user: Annotated[User, Depends(get_current_user)]):
     if current_user.is_superuser:
         return current_user
     raise HTTPException(
@@ -60,7 +59,29 @@ async def is_superuser(current_user: Annotated[User, Depends(get_current_user)])
         detail="User don't have permition to access this endpoint",
     )
 
-def get_validated_cpf(cpf: str):
+async def assert_user_has_pipeline_write_permition(current_user: Annotated[User, Depends(get_current_user)]):
+    if current_user.role.permition in [
+        'pipeline_write',
+        'pipeline_readwrite',
+    ]:
+        return current_user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="User don't have permition to Write data into HCI",
+    )
+
+async def assert_user_has_pipeline_read_permition(current_user: Annotated[User, Depends(get_current_user)]):
+    if current_user.role.permition in [
+        'pipeline_read',
+        'pipeline_readwrite',
+    ]:
+        return current_user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="User don't have permition to Read data from HCI",
+    )
+
+def assert_cpf_is_valid(cpf: str):
     validator = CPFValidator()
     try:
         validator(cpf)

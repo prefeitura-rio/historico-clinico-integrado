@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi_simple_rate_limiter import rate_limiter
 
 from app.decorators import router_request
-from app.dependencies import get_current_active_user, get_validated_cpf
+from app.dependencies import assert_user_is_active, assert_cpf_is_valid
 from app.models import User
 from app.types.frontend import (
     PatientHeader,
@@ -13,7 +13,7 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
-from app.utils import read_bq, validate_access
+from app.utils import read_bq, validate_user_access_to_patient_data
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
 @router.get("/user")
 async def get_user_info(
-    user: Annotated[User, Depends(get_current_active_user)],
+    user: Annotated[User, Depends(assert_user_is_active)],
 ) -> UserInfo:
 
     if user.cpf:
@@ -48,12 +48,12 @@ async def get_user_info(
 @router_request(method="GET", router=router, path="/patient/header/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_header(
-    user: Annotated[User, Depends(get_current_active_user)],
-    cpf: Annotated[str, Depends(get_validated_cpf)],
+    user: Annotated[User, Depends(assert_user_is_active)],
+    cpf: Annotated[str, Depends(assert_cpf_is_valid)],
     request: Request,
 ) -> PatientHeader:
 
-    validation_job = validate_access(user, cpf)
+    validation_job = validate_user_access_to_patient_data(user, cpf)
     results_job = read_bq(
         f"""
         SELECT *
@@ -72,12 +72,12 @@ async def get_patient_header(
 @router_request(method="GET", router=router, path="/patient/summary/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_summary(
-    user: Annotated[User, Depends(get_current_active_user)],
-    cpf: Annotated[str, Depends(get_validated_cpf)],
+    user: Annotated[User, Depends(assert_user_is_active)],
+    cpf: Annotated[str, Depends(assert_cpf_is_valid)],
     request: Request,
 ) -> PatientSummary:
 
-    validation_job = validate_access(user, cpf)
+    validation_job = validate_user_access_to_patient_data(user, cpf)
 
     results_job = read_bq(
         f"""
@@ -95,12 +95,12 @@ async def get_patient_summary(
 @router_request(method="GET", router=router, path="/patient/encounters/{cpf}")
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_encounters(
-    user: Annotated[User, Depends(get_current_active_user)],
-    cpf: Annotated[str, Depends(get_validated_cpf)],
+    user: Annotated[User, Depends(assert_user_is_active)],
+    cpf: Annotated[str, Depends(assert_cpf_is_valid)],
     request: Request,
 ) -> List[Encounter]:
 
-    validation_job = validate_access(user, cpf)
+    validation_job = validate_user_access_to_patient_data(user, cpf)
 
     results_job = read_bq(
         f"""
@@ -116,7 +116,7 @@ async def get_patient_encounters(
 
 
 @router.get("/patient/filter_tags")
-async def get_filter_tags(_: Annotated[User, Depends(get_current_active_user)]) -> List[str]:
+async def get_filter_tags(_: Annotated[User, Depends(assert_user_is_active)]) -> List[str]:
     return [
         "CF/CMS",
         "HOSPITAL",
