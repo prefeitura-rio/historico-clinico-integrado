@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import asyncio
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request
 from fastapi_simple_rate_limiter import rate_limiter
@@ -52,9 +53,8 @@ async def get_patient_header(
     request: Request,
 ) -> PatientHeader:
     
-    await validate_access(user, cpf)
-
-    results = await read_bq(
+    validation_job = validate_access(user, cpf)
+    results_job = read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
@@ -63,6 +63,8 @@ async def get_patient_header(
         """,
         from_file="/tmp/credentials.json"
     )
+
+    _, results = await asyncio.gather(validation_job, results_job)
 
     return results[0]
 
@@ -75,9 +77,9 @@ async def get_patient_summary(
     request: Request,
 ) -> PatientSummary:
     
-    await validate_access(user, cpf)
+    validation_job = validate_access(user, cpf)
 
-    results = await read_bq(
+    results_job = read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
@@ -85,6 +87,8 @@ async def get_patient_summary(
         """,
         from_file="/tmp/credentials.json",
     )
+    _, results = await asyncio.gather(validation_job, results_job)
+
     return results[0]
 
 
@@ -96,9 +100,9 @@ async def get_patient_encounters(
     request: Request,
 ) -> List[Encounter]:
     
-    await validate_access(user, cpf)
+    validation_job = validate_access(user, cpf)
 
-    results = await read_bq(
+    results_job = read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
@@ -106,6 +110,8 @@ async def get_patient_encounters(
         """,
         from_file="/tmp/credentials.json",
     )
+    _, results = await asyncio.gather(validation_job, results_job)
+
     return results
 
 
