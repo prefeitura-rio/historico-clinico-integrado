@@ -16,8 +16,19 @@ async def create_admin_user():
     """
     admin_username = getenv_or_action("API_ADMIN_USERNAME", action="ignore")
     admin_password = getenv_or_action("API_ADMIN_PASSWORD", action="ignore")
+    admin_name = getenv_or_action("API_ADMIN_NAME", action="ignore")
+    admin_cpf = getenv_or_action("API_ADMIN_CPF", action="ignore")
+    admin_data_source = getenv_or_action("API_ADMIN_DATA_SOURCE", action="ignore")
 
-    await create_any_user(admin_username, admin_password, True)
+    await create_any_user(
+        username=admin_username, 
+        password=admin_password, 
+        is_admin=True,
+        name=admin_name,
+        cpf=admin_cpf,
+        data_source=admin_data_source,
+        role="desenvolvedor",
+    )
 
 async def create_any_user(
     username: str,
@@ -26,7 +37,7 @@ async def create_any_user(
     name: str = "João da Silva",
     cpf: str = "01234567890",
     data_source: str = "3567508",
-    role: str = "only_from_same_unit",
+    role: str = "convidado",
 ):
     """
     Creates a user with the given username, password, and admin status.
@@ -49,7 +60,10 @@ async def create_any_user(
             username=username,
             email=f"{username}@example.com",
             password=password_hash(password),
-            role=role,
+            role_id=role,
+            data_source_id=data_source,
+            name=name,
+            cpf=cpf,
             is_active=True,
             is_superuser=is_admin,
         )
@@ -64,9 +78,12 @@ if __name__ == "__main__":
     parser = ArgumentParser()
 
     parser.add_argument("--create-admin", action="store_true")
-
     parser.add_argument("--username", type=str)
     parser.add_argument("--password", type=str)
+    parser.add_argument("--name", type=str)
+    parser.add_argument("--cpf", type=str)
+    parser.add_argument("--data-source", type=str)
+    parser.add_argument("--role", type=str)
     parser.add_argument("--is-admin", type=bool, default=False)
 
     args = parser.parse_args()
@@ -77,6 +94,14 @@ if __name__ == "__main__":
     if args.create_admin:
         run_async(create_admin_user())
     else:
-        run_async(create_any_user(args.username, args.password, args.is_admin))
+        run_async(create_any_user(
+            username=args.username,
+            password=args.password,
+            is_admin=args.is_admin,
+            name=args.name,
+            cpf=args.cpf,
+            data_source=args.data_source,
+            role=args.role,
+        ))
 
     logger.info("User is available!")
