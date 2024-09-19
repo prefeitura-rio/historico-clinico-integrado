@@ -13,8 +13,12 @@ from app.models import (
     RawPatientRecord,
     RawPatientCondition,
     Occupation,
-    OccupationFamily
+    OccupationFamily,
+    Permition,
+    SystemRole,
 )
+import scripts.database_init_table
+import scripts.create_user
 from app.utils import password_hash, read_bq, prepare_gcp_credential
 from app.config import (
     BIGQUERY_PROJECT,
@@ -47,64 +51,43 @@ async def client():
 
 @pytest.fixture(scope="session", autouse=True)
 async def initialize_tests(
+    patient_cpf: str,
     other_patient_cpf: str,
     other_patient_code: str
 ):
-
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
-    datasource, _ = await DataSource.get_or_create(
-        description="test_datasource",
-        system="vitacare",
-        cnes="1234567"
-    )
-    occupation_family, _ = await OccupationFamily.get_or_create(
-        code="1114", defaults={"name": "Test occupation family"}
-    )
-    await Occupation.get_or_create(
-        cbo="111415", defaults={
-            "description": "Test occupation",
-            "family": occupation_family
-        }
-    )
-    pipeline_user = await User.get_or_none(username="pipeliner")
-    if pipeline_user:
-        await pipeline_user.delete()
-    await User.update_or_create(
+    await scripts.database_init_table.run()
+    await scripts.create_user.create_any_user(
         username="pipeliner",
-        email="test1@example.com",
         password=password_hash("testpassword"),
-        is_active=True,
-        is_superuser=False,
-        role_id="pipeliner",
-        data_source=datasource,
+        cpf=patient_cpf,
+        role="pipeliner",
+        is_admin=False,
     )
-    frontend_user = await User.get_or_none(username="frontend")
-    if frontend_user:
-        await frontend_user.delete()
-    await User.update_or_create(
+    await scripts.create_user.create_any_user(
         username="frontend",
-        email="test2@example.com",
         password=password_hash("testpassword"),
-        is_active=True,
-        is_superuser=False,
-        role_id="desenvolvedor",
-        data_source=datasource,
+        cpf=other_patient_cpf,
+        role="desenvolvedor",
+        data_source="3567508",
+        is_admin=False,
     )
+
     await RawPatientRecord.get_or_create(
         patient_cpf=other_patient_cpf,
         patient_code=other_patient_code,
         source_updated_at="2021-06-07T00:00:00Z",
         data={"name": "Maria"},
-        data_source=datasource
+        data_source_id="3567508"
     )
     await RawPatientCondition.get_or_create(
         patient_cpf=other_patient_cpf,
         patient_code=other_patient_code,
         source_updated_at="2021-06-07T00:00:00Z",
         data={"cid": "A001"},
-        data_source=datasource
+        data_source_id="3567508"
     )
     yield
     await Tortoise.close_connections()
@@ -203,6 +186,7 @@ async def token_frontend(client: AsyncClient):
         headers={"content-type": "application/x-www-form-urlencoded"},
         data={"username": "frontend", "password": "testpassword"},
     )
+    print(response.text)
     yield response.json().get("access_token")
 
 @pytest.fixture(scope="session")
