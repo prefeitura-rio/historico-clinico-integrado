@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 
 from loguru import logger
 from tortoise import Tortoise, run_async
+from tortoise.exceptions import IntegrityError
 
 from app.config import getenv_or_action
 from app.db import TORTOISE_ORM
@@ -53,9 +54,15 @@ async def create_any_user(
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
-    user = await User.get_or_none(username=username)
+    user_with_same_username = await User.get_or_none(username=username)
+    if user_with_same_username:
+        await user_with_same_username.delete()
+    
+    user_with_same_cpf = await User.get_or_none(cpf=cpf)
+    if user_with_same_cpf:
+        await user_with_same_cpf.delete()
 
-    if user is None:
+    try:
         await User.create(
             username=username,
             email=f"{username}@example.com",
@@ -68,8 +75,8 @@ async def create_any_user(
             is_superuser=is_admin,
         )
         logger.info("User created")
-    else:
-        logger.info("User already exist")
+    except IntegrityError as e:
+        logger.error(f"User already exist. Error: {e}")
 
     await Tortoise.close_connections()
 
