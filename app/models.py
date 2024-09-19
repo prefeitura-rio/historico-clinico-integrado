@@ -147,6 +147,7 @@ class StandardizedPatientCondition(Model):
 
 class DataSource(Model):
     cnes = fields.CharField(max_length=50, unique=True, pk=True)
+    ap = fields.CharField(max_length=2, null=True)
     system = fields.CharEnumField(SystemEnum, index=True, max_length=50, null=True)
     description = fields.CharField(max_length=512, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
@@ -373,7 +374,17 @@ class SystemRole(Model):
     slug = fields.CharField(max_length=255, unique=True)
     job_title = fields.CharField(max_length=255, null=True)
     role_title = fields.CharField(max_length=255, null=True)
-    permition = fields.CharEnumField(enum_type=PermitionEnum, null=True, default=PermitionEnum.HCI_SAME_CPF)
+    permition = fields.ForeignKeyField("app.Permition", related_name="role_permition", null=True)
+    # Metadata
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
+
+
+class Permition(Model):
+    #Information
+    slug = fields.CharEnumField(pk=True, enum_type=PermitionEnum, default=PermitionEnum.HCI_SAME_CPF)
+    description = fields.CharField(max_length=255)
+    filter_clause = fields.CharField(max_length=255, null=False)
     # Metadata
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)

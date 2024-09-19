@@ -70,10 +70,17 @@
         "version": 5
     },
     {
+        "entity_model_name": "Permition",
+        "table_name": "permition",
+        "source_csv_name": "./data/permition.csv",
+        "conflict_columns": ["slug"],
+        "version": 4
+    },
+    {
         "entity_model_name": "SystemRole",
         "table_name": "systemrole",
         "source_csv_name": "./data/systemrole.csv",
         "conflict_columns": ["slug"],
-        "version": 3
+        "version": 4
     }
 ]

@@ -35,7 +35,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 
-    user = await User.get_or_none(username=token_data.username).prefetch_related("user_role")
+    user = await User.get_or_none(username=token_data.username).prefetch_related(
+        "role", "role__permition", "data_source"
+    )
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, Request
-from tortoise.exceptions import ValidationError
 from fastapi_simple_rate_limiter import rate_limiter
+from loguru import logger
+
 from app.decorators import router_request
 from app.dependencies import get_current_active_user, get_validated_cpf
 from app.models import User
@@ -12,8 +13,7 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
-from app.utils import read_bq
-from app.validators import CPFValidator
+from app.utils import read_bq, validate_access
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
@@ -52,27 +52,20 @@ async def get_patient_header(
     cpf: Annotated[str, Depends(get_validated_cpf)],
     request: Request,
 ) -> PatientHeader:
+    
+    await validate_access(user, cpf)
 
     results = await read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
-        WHERE cpf_particao = {cpf}
+        WHERE 
+            cpf_particao = {cpf}
         """,
-        from_file="/tmp/credentials.json",
+        from_file="/tmp/credentials.json"
     )
 
-    if len(results) == 0:
-        raise HTTPException(status_code=404, detail="Patient not found")
-
-    dados = results[0]
-    configuracao_exibicao = dados.get("exibicao", {})
-
-    if configuracao_exibicao.get("indicador", False) is False:
-        message = ",".join(configuracao_exibicao.get("motivos", []))
-        raise HTTPException(status_code=403, detail=message)
-
-    return dados
+    return results[0]
 
 
 @router_request(method="GET", router=router, path="/patient/summary/{cpf}")
@@ -82,6 +75,8 @@ async def get_patient_summary(
     cpf: Annotated[str, Depends(get_validated_cpf)],
     request: Request,
 ) -> PatientSummary:
+    
+    await validate_access(user, cpf)
 
     results = await read_bq(
         f"""
@@ -91,10 +86,28 @@ async def get_patient_summary(
         """,
         from_file="/tmp/credentials.json",
     )
-    if len(results) == 0:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    else:
-        return results[0]
+    return results[0]
+
+
+@router_request(method="GET", router=router, path="/patient/encounters/{cpf}")
+@rate_limiter(limit=5, seconds=60)
+async def get_patient_encounters(
+    user: Annotated[User, Depends(get_current_active_user)],
+    cpf: Annotated[str, Depends(get_validated_cpf)],
+    request: Request,
+) -> List[Encounter]:
+    
+    await validate_access(user, cpf)
+
+    results = await read_bq(
+        f"""
+        SELECT *
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
+        WHERE cpf_particao = {cpf} and exibicao.indicador = true
+        """,
+        from_file="/tmp/credentials.json",
+    )
+    return results
 
 
 @router.get("/patient/filter_tags")
@@ -109,22 +122,3 @@ async def get_filter_tags(_: Annotated[User, Depends(get_current_active_user)]) 
         "CER",
         "POLICLINICA",
     ]
-
-
-@router_request(method="GET", router=router, path="/patient/encounters/{cpf}")
-@rate_limiter(limit=5, seconds=60)
-async def get_patient_encounters(
-    user: Annotated[User, Depends(get_current_active_user)],
-    cpf: Annotated[str, Depends(get_validated_cpf)],
-    request: Request,
-) -> List[Encounter]:
-
-    results = await read_bq(
-        f"""
-        SELECT *
-        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
-        WHERE cpf_particao = {cpf} and exibicao.indicador = true
-        """,
-        from_file="/tmp/credentials.json",
-    )
-    return results
