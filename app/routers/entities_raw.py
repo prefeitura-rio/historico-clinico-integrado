@@ -37,7 +37,7 @@ ENTITIES_CONFIG = {
 
 @router.get("/{entity_name}/{filter_type}")
 async def get_raw_data(
-    _: Annotated[User, Depends(assert_user_is_active)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_read_permition)],
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     filter_type: Literal["fromEventDatetime", "fromInsertionDatetime"],
     start_datetime: dt = dt.now() - td(hours=1),
@@ -72,7 +72,7 @@ async def get_raw_data(
 @router.post("/{entity_name}", status_code=201)
 async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
-    current_user: Annotated[User, Depends(assert_user_is_active)],
+    current_user: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     raw_data: RawDataListModel,
     upload_to_datalake: bool = True,
 ) -> BulkInsertOutputModel:
@@ -149,7 +149,7 @@ async def create_raw_data(
 
 @router.post("/{entity_name}/setAsInvalid", status_code=200)
 async def set_as_invalid_flag_records(
-    _: Annotated[User, Depends(assert_user_is_active)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     raw_record_id_list: list[str],
 ):
