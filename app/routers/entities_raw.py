@@ -13,7 +13,6 @@ from tortoise.exceptions import ValidationError
 
 from app.types.pydantic_models import RawDataListModel, BulkInsertOutputModel, RawDataModel
 from app.dependencies import (
-    assert_user_is_active,
     assert_user_has_pipeline_read_permition,
     assert_user_has_pipeline_write_permition
 )
