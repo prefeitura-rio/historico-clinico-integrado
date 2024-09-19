@@ -188,7 +188,7 @@ async def validate_access(user: User, cpf: str):
         exibicao.motivos data_display_reasons,
         cast({user_permition_filter} as bool) as user_has_permition
     FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
-    WHERE 
+    WHERE
         cpf_particao = {cpf}
     """
 
@@ -202,7 +202,7 @@ async def validate_access(user: User, cpf: str):
             status_code=403, detail="User does not have permission to access this patient")
     elif not results[0]["data_is_displayable"]:
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Patient is not displayable: " + ",".join(results[0]["data_display_reasons"])
         )
     return

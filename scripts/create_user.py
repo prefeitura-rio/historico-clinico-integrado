@@ -21,8 +21,8 @@ async def create_admin_user():
     admin_data_source = getenv_or_action("API_ADMIN_DATA_SOURCE", action="ignore")
 
     await create_any_user(
-        username=admin_username, 
-        password=admin_password, 
+        username=admin_username,
+        password=admin_password,
         is_admin=True,
         name=admin_name,
         cpf=admin_cpf,
@@ -33,7 +33,7 @@ async def create_admin_user():
 async def create_any_user(
     username: str,
     password: str,
-    is_admin: bool, 
+    is_admin: bool,
     name: str = "João da Silva",
     cpf: str = "01234567890",
     data_source: str = "3567508",

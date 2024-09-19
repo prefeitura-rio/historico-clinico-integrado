@@ -52,13 +52,13 @@ async def get_patient_header(
     cpf: Annotated[str, Depends(get_validated_cpf)],
     request: Request,
 ) -> PatientHeader:
-    
+
     validation_job = validate_access(user, cpf)
     results_job = read_bq(
         f"""
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
-        WHERE 
+        WHERE
             cpf_particao = {cpf}
         """,
         from_file="/tmp/credentials.json"
@@ -76,7 +76,7 @@ async def get_patient_summary(
     cpf: Annotated[str, Depends(get_validated_cpf)],
     request: Request,
 ) -> PatientSummary:
-    
+
     validation_job = validate_access(user, cpf)
 
     results_job = read_bq(
@@ -99,7 +99,7 @@ async def get_patient_encounters(
     cpf: Annotated[str, Depends(get_validated_cpf)],
     request: Request,
 ) -> List[Encounter]:
-    
+
     validation_job = validate_access(user, cpf)
 
     results_job = read_bq(
