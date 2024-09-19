@@ -370,8 +370,7 @@ class UserHistory(Model):
 
 class SystemRole(Model):
     # Information
-    id = fields.IntField(pk=True)
-    slug = fields.CharField(max_length=255, unique=True)
+    slug = fields.CharField(pk=True, max_length=255, unique=True)
     job_title = fields.CharField(max_length=255, null=True)
     role_title = fields.CharField(max_length=255, null=True)
     permition = fields.ForeignKeyField("app.Permition", related_name="role_permition", null=True)

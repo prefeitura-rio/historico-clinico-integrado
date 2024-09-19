@@ -19,7 +19,15 @@ async def create_admin_user():
 
     await create_any_user(admin_username, admin_password, True)
 
-async def create_any_user(username: str, password: str, is_admin: bool):
+async def create_any_user(
+    username: str,
+    password: str,
+    is_admin: bool, 
+    name: str = "João da Silva",
+    cpf: str = "01234567890",
+    data_source: str = "3567508",
+    role: str = "only_from_same_unit",
+):
     """
     Creates a user with the given username, password, and admin status.
 
@@ -41,6 +49,7 @@ async def create_any_user(username: str, password: str, is_admin: bool):
             username=username,
             email=f"{username}@example.com",
             password=password_hash(password),
+            role=role,
             is_active=True,
             is_superuser=is_admin,
         )
