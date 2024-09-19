@@ -61,14 +61,14 @@ async def initialize_tests(
     await scripts.database_init_table.run()
     await scripts.create_user.create_any_user(
         username="pipeliner",
-        password=password_hash("testpassword"),
+        password="testpassword",
         cpf=patient_cpf,
         role="pipeliner",
         is_admin=False,
     )
     await scripts.create_user.create_any_user(
         username="frontend",
-        password=password_hash("testpassword"),
+        password="testpassword",
         cpf=other_patient_cpf,
         role="desenvolvedor",
         data_source="3567508",
