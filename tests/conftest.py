@@ -210,7 +210,7 @@ async def token_pipeline(client: AsyncClient):
     response = await client.post(
         "/auth/token",
         headers={"content-type": "application/x-www-form-urlencoded"},
-        data={"username": "pipeline", "password": "testpassword"},
+        data={"username": "pipeliner", "password": "testpassword"},
     )
     yield response.json().get("access_token")
 

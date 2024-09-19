@@ -60,7 +60,7 @@ async def assert_user_is_superuser(current_user: Annotated[User, Depends(get_cur
     )
 
 async def assert_user_has_pipeline_write_permition(current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.role.permition in [
+    if current_user.role.permition.slug.value in [
         'pipeline_write',
         'pipeline_readwrite',
     ]:
@@ -71,7 +71,7 @@ async def assert_user_has_pipeline_write_permition(current_user: Annotated[User,
     )
 
 async def assert_user_has_pipeline_read_permition(current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.role.permition in [
+    if current_user.role.permition.slug.value in [
         'pipeline_read',
         'pipeline_readwrite',
     ]:
