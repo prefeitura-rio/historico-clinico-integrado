@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from tortoise.exceptions import ValidationError
 from fastapi_simple_rate_limiter import rate_limiter
 from app.decorators import router_request
-from app.dependencies import get_current_active_user
+from app.dependencies import get_current_active_user, get_validated_cpf
 from app.models import User
 from app.types.frontend import (
     PatientHeader,
@@ -49,14 +49,9 @@ async def get_user_info(
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_header(
     user: Annotated[User, Depends(get_current_active_user)],
-    cpf: str,
+    cpf: Annotated[str, Depends(get_validated_cpf)],
     request: Request,
 ) -> PatientHeader:
-    validator = CPFValidator()
-    try:
-        validator(cpf)
-    except ValidationError:
-        raise HTTPException(status_code=400, detail="Invalid CPF")
 
     results = await read_bq(
         f"""
@@ -84,7 +79,7 @@ async def get_patient_header(
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_summary(
     user: Annotated[User, Depends(get_current_active_user)],
-    cpf: str,
+    cpf: Annotated[str, Depends(get_validated_cpf)],
     request: Request,
 ) -> PatientSummary:
 
@@ -120,7 +115,7 @@ async def get_filter_tags(_: Annotated[User, Depends(get_current_active_user)]) 
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_encounters(
     user: Annotated[User, Depends(get_current_active_user)],
-    cpf: str,
+    cpf: Annotated[str, Depends(get_validated_cpf)],
     request: Request,
 ) -> List[Encounter]:
 

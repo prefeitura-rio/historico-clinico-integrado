@@ -3,12 +3,15 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException
+from tortoise.exceptions import ValidationError
 import jwt
+from jwt import PyJWTError
 
 from app import config
 from app.models import User
 from app.types.pydantic_models import TokenData
-from jwt import PyJWTError
+from app.validators import CPFValidator
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
@@ -54,3 +57,12 @@ async def is_superuser(current_user: Annotated[User, Depends(get_current_user)])
         status_code=status.HTTP_403_FORBIDDEN,
         detail="User don't have permition to access this endpoint",
     )
+
+def get_validated_cpf(cpf: str):
+    validator = CPFValidator()
+    try:
+        validator(cpf)
+    except ValidationError:
+        raise HTTPException(status_code=400, detail="Invalid CPF")
+
+    return cpf
