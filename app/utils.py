@@ -17,9 +17,7 @@ from app import config
 from app.models import User
 from app.config import (
     BIGQUERY_PROJECT,
-    BIGQUERY_PATIENT_HEADER_TABLE_ID,
-    BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
-    BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID,
+    BIGQUERY_PATIENT_HEADER_TABLE_ID
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

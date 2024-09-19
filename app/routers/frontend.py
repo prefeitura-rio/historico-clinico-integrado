@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated, List
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi_simple_rate_limiter import rate_limiter
-from loguru import logger
 
 from app.decorators import router_request
 from app.dependencies import get_current_active_user, get_validated_cpf
