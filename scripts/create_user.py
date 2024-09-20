@@ -55,28 +55,32 @@ async def create_any_user(
     await Tortoise.generate_schemas()
 
     user_with_same_username = await User.get_or_none(username=username)
-    if user_with_same_username:
-        await user_with_same_username.delete()
-
     user_with_same_cpf = await User.get_or_none(cpf=cpf)
-    if user_with_same_cpf:
-        await user_with_same_cpf.delete()
 
-    try:
-        await User.create(
-            username=username,
-            email=f"{username}@example.com",
-            password=password_hash(password),
-            role_id=role,
-            data_source_id=data_source,
-            name=name,
-            cpf=cpf,
-            is_active=True,
-            is_superuser=is_admin,
-        )
-        logger.info("User created")
-    except IntegrityError as e:
-        logger.error(f"User already exist. Error: {e}")
+    if user_with_same_username.is_superuser or user_with_same_cpf.is_superuser:
+        logger.error("You cannot create a user with the same username or cpf as an admin user")
+    else:
+        if user_with_same_username:
+            await user_with_same_username.delete()
+
+        if user_with_same_cpf:
+            await user_with_same_cpf.delete()
+
+        try:
+            await User.create(
+                username=username,
+                email=f"{username}@example.com",
+                password=password_hash(password),
+                role_id=role,
+                data_source_id=data_source,
+                name=name,
+                cpf=cpf,
+                is_active=True,
+                is_superuser=is_admin,
+            )
+            logger.info("User created")
+        except IntegrityError as e:
+            logger.error(f"User already exist. Error: {e}")
 
     await Tortoise.close_connections()
 
