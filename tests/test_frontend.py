@@ -10,10 +10,10 @@ sys.path.insert(0, "../")
 async def test_patientheader(
     client: AsyncClient,
     token_frontend: str,
-    cpf_with_header: str,
+    patient_cpf_with_data: str,
 ):
     response = await client.get(
-        f"/frontend/patient/header/{cpf_with_header}",
+        f"/frontend/patient/header/{patient_cpf_with_data}",
         headers={"Authorization": f"Bearer {token_frontend}"}
     )
 
@@ -25,14 +25,13 @@ async def test_patientheader(
 async def test_patientsummary(
     client: AsyncClient,
     token_frontend: str,
-    cpf_with_summary: str,
+    patient_cpf_with_data: str,
 ):
     response = await client.get(
-        f"/frontend/patient/summary/{cpf_with_summary}",
+        f"/frontend/patient/summary/{patient_cpf_with_data}",
         headers={"Authorization": f"Bearer {token_frontend}"}
     )
 
-    print("RESPONSE:", response.text)
     assert response.status_code == 200
 
 
@@ -55,10 +54,10 @@ async def test_filtertags(
 async def test_patientencounters(
     client: AsyncClient,
     token_frontend: str,
-    cpf_with_encounters: str,
+    patient_cpf_with_data: str,
 ):
     response = await client.get(
-        f"/frontend/patient/encounters/{cpf_with_encounters}",
+        f"/frontend/patient/encounters/{patient_cpf_with_data}",
         headers={"Authorization": f"Bearer {token_frontend}"}
     )
 

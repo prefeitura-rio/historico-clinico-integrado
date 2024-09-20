@@ -12,7 +12,7 @@ from app.types.frontend import LoginFormWith2FA, LoginForm
 from app.types.pydantic_models import Token, Enable2FA
 from app.utils import authenticate_user, generate_user_token
 from app.security import TwoFactorAuth
-from app.dependencies import get_current_frontend_user
+from app.dependencies import assert_user_is_active
 
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -96,7 +96,7 @@ async def login_with_2fa(
 
 @router.post("/2fa/enable/")
 async def enable_2fa(
-    current_user: Annotated[User, Depends(get_current_frontend_user)],
+    current_user: Annotated[User, Depends(assert_user_is_active)],
 ) -> Enable2FA:
     if current_user.is_2fa_activated:
         raise HTTPException(

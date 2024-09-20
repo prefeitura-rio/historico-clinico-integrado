@@ -1,0 +1,9 @@
+slug,role_title,job_title,permition_id
+pipeliner,"Processo de Pipeline","Processo de Pipeline","pipeline_readwrite"
+convidado,"Convidado","Convidado (a)","only_from_same_cpf"
+desenvolvedor,"Desenvolvedor","Desenvolvedor (a)","full_permition"
+subsecretario,"Subsecretário","Subsecretário (a)","full_permition"
+medico_cf_cms_cse,"Médico de CF, CMS ou CSE",Médico (a),"only_from_same_unit"
+enfermeiro_cf_cms_cse,"Enfermeiro de CF, CMS ou CSE",Enfermeiro (a),"only_from_same_unit"
+medico_policlinica,Médico de Policlínica,Médico (a),"only_from_same_unit"
+medico_hospital_upa_maternidade_cco,"Médico de Hospital, UPA, Maternidade ou CCO",Médico (a),"full_permition"
