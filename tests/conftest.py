@@ -8,18 +8,12 @@ from tortoise import Tortoise
 from app.db import TORTOISE_ORM
 from app.main import app
 from app.models import (
-    DataSource,
-    User,
     RawPatientRecord,
     RawPatientCondition,
-    Occupation,
-    OccupationFamily,
-    Permition,
-    SystemRole,
 )
 import scripts.database_init_table
 import scripts.create_user
-from app.utils import password_hash, read_bq, prepare_gcp_credential
+from app.utils import read_bq, prepare_gcp_credential
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
