@@ -30,10 +30,9 @@ async def test_create_rawpatientrecord(
                     "data": {"name": "Teste"}
                 }
             ],
-            "cnes": "1234567"
+            "cnes": "3567508"
         }
     )
-    print("SAIDA:", response.text)
 
     assert response.status_code == 201
     assert response.json()['count'] == 2
@@ -58,7 +57,7 @@ async def test_create_rawpatientrecord_invalid_cpf(
                     "data": {"name": "Teste"}
                 }
             ],
-            "cnes": "1234567"
+            "cnes": "3567508"
         }
     )
 
@@ -90,7 +89,7 @@ async def test_create_rawpatientcondition(
                     "data": {"name": "Teste"}
                 }
             ],
-            "cnes": "1234567"
+            "cnes": "3567508"
         }
     )
 
@@ -124,7 +123,7 @@ async def test_create_rawpatientcondition_invalid_cpf(
                     "data": {"name": "Teste"}
                 }
             ],
-            "cnes": "1234567"
+            "cnes": "3567508"
         }
     )
 
