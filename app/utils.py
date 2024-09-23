@@ -10,11 +10,15 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 from asyncer import asyncify
 from loguru import logger
+from fastapi import HTTPException
 from passlib.context import CryptContext
 
 from app import config
 from app.models import User
-
+from app.config import (
+    BIGQUERY_PROJECT,
+    BIGQUERY_PATIENT_HEADER_TABLE_ID
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -28,6 +32,7 @@ def generate_user_token(user: User) -> str:
 
     return access_token
 
+
 async def authenticate_user(username: str, password: str) -> User:
     """Authenticate a user.
 
@@ -38,7 +43,7 @@ async def authenticate_user(username: str, password: str) -> User:
     Returns:
         User: The authenticated user.
     """
-    user = await User.get_or_none(username=username)
+    user = await User.get_or_none(username=username).prefetch_related("role")
     if not user:
         return None
     if not password_verify(password, user.password):
@@ -137,6 +142,7 @@ async def get_instance(Model, table, slug=None, code=None):
 
     return table[slug]
 
+
 def prepare_gcp_credential() -> None:
     base64_credential = os.environ["BASEDOSDADOS_CREDENTIALS_PROD"]
 
@@ -152,6 +158,8 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
         os.environ['QUERY_PREVIEW_ENABLED']
     }): {query}""")
 
+    logger.info(f"Querying BigQuery: {query}")
+
     def execute_job():
         credentials = service_account.Credentials.from_service_account_file(
             from_file,
@@ -163,3 +171,38 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
     rows = await asyncify(execute_job)()
 
     return rows
+
+
+async def validate_user_access_to_patient_data(user: User, cpf: str):
+    # Build the filter clause based on the user's role
+    user_permition_filter = user.role.permition.filter_clause.format(
+        user_cpf=user.cpf,
+        user_ap=user.data_source.ap,
+        user_cnes=user.data_source,
+    )
+
+    # Build the query
+    query = f"""
+    SELECT
+        exibicao.indicador data_is_displayable,
+        exibicao.motivos data_display_reasons,
+        cast({user_permition_filter} as bool) as user_has_permition
+    FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
+    WHERE
+        cpf_particao = {cpf}
+    """
+
+    # Execute the query
+    results = await read_bq(query, from_file="/tmp/credentials.json")
+
+    if len(results) == 0:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    elif not results[0]["user_has_permition"]:
+        raise HTTPException(
+            status_code=403, detail="User does not have permission to access this patient")
+    elif not results[0]["data_is_displayable"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Patient is not displayable: " + ",".join(results[0]["data_display_reasons"])
+        )
+    return

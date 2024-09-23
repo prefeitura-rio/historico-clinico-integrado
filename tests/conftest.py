@@ -1,26 +1,25 @@
 # -*- coding: utf-8 -*-
 import asyncio
-
 import pytest
+import random
 from httpx import AsyncClient
 from tortoise import Tortoise
+
+import scripts.database_init_table
+import scripts.create_user
 
 from app.db import TORTOISE_ORM
 from app.main import app
 from app.models import (
-    DataSource,
-    User,
     RawPatientRecord,
     RawPatientCondition,
-    Occupation,
-    OccupationFamily
 )
-from app.utils import password_hash, read_bq, prepare_gcp_credential
+from app.utils import read_bq, prepare_gcp_credential
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
     BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
-    BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID
+    BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID,
 )
 
 
@@ -47,123 +46,92 @@ async def client():
 
 @pytest.fixture(scope="session", autouse=True)
 async def initialize_tests(
-    other_patient_cpf: str,
-    other_patient_code: str
+    patient_cpf: str, other_patient_cpf: str, other_patient_code: str, test_password: str
 ):
-
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
-    datasource, _ = await DataSource.get_or_create(
-        description="test_datasource",
-        system="vitacare",
-        cnes="1234567"
+    await scripts.database_init_table.run()
+    await scripts.create_user.create_any_user(
+        username="pipeliner",
+        password=test_password,
+        cpf=patient_cpf,
+        role="pipeliner",
+        is_admin=False,
     )
-    occupation_family, _ = await OccupationFamily.get_or_create(
-        code="1114", defaults={"name": "Test occupation family"}
-    )
-    await Occupation.get_or_create(
-        cbo="111415", defaults={
-            "description": "Test occupation",
-            "family": occupation_family
-        }
-    )
-    pipeline_user = await User.get_or_none(username="pipeline")
-    if pipeline_user:
-        await pipeline_user.delete()
-    await User.update_or_create(
-        username="pipeline",
-        email="test1@example.com",
-        password=password_hash("testpassword"),
-        is_active=True,
-        is_superuser=False,
-        user_class="pipeline_user",
-        data_source=datasource,
-    )
-    frontend_user = await User.get_or_none(username="frontend")
-    if frontend_user:
-        await frontend_user.delete()
-    await User.update_or_create(
+    await scripts.create_user.create_any_user(
         username="frontend",
-        email="test2@example.com",
-        password=password_hash("testpassword"),
-        is_active=True,
-        is_superuser=False,
-        user_class="frontend_user",
-        data_source=datasource,
+        password=test_password,
+        cpf=other_patient_cpf,
+        role="desenvolvedor",
+        data_source="3567508",
+        is_admin=False,
     )
+
     await RawPatientRecord.get_or_create(
         patient_cpf=other_patient_cpf,
         patient_code=other_patient_code,
         source_updated_at="2021-06-07T00:00:00Z",
         data={"name": "Maria"},
-        data_source=datasource
+        data_source_id="3567508",
     )
     await RawPatientCondition.get_or_create(
         patient_cpf=other_patient_cpf,
         patient_code=other_patient_code,
         source_updated_at="2021-06-07T00:00:00Z",
         data={"cid": "A001"},
-        data_source=datasource
+        data_source_id="3567508",
     )
     yield
     await Tortoise.close_connections()
 
 
 @pytest.fixture(scope="session")
-async def cpf_with_header():
+async def patient_cpf_with_data():
     prepare_gcp_credential()
 
-    response = await read_bq(f"""
+    response = await read_bq(
+        f"""
+        WITH
+            allowed_cpf AS (
+                SELECT cpf
+                FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
+                WHERE exibicao.indicador = True
+                ORDER BY RAND()
+            ),
+            cpf_with_summary AS (
+                SELECT cpf
+                FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
+                WHERE
+                    array_length(continuous_use_medications) > 0 or
+                    array_length(allergies) > 0
+                ORDER BY RAND()
+            ),
+            cpf_with_encounters AS (
+                SELECT cpf
+                FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
+                WHERE exibicao.indicador = True
+                ORDER BY RAND()
+            )
         SELECT cpf
-        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_HEADER_TABLE_ID}
-        WHERE exibicao.indicador = True
-        ORDER BY RAND()
-        LIMIT 1
-        """,
-        from_file="/tmp/credentials.json"
-    )
-    cpf = response[0]["cpf"]
-    yield cpf
-
-@pytest.fixture(scope="session")
-async def cpf_with_summary():
-    prepare_gcp_credential()
-
-    response = await read_bq(f"""
-        SELECT cpf
-        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SUMMARY_TABLE_ID}
+        FROM allowed_cpf
+            INNER JOIN cpf_with_summary USING (cpf)
+            INNER JOIN cpf_with_encounters USING (cpf)
         WHERE
-            array_length(continuous_use_medications) > 0 or
-            array_length(allergies) > 0
-        ORDER BY RAND()
+            cpf in (SELECT cpf FROM cpf_with_summary) and
+            cpf in (SELECT cpf FROM cpf_with_encounters)
         LIMIT 1
         """,
-        from_file="/tmp/credentials.json"
-    )
-    cpf = response[0]["cpf"]
-    yield cpf
-
-@pytest.fixture(scope="session")
-async def cpf_with_encounters():
-    prepare_gcp_credential()
-
-    response = await read_bq(f"""
-        SELECT cpf
-        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID}
-        WHERE exibicao.indicador = True
-        ORDER BY RAND()
-        LIMIT 1
-        """,
-        from_file="/tmp/credentials.json"
+        from_file="/tmp/credentials.json",
     )
     cpf = response[0]["cpf"]
     yield cpf
 
 
 @pytest.fixture(scope="session")
-async def password():
-    yield "testpassword"
+async def test_password():
+    random_password = [random.choice("1234567890") for _ in range(3)]
+    yield "".join(random_password)
 
 
 @pytest.fixture(scope="session")
@@ -197,66 +165,20 @@ async def patient_invalid_code():
 
 
 @pytest.fixture(scope="session")
-async def token_frontend(client: AsyncClient):
+async def token_frontend(client: AsyncClient, test_password: str):
     response = await client.post(
         "/auth/token",
         headers={"content-type": "application/x-www-form-urlencoded"},
-        data={"username": "frontend", "password": "testpassword"},
-    )
-    yield response.json().get("access_token")
-
-@pytest.fixture(scope="session")
-async def token_pipeline(client: AsyncClient):
-    response = await client.post(
-        "/auth/token",
-        headers={"content-type": "application/x-www-form-urlencoded"},
-        data={"username": "pipeline", "password": "testpassword"},
+        data={"username": "frontend", "password": test_password},
     )
     yield response.json().get("access_token")
 
 
 @pytest.fixture(scope="session")
-async def patientrecord_raw_source(patient_cpf: str):
-    await Tortoise.init(config=TORTOISE_ORM)
-    await Tortoise.generate_schemas()
-
-    raw_patientrecord = await RawPatientRecord.get(
-        patient_cpf=patient_cpf
-    ).first()
-
-    yield str(raw_patientrecord.id)
-
-
-@pytest.fixture(scope="session")
-async def patientcondition_raw_source(patient_cpf: str):
-    await Tortoise.init(config=TORTOISE_ORM)
-    await Tortoise.generate_schemas()
-
-    raw_patientcondition = await RawPatientCondition.get(
-        patient_cpf=patient_cpf
-    ).first()
-    yield str(raw_patientcondition.id)
-
-
-@pytest.fixture(scope="session")
-async def other_patientrecord_raw_source(other_patient_cpf: str):
-    await Tortoise.init(config=TORTOISE_ORM)
-    await Tortoise.generate_schemas()
-
-    raw_patientrecord = await RawPatientRecord.get(
-        patient_cpf=other_patient_cpf
-    ).first()
-
-    yield str(raw_patientrecord.id)
-
-
-@pytest.fixture(scope="session")
-async def other_patientcondition_raw_source(other_patient_cpf: str):
-    await Tortoise.init(config=TORTOISE_ORM)
-    await Tortoise.generate_schemas()
-
-    raw_patientcondition = await RawPatientCondition.get(
-        patient_cpf=other_patient_cpf
-    ).first()
-
-    yield str(raw_patientcondition.id)
+async def token_pipeline(client: AsyncClient, test_password: str):
+    response = await client.post(
+        "/auth/token",
+        headers={"content-type": "application/x-www-form-urlencoded"},
+        data={"username": "pipeliner", "password": test_password},
+    )
+    yield response.json().get("access_token")

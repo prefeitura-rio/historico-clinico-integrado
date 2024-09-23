@@ -2,9 +2,14 @@
 from enum import Enum
 
 
-class UserClassEnum(str, Enum):
-    WEBAPP_USER = "frontend_user"
-    PIPELINE_USER = "pipeline_user"
+class PermitionEnum(str, Enum):
+    PIPELINE_READ = "pipeline_read"
+    PIPELINE_WRITE = "pipeline_write"
+    PIPELINE_READWRITE = "pipeline_readwrite"
+    HCI_SAME_CPF = "only_from_same_cpf"
+    HCI_SAME_HEALTHUNIT = "only_from_same_unit"
+    HCI_SAME_AP = "only_from_same_ap"
+    HCI_FULL_PERMITION = "full_permition"
 
 
 class ConditionCodeTypeEnum(str, Enum):

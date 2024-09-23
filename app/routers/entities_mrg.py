@@ -8,7 +8,8 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import ValidationError
 
 from app.dependencies import (
-    get_current_pipeline_user
+    assert_user_has_pipeline_read_permition,
+    assert_user_has_pipeline_write_permition
 )
 from app.types.pydantic_models import (
     CompletePatientModel,
@@ -49,7 +50,7 @@ PatientOutput = pydantic_model_creator(MergedPatient, name="PatientOutput")
 
 @router.put("/patient")
 async def create_or_update_patient(
-    _: Annotated[User, Depends(get_current_pipeline_user)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     patients: List[PydanticMergedPatient],
 ) -> int:
 
@@ -83,7 +84,7 @@ async def create_or_update_patient(
 
 @router.put("/patientaddress")
 async def create_or_update_patientaddress(
-    _: Annotated[User, Depends(get_current_pipeline_user)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     patientaddress_list: List[PydanticMergedPatientAddress],
 ) -> int:
     # Get list of patient codes
@@ -113,7 +114,7 @@ async def create_or_update_patientaddress(
 
 @router.put("/patienttelecom")
 async def create_or_update_patienttelecom(
-    _: Annotated[User, Depends(get_current_pipeline_user)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     patienttelecom_list: List[PydanticMergedPatientTelecom],
 ) -> int:
     # Get list of patient codes
@@ -142,7 +143,7 @@ async def create_or_update_patienttelecom(
 
 @router.put("/patientcns")
 async def create_or_update_patientcns(
-    _: Annotated[User, Depends(get_current_pipeline_user)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     patientcns_list: List[PydanticMergedPatientCns],
 ) -> int:
     # Get list of patient codes
@@ -171,7 +172,7 @@ async def create_or_update_patientcns(
 
 @router.get("/patient/{patient_cpf}")
 async def get_patient(
-    _: Annotated[User, Depends(get_current_pipeline_user)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_read_permition)],
     patient_cpf: int,
 )-> list[CompletePatientModel]:
 
@@ -227,7 +228,7 @@ async def get_patient(
 
 @router.put("/professionals")
 async def create_or_update_professionals(
-    _: Annotated[User, Depends(get_current_pipeline_user)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     professionals: List[ProfessionalModel],
 ) -> int:
 
@@ -330,7 +331,7 @@ async def create_or_update_professionals(
 
 @router.put("/teams")
 async def create_or_update_teams(
-    _: Annotated[User, Depends(get_current_pipeline_user)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     teams: List[TeamModel],
 ) -> int:
 
