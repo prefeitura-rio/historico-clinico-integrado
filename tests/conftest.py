@@ -46,7 +46,7 @@ async def client():
 
 @pytest.fixture(scope="session", autouse=True)
 async def initialize_tests(
-    patient_cpf: str, other_patient_cpf: str, other_patient_code: str, test_password: str
+    patient_cpf: str, other_patient_cpf: str, test_password: str
 ):
     await Tortoise.init(config=TORTOISE_ORM)
     await Tortoise.generate_schemas()
@@ -66,21 +66,6 @@ async def initialize_tests(
         role="desenvolvedor",
         data_source="3567508",
         is_admin=False,
-    )
-
-    await RawPatientRecord.get_or_create(
-        patient_cpf=other_patient_cpf,
-        patient_code=other_patient_code,
-        source_updated_at="2021-06-07T00:00:00Z",
-        data={"name": "Maria"},
-        data_source_id="3567508",
-    )
-    await RawPatientCondition.get_or_create(
-        patient_cpf=other_patient_cpf,
-        patient_code=other_patient_code,
-        source_updated_at="2021-06-07T00:00:00Z",
-        data={"cid": "A001"},
-        data_source_id="3567508",
     )
     yield
     await Tortoise.close_connections()
