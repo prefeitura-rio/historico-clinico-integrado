@@ -10,10 +10,6 @@ import scripts.create_user
 
 from app.db import TORTOISE_ORM
 from app.main import app
-from app.models import (
-    RawPatientRecord,
-    RawPatientCondition,
-)
 from app.utils import read_bq, prepare_gcp_credential
 from app.config import (
     BIGQUERY_PROJECT,
