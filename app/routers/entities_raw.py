@@ -7,7 +7,7 @@ from app.types.pydantic_models import RawDataListModel, BulkInsertOutputModel
 from app.dependencies import (
     assert_user_has_pipeline_write_permition
 )
-from app.models import User, RawPatientRecord, RawPatientCondition, DataSource, RawEncounter
+from app.models import User, DataSource
 
 from app.datalake.uploader import DatalakeUploader
 from app.datalake.utils import (
@@ -19,11 +19,6 @@ from app.datalake.utils import (
 
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
-ENTITIES_CONFIG = {
-    "patientrecords": RawPatientRecord,
-    "patientconditions": RawPatientCondition,
-    "encounter": RawEncounter,
-}
 
 @router.post("/{entity_name}", status_code=201)
 async def create_raw_data(
