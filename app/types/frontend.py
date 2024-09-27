@@ -61,6 +61,7 @@ class Encounter(BaseModel):
     exit_datetime: Optional[str]
     location: str
     type: str
+    deceased: Optional[bool]
     subtype: Optional[str]
     exhibition_type: str = "default"
     cids: List[CID]
@@ -91,6 +92,7 @@ class PatientHeader(BaseModel):
     social_name: Optional[str]
     cpf: str
     cns: Optional[str]
+    deceased: Optional[bool]
     birth_date: Optional[str]
     gender: Optional[str]
     race: Optional[str]
