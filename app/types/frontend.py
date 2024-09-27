@@ -45,6 +45,15 @@ class Responsible(BaseModel):
     name: Optional[str]  # Temporary
     role: str
 
+# Condition model
+class CID(BaseModel):
+    status: Optional[str]
+    description: Optional[str]
+
+# Procedure model
+class Procedure(BaseModel):
+    description: Optional[str]
+    notes: Optional[str]
 
 # Medical Visit model
 class Encounter(BaseModel):
@@ -52,14 +61,16 @@ class Encounter(BaseModel):
     exit_datetime: Optional[str]
     location: str
     type: str
+    deceased: Optional[bool]
     subtype: Optional[str]
     exhibition_type: str = "default"
-    active_cids: List[str]
-    active_cids_summarized: List[str]
+    cids: List[CID]
+    cids_summarized: List[str]
     responsible: Optional[Responsible]
     clinical_motivation: Optional[str]
     clinical_outcome: Optional[str]
     clinical_exams: List[ClinicalExam]
+    procedures: List[Procedure]
     filter_tags: List[str]
 
 
@@ -81,6 +92,7 @@ class PatientHeader(BaseModel):
     social_name: Optional[str]
     cpf: str
     cns: Optional[str]
+    deceased: Optional[bool]
     birth_date: Optional[str]
     gender: Optional[str]
     race: Optional[str]
