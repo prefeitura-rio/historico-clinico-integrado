@@ -10,15 +10,13 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 from asyncer import asyncify
 from loguru import logger
-from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 
 from app import config
 from app.models import User
-from app.config import (
-    BIGQUERY_PROJECT,
-    BIGQUERY_PATIENT_HEADER_TABLE_ID
-)
+from app.enums import AccessErrorEnum
+from app.config import BIGQUERY_PROJECT, BIGQUERY_PATIENT_HEADER_TABLE_ID
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -155,9 +153,11 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
         list: A list of dictionaries, where each dictionary represents a row from the query result.
     """
 
-    logger.debug(f"""Reading BigQuery with query (QUERY_PREVIEW_ENABLED={
+    logger.debug(
+        f"""Reading BigQuery with query (QUERY_PREVIEW_ENABLED={
         os.environ['QUERY_PREVIEW_ENABLED']
-    }): {query}""")
+    }): {query}"""
+    )
 
     logger.info(f"Querying BigQuery: {query}")
 
@@ -174,18 +174,23 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
     return rows
 
 
-async def validate_user_access_to_patient_data(user: User, cpf: str):
+async def validate_user_access_to_patient_data(
+    user: User,
+    cpf: str
+) -> tuple[bool, JSONResponse]:
     """
     Validates if a user has access to a patient's data based on their role and permissions.
     Args:
-        user (User): The user object containing role and data source information.
+        user (User): The user object containing user details and role permissions.
         cpf (str): The CPF (Cadastro de Pessoas Físicas) number of the patient.
-    Raises:
-        HTTPException: If the patient is not found (404).
-        HTTPException: If the user does not have permission to access the patient (403).
-        HTTPException: If the patient's data is not displayable (403).
     Returns:
-        None
+        tuple: A tuple containing a boolean and a JSONResponse.
+            - If the user has permission and the data is displayable, returns (True, None).
+            - If the patient is not found, returns (False, JSONResponse) with a 404 status code.
+            - If the user does not have permission, returns (False, JSONResponse) with a 403
+                status code.
+            - If the data is not displayable, returns (False, JSONResponse) with a 403 status
+                code and reasons for restriction.
     """
 
     # Build the filter clause based on the user's role
@@ -210,13 +215,29 @@ async def validate_user_access_to_patient_data(user: User, cpf: str):
     results = await read_bq(query, from_file="/tmp/credentials.json")
 
     if len(results) == 0:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    elif not results[0]["user_has_permition"]:
-        raise HTTPException(
-            status_code=403, detail="User does not have permission to access this patient")
-    elif not results[0]["data_is_displayable"]:
-        raise HTTPException(
-            status_code=403,
-            detail="Patient is not displayable: " + ",".join(results[0]["data_display_reasons"])
+        return False, JSONResponse(
+            status_code=404,
+            content={
+                "message": "Patient not found",
+                "type": AccessErrorEnum.NOT_FOUND,
+            },
         )
-    return
+    elif not results[0]["user_has_permition"]:
+        return False, JSONResponse(
+            status_code=403,
+            content={
+                "message": "User does not have permission to access this patient",
+                "type": AccessErrorEnum.PERMISSION_DENIED,
+            },
+        )
+    elif not results[0]["data_is_displayable"]:
+        return False, JSONResponse(
+            status_code=403,
+            content={
+                "message": "Patient is not displayable: " + ",".join(
+                    results[0]["data_display_reasons"]
+                ),
+                "type": AccessErrorEnum.DATA_RESTRICTED,
+            },
+        )
+    return True, None
