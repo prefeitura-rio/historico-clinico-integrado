@@ -2,8 +2,9 @@
 import asyncio
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request
-from fastapi_simple_rate_limiter import rate_limiter
+from fastapi import HTTPException
 
+from fastapi_simple_rate_limiter import rate_limiter
 from app.decorators import router_request
 from app.dependencies import assert_user_is_active, assert_cpf_is_valid
 from app.models import User
@@ -35,7 +36,6 @@ async def get_user_info(
     else:
         cpf = None
 
-
     return {
         "name": user.name,
         "role": user.role.job_title if user.role else None,
@@ -45,7 +45,9 @@ async def get_user_info(
     }
 
 
-@router_request(method="GET", router=router, path="/patient/header/{cpf}")
+@router_request(
+    method="GET", router=router, path="/patient/header/{cpf}", response_model=PatientHeader
+)
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_header(
     user: Annotated[User, Depends(assert_user_is_active)],
@@ -61,7 +63,7 @@ async def get_patient_header(
         WHERE
             cpf_particao = {cpf}
         """,
-        from_file="/tmp/credentials.json"
+        from_file="/tmp/credentials.json",
     )
 
     _, results = await asyncio.gather(validation_job, results_job)
@@ -69,7 +71,9 @@ async def get_patient_header(
     return results[0]
 
 
-@router_request(method="GET", router=router, path="/patient/summary/{cpf}")
+@router_request(
+    method="GET", router=router, path="/patient/summary/{cpf}", response_model=PatientSummary
+)
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_summary(
     user: Annotated[User, Depends(assert_user_is_active)],
@@ -87,12 +91,17 @@ async def get_patient_summary(
         """,
         from_file="/tmp/credentials.json",
     )
-    _, results = await asyncio.gather(validation_job, results_job)
+    try:
+        _, results = await asyncio.gather(validation_job, results_job)
+    except HTTPException:
+        return PatientSummary(allergies=[], continuous_use_medications=[])
 
     return results[0]
 
 
-@router_request(method="GET", router=router, path="/patient/encounters/{cpf}")
+@router_request(
+    method="GET", router=router, path="/patient/encounters/{cpf}", response_model=List[Encounter]
+)
 @rate_limiter(limit=5, seconds=60)
 async def get_patient_encounters(
     user: Annotated[User, Depends(assert_user_is_active)],
@@ -110,7 +119,10 @@ async def get_patient_encounters(
         """,
         from_file="/tmp/credentials.json",
     )
-    _, results = await asyncio.gather(validation_job, results_job)
+    try:
+        _, results = await asyncio.gather(validation_job, results_job)
+    except HTTPException:
+        return []
 
     return results
 
