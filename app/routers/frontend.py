@@ -4,6 +4,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request
 
 from fastapi_simple_rate_limiter import rate_limiter
+
 from app.decorators import router_request
 from app.dependencies import assert_user_is_active, assert_cpf_is_valid
 from app.models import User
@@ -13,7 +14,7 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
-from app.utils import read_bq, validate_user_access_to_patient_data
+from app.utils import read_bq, validate_user_access_to_patient_data, get_redis_session
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
@@ -22,6 +23,7 @@ from app.config import (
 )
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
+redis_session = get_redis_session()
 
 
 @router.get("/user")
@@ -47,7 +49,7 @@ async def get_user_info(
 @router_request(
     method="GET", router=router, path="/patient/header/{cpf}", response_model=PatientHeader
 )
-@rate_limiter(limit=5, seconds=60)
+@rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_header(
     user: Annotated[User, Depends(assert_user_is_active)],
     cpf: Annotated[str, Depends(assert_cpf_is_valid)],
@@ -77,7 +79,7 @@ async def get_patient_header(
 @router_request(
     method="GET", router=router, path="/patient/summary/{cpf}", response_model=PatientSummary
 )
-@rate_limiter(limit=5, seconds=60)
+@rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_summary(
     user: Annotated[User, Depends(assert_user_is_active)],
     cpf: Annotated[str, Depends(assert_cpf_is_valid)],
@@ -106,7 +108,7 @@ async def get_patient_summary(
 @router_request(
     method="GET", router=router, path="/patient/encounters/{cpf}", response_model=List[Encounter]
 )
-@rate_limiter(limit=5, seconds=60)
+@rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_encounters(
     user: Annotated[User, Depends(assert_user_is_active)],
     cpf: Annotated[str, Depends(assert_cpf_is_valid)],
@@ -144,3 +146,19 @@ async def get_filter_tags(_: Annotated[User, Depends(assert_user_is_active)]) ->
         "CER",
         "POLICLINICA",
     ]
+
+
+@router.get("/metadata")
+async def get_metadata(_: Annotated[User, Depends(assert_user_is_active)]) -> dict:
+    return {
+        "filter_tags": [
+            {"tag": "CF/CMS", "description": "CF e CMS"},
+            {"tag": "HOSPITAL", "description": "Hospital"},
+            {"tag": "CENTRO SAUDE ESCOLA", "description": "Centro Saúde Escola"},
+            {"tag": "UPA", "description": "UPA"},
+            {"tag": "CCO", "description": "CCO"},
+            {"tag": "MATERNIDADE", "description": "Maternidade"},
+            {"tag": "CER", "description": "CER"},
+            {"tag": "POLICLINICA", "description": "Policlínica"},
+        ]
+    }
