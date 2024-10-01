@@ -12,6 +12,12 @@ class PermitionEnum(str, Enum):
     HCI_FULL_PERMITION = "full_permition"
 
 
+class AccessErrorEnum(str, Enum):
+    NOT_FOUND = "NOT_FOUND"
+    PERMISSION_DENIED = "PERMISSION_DENIED"
+    DATA_RESTRICTED = "DATA_RESTRICTED"
+
+
 class SystemEnum(str, Enum):
     VITACARE = "vitacare"
     VITAI = "vitai"
