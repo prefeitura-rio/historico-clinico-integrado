@@ -25,6 +25,7 @@ from app.config import (
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 redis_session = get_redis_session()
 
+
 @router.get("/user")
 async def get_user_info(
     user: Annotated[User, Depends(assert_user_is_active)],
@@ -145,3 +146,19 @@ async def get_filter_tags(_: Annotated[User, Depends(assert_user_is_active)]) ->
         "CER",
         "POLICLINICA",
     ]
+
+
+@router.get("/metadata")
+async def get_metadata(_: Annotated[User, Depends(assert_user_is_active)]) -> dict:
+    return {
+        "filter_tags": [
+            {"tag": "CF/CMS", "description": "CF e CMS"},
+            {"tag": "HOSPITAL", "description": "Hospital"},
+            {"tag": "CENTRO SAUDE ESCOLA", "description": "Centro Saúde Escola"},
+            {"tag": "UPA", "description": "UPA"},
+            {"tag": "CCO", "description": "CCO"},
+            {"tag": "MATERNIDADE", "description": "Maternidade"},
+            {"tag": "CER", "description": "CER"},
+            {"tag": "POLICLINICA", "description": "Policlínica"},
+        ]
+    }
