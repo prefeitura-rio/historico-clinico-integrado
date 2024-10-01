@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
-import jwt
 import hashlib
 import json
 import os
 import base64
+import jwt
 
 from google.cloud import bigquery
 from google.oauth2 import service_account
@@ -24,6 +24,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def generate_user_token(user: User) -> str:
+    """
+    Generates a JWT access token for a given user.
+    Args:
+        user (User): The user object for which the token is being generated.
+    Returns:
+        str: The generated JWT access token.
+    """
+
     access_token_expires = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
     access_token = create_access_token(
@@ -112,38 +120,21 @@ def generate_dictionary_fingerprint(dict_obj: dict) -> str:
     return hashlib.md5(serialized_obj.encode("utf-8")).hexdigest()
 
 
-def merge_versions(current_objs, new_objs: dict) -> None:
-    current_fingerprints = {obj.fingerprint: obj for obj in current_objs}
-    new_fingerprints = {obj.get("fingerprint"): obj for obj in new_objs}
-
-    to_delete = current_fingerprints.keys() - new_fingerprints.keys()
-    to_add = new_fingerprints.keys() - current_fingerprints.keys()
-
-    deletions = [current_fingerprints[fingerprint] for fingerprint in to_delete]
-    insertions = [new_fingerprints[fingerprint] for fingerprint in to_add]
-
-    return deletions, insertions
-
-
-async def update_and_return(instance, new_data):
-    await instance.update_from_dict(new_data).save()
-    return instance
-
-
-async def get_instance(Model, table, slug=None, code=None):
-    if slug is None:
-        return None
-
-    if slug not in table:
-        if code:
-            table[slug] = await Model.get_or_none(code=code)
-        elif slug:
-            table[slug] = await Model.get_or_none(slug=slug)
-
-    return table[slug]
-
-
 def prepare_gcp_credential() -> None:
+    """
+    Prepares Google Cloud Platform (GCP) credentials for use by decoding a base64
+    encoded credential string from an environment variable and writing it to a
+    temporary file. The path to this file is then set as the value of the
+    GOOGLE_APPLICATION_CREDENTIALS environment variable.
+    Environment Variables:
+    - BASEDOSDADOS_CREDENTIALS_PROD: A base64 encoded string containing the GCP
+      credentials.
+    - GOOGLE_APPLICATION_CREDENTIALS: The path to the temporary file where the
+      decoded credentials are stored.
+    Returns:
+    None
+    """
+
     base64_credential = os.environ["BASEDOSDADOS_CREDENTIALS_PROD"]
 
     with open("/tmp/credentials.json", "wb") as f:
@@ -154,6 +145,16 @@ def prepare_gcp_credential() -> None:
 
 
 async def read_bq(query, from_file="/tmp/credentials.json"):
+    """
+    Asynchronously reads data from Google BigQuery using a provided SQL query.
+    Args:
+        query (str): The SQL query to execute on BigQuery.
+        from_file (str, optional): The path to the service account credentials JSON file.
+            Defaults to "/tmp/credentials.json".
+    Returns:
+        list: A list of dictionaries, where each dictionary represents a row from the query result.
+    """
+
     logger.debug(f"""Reading BigQuery with query (QUERY_PREVIEW_ENABLED={
         os.environ['QUERY_PREVIEW_ENABLED']
     }): {query}""")
@@ -174,6 +175,19 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
 
 
 async def validate_user_access_to_patient_data(user: User, cpf: str):
+    """
+    Validates if a user has access to a patient's data based on their role and permissions.
+    Args:
+        user (User): The user object containing role and data source information.
+        cpf (str): The CPF (Cadastro de Pessoas Físicas) number of the patient.
+    Raises:
+        HTTPException: If the patient is not found (404).
+        HTTPException: If the user does not have permission to access the patient (403).
+        HTTPException: If the patient's data is not displayable (403).
+    Returns:
+        None
+    """
+
     # Build the filter clause based on the user's role
     user_permition_filter = user.role.permition.filter_clause.format(
         user_cpf=user.cpf,
