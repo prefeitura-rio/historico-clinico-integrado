@@ -2,7 +2,6 @@
 import asyncio
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request
-from fastapi import HTTPException
 
 from fastapi_simple_rate_limiter import rate_limiter
 from app.decorators import router_request
