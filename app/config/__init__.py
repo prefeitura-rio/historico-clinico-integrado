@@ -91,7 +91,9 @@ if environment not in [
     "staging",
     "prod",
     "local-staging",
-    "local-prod"
+    "local-prod",
+    "datario-staging",
+    "datario-prod",
 ]:
     raise ValueError("ENVIRONMENT must be either: 'dev', 'staging', 'prod', 'local-staging', 'local-prod'")  # noqa
 
