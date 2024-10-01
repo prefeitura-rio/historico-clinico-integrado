@@ -19,9 +19,9 @@ BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID = getenv_or_action(
 )
 
 # Redis
-REDIS_HOST = getenv_or_action("REDIS_HOST", action="raise")
-REDIS_PORT = int(getenv_or_action("REDIS_PORT", action="raise"))
-REDIS_PASSWORD = getenv_or_action("REDIS_PASSWORD", action="raise")
+REDIS_HOST = getenv_or_action("REDIS_HOST", action="ignore")
+REDIS_PORT = int(getenv_or_action("REDIS_PORT", action="ignore"))
+REDIS_PASSWORD = getenv_or_action("REDIS_PASSWORD", action="ignore")
 
 # JWT configuration
 JWT_SECRET_KEY = getenv_or_action("JWT_SECRET_KEY", default=token_bytes(32).hex())
