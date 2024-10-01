@@ -10,13 +10,20 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 from asyncer import asyncify
 from loguru import logger
+from fastapi_simple_rate_limiter.database import create_redis_session
 from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 
 from app import config
 from app.models import User
 from app.enums import AccessErrorEnum
-from app.config import BIGQUERY_PROJECT, BIGQUERY_PATIENT_HEADER_TABLE_ID
+from app.config import (
+    BIGQUERY_PROJECT,
+    BIGQUERY_PATIENT_HEADER_TABLE_ID,
+    REDIS_HOST,
+    REDIS_PASSWORD,
+    REDIS_PORT,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -174,10 +181,7 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
     return rows
 
 
-async def validate_user_access_to_patient_data(
-    user: User,
-    cpf: str
-) -> tuple[bool, JSONResponse]:
+async def validate_user_access_to_patient_data(user: User, cpf: str) -> tuple[bool, JSONResponse]:
     """
     Validates if a user has access to a patient's data based on their role and permissions.
     Args:
@@ -234,10 +238,26 @@ async def validate_user_access_to_patient_data(
         return False, JSONResponse(
             status_code=403,
             content={
-                "message": "Patient is not displayable: " + ",".join(
-                    results[0]["data_display_reasons"]
-                ),
+                "message": "Patient is not displayable: "
+                + ",".join(results[0]["data_display_reasons"]),
                 "type": AccessErrorEnum.DATA_RESTRICTED,
             },
         )
     return True, None
+
+
+def get_redis_session():
+    """
+    Establishes a Redis session using the configured host, port, and password.
+    Returns:
+        redis.Redis: A Redis session object if the host, port, and password are available in envs.
+        None: If any of the host, port, or password are missing.
+    """
+
+    if REDIS_HOST and REDIS_PORT and REDIS_PASSWORD:
+        return create_redis_session(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
+    else:
+        logger.error(
+            "Could not establish a Redis session because one or more of the required environment variables are missing."  # noqa
+        )
+        return None
