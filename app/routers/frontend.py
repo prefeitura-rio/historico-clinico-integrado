@@ -66,9 +66,13 @@ async def get_patient_header(
         from_file="/tmp/credentials.json",
     )
 
-    _, results = await asyncio.gather(validation_job, results_job)
+    validation, results = await asyncio.gather(validation_job, results_job)
 
-    return results[0]
+    has_access, response = validation
+    if has_access:
+        return results[0]
+    else:
+        return response
 
 
 @router_request(
@@ -91,12 +95,13 @@ async def get_patient_summary(
         """,
         from_file="/tmp/credentials.json",
     )
-    try:
-        _, results = await asyncio.gather(validation_job, results_job)
-    except HTTPException:
-        return PatientSummary(allergies=[], continuous_use_medications=[])
+    validation, results = await asyncio.gather(validation_job, results_job)
 
-    return results[0]
+    has_access, _ = validation
+    if has_access:
+        return results[0]
+    else:
+        return PatientSummary(allergies=[], continuous_use_medications=[])
 
 
 @router_request(
@@ -119,12 +124,13 @@ async def get_patient_encounters(
         """,
         from_file="/tmp/credentials.json",
     )
-    try:
-        _, results = await asyncio.gather(validation_job, results_job)
-    except HTTPException:
-        return []
+    validation, results = await asyncio.gather(validation_job, results_job)
 
-    return results
+    has_access, _ = validation
+    if has_access:
+        return results
+    else:
+        return []
 
 
 @router.get("/patient/filter_tags")
