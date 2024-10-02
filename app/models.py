@@ -36,10 +36,11 @@ class User(Model):
     password = fields.CharField(max_length=255)
     data_source = fields.ForeignKeyField("app.DataSource", related_name="users", null=True)
     role = fields.ForeignKeyField("app.SystemRole", related_name="user_role", null=True)
-    # 2FA
+    # Autentication
     secret_key = fields.CharField(max_length=255, null=True)
     is_2fa_required = fields.BooleanField(default=False)
     is_2fa_activated = fields.BooleanField(default=False)
+    is_ergon_validation_required = fields.BooleanField(default=False)
     # Metadata
     is_active = fields.BooleanField(default=True)
     is_superuser = fields.BooleanField(default=False)
