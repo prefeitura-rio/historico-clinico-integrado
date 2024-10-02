@@ -105,7 +105,7 @@ async def login_with_2fa(
             from_file="/tmp/credentials.json",
         )
         # If has ERGON register and is an inactive employee: Unauthorized
-        if len(ergon_register) > 0 and ergon_register[0].get("status_ativo", False) == False:
+        if len(ergon_register) > 0 and ergon_register[0].get("status_ativo", False) is False:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User is not an active employee",
