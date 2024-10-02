@@ -10,10 +10,12 @@ from app import config
 from app.models import User
 from app.types.frontend import LoginFormWith2FA, LoginForm
 from app.types.pydantic_models import Token, Enable2FA
-from app.utils import authenticate_user, generate_user_token
+from app.utils import authenticate_user, generate_user_token, read_bq
 from app.security import TwoFactorAuth
 from app.dependencies import assert_user_is_active
-
+from app.config import (
+    BIGQUERY_ERGON_TABLE_ID,
+)
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
@@ -86,12 +88,30 @@ async def login_with_2fa(
     if not user.is_2fa_activated:
         user.is_2fa_activated = True
         await user.save()
-
-    return {
-        "access_token": generate_user_token(user),
-        "token_type": "bearer",
-        "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
-    }
+    
+    # ----------------------------------------
+    # Validate access status in ERGON database
+    # ----------------------------------------
+    vinculo = read_bq(
+        f"""
+        SELECT *
+        FROM {BIGQUERY_ERGON_TABLE_ID}
+        WHERE cpf_particao = {user.cpf}
+        """
+    )
+    # If the user is not in ERGON or is active in ERGON, generate a token
+    if len(vinculo) == 0 or vinculo[0].get("status_ativo", False):
+        return {
+            "access_token": generate_user_token(user),
+            "token_type": "bearer",
+            "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
+        }
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not an active employee",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 @router.post("/2fa/enable/")
