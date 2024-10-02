@@ -88,7 +88,7 @@ async def login_with_2fa(
     if not user.is_2fa_activated:
         user.is_2fa_activated = True
         await user.save()
-    
+
     # ----------------------------------------
     # Validate access status in ERGON database
     # ----------------------------------------
