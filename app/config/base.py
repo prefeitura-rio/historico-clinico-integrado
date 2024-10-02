@@ -17,6 +17,7 @@ BIGQUERY_PATIENT_SUMMARY_TABLE_ID = getenv_or_action(
 BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID = getenv_or_action(
     "BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID", action="raise"
 )
+BIGQUERY_ERGON_TABLE_ID = getenv_or_action("BIGQUERY_ERGON_TABLE_ID", action="raise")
 
 # Redis
 REDIS_HOST = getenv_or_action("REDIS_HOST", action="ignore")
