@@ -75,6 +75,9 @@ async def login_with_2fa(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # ----------------------------------------
+    # 2FA Verification
+    # ----------------------------------------
     secret_key = await TwoFactorAuth.get_or_create_secret_key(user)
     two_factor_auth = TwoFactorAuth(user, secret_key)
 
@@ -92,27 +95,28 @@ async def login_with_2fa(
     # ----------------------------------------
     # Validate access status in ERGON database
     # ----------------------------------------
-    vinculo = await read_bq(
-        f"""
-        SELECT *
-        FROM {BIGQUERY_ERGON_TABLE_ID}
-        WHERE cpf_particao = {user.cpf}
-        """,
-        from_file="/tmp/credentials.json",
-    )
-    # If the user is not in ERGON or is active in ERGON, generate a token
-    if len(vinculo) == 0 or vinculo[0].get("status_ativo", False):
-        return {
-            "access_token": generate_user_token(user),
-            "token_type": "bearer",
-            "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
-        }
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User is not an active employee",
-            headers={"WWW-Authenticate": "Bearer"},
+    if user.is_ergon_validation_required:
+        ergon_register = await read_bq(
+            f"""
+            SELECT *
+            FROM {BIGQUERY_ERGON_TABLE_ID}
+            WHERE cpf_particao = {user.cpf}
+            """,
+            from_file="/tmp/credentials.json",
         )
+        # If has ERGON register and is an inactive employee: Unauthorized
+        if len(ergon_register) > 0 and ergon_register[0].get("status_ativo", False) == False:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User is not an active employee",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+    return {
+        "access_token": generate_user_token(user),
+        "token_type": "bearer",
+        "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
+    }
 
 
 @router.post("/2fa/enable/")
