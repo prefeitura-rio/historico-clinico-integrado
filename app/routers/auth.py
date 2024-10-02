@@ -92,12 +92,13 @@ async def login_with_2fa(
     # ----------------------------------------
     # Validate access status in ERGON database
     # ----------------------------------------
-    vinculo = read_bq(
+    vinculo = await read_bq(
         f"""
         SELECT *
         FROM {BIGQUERY_ERGON_TABLE_ID}
         WHERE cpf_particao = {user.cpf}
-        """
+        """,
+        from_file="/tmp/credentials.json",
     )
     # If the user is not in ERGON or is active in ERGON, generate a token
     if len(vinculo) == 0 or vinculo[0].get("status_ativo", False):
