@@ -257,7 +257,7 @@ def get_redis_session():
     if REDIS_HOST and REDIS_PORT and REDIS_PASSWORD:
         return create_redis_session(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
     else:
-        logger.error(
+        logger.warning(
             "Could not establish a Redis session because one or more of the required environment variables are missing."  # noqa
         )
         return None

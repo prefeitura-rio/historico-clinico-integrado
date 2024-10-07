@@ -10,6 +10,8 @@ from tortoise.contrib.fastapi import register_tortoise
 from app import config
 from app.db import TORTOISE_ORM
 from app.routers import auth, entities_raw, frontend
+from app.utils import prepare_gcp_credential
+
 
 logger.remove()
 logger.add(sys.stdout, level=config.LOG_LEVEL)
@@ -20,6 +22,9 @@ if config.SENTRY_ENABLE:
         traces_sample_rate=0,
         environment=config.SENTRY_ENVIRONMENT,
     )
+
+logger.debug("Preparing GCP credentials")
+prepare_gcp_credential()
 
 app = FastAPI(
     title="Unificador de Prontuários - SMSRio",
