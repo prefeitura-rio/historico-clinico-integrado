@@ -9,7 +9,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from app import config
 from app.db import TORTOISE_ORM
-from app.routers import auth, entities_raw, frontend
+from app.routers import auth, entities_raw, frontend, misc
 from app.utils import prepare_gcp_credential
 
 
@@ -50,6 +50,7 @@ app.add_middleware(
 app.include_router(entities_raw.router)
 app.include_router(auth.router)
 app.include_router(frontend.router)
+app.include_router(misc.router)
 
 register_tortoise(
     app,
