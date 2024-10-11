@@ -19,8 +19,8 @@
    - Peça ao Administrador mais informações sobre seus valores.
 
 ```
-INFISICAL_ADDRESS=<O Endereço do Servidor Infisical>
-INFISICAL_TOKEN=<O token do projeto>
+INFISICAL_ADDRESS=<Endereço do Servidor Infisical>
+INFISICAL_TOKEN=<Token do projeto>
 ```
 - Garanta instalação do poetry e pyenv com python 3.11
 - Crie um ambiente poetry *dentro do projeto*.

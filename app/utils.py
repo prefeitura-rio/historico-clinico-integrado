@@ -1,29 +1,42 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
-import jwt
 import hashlib
 import json
 import os
 import base64
+import jwt
 
 from google.cloud import bigquery
 from google.oauth2 import service_account
 from asyncer import asyncify
 from loguru import logger
-from fastapi import HTTPException
+from fastapi_simple_rate_limiter.database import create_redis_session
+from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 
 from app import config
 from app.models import User
+from app.enums import AccessErrorEnum
 from app.config import (
     BIGQUERY_PROJECT,
-    BIGQUERY_PATIENT_HEADER_TABLE_ID
+    BIGQUERY_PATIENT_HEADER_TABLE_ID,
+    REDIS_HOST,
+    REDIS_PASSWORD,
+    REDIS_PORT,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def generate_user_token(user: User) -> str:
+    """
+    Generates a JWT access token for a given user.
+    Args:
+        user (User): The user object for which the token is being generated.
+    Returns:
+        str: The generated JWT access token.
+    """
+
     access_token_expires = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
     access_token = create_access_token(
@@ -112,38 +125,21 @@ def generate_dictionary_fingerprint(dict_obj: dict) -> str:
     return hashlib.md5(serialized_obj.encode("utf-8")).hexdigest()
 
 
-def merge_versions(current_objs, new_objs: dict) -> None:
-    current_fingerprints = {obj.fingerprint: obj for obj in current_objs}
-    new_fingerprints = {obj.get("fingerprint"): obj for obj in new_objs}
-
-    to_delete = current_fingerprints.keys() - new_fingerprints.keys()
-    to_add = new_fingerprints.keys() - current_fingerprints.keys()
-
-    deletions = [current_fingerprints[fingerprint] for fingerprint in to_delete]
-    insertions = [new_fingerprints[fingerprint] for fingerprint in to_add]
-
-    return deletions, insertions
-
-
-async def update_and_return(instance, new_data):
-    await instance.update_from_dict(new_data).save()
-    return instance
-
-
-async def get_instance(Model, table, slug=None, code=None):
-    if slug is None:
-        return None
-
-    if slug not in table:
-        if code:
-            table[slug] = await Model.get_or_none(code=code)
-        elif slug:
-            table[slug] = await Model.get_or_none(slug=slug)
-
-    return table[slug]
-
-
 def prepare_gcp_credential() -> None:
+    """
+    Prepares Google Cloud Platform (GCP) credentials for use by decoding a base64
+    encoded credential string from an environment variable and writing it to a
+    temporary file. The path to this file is then set as the value of the
+    GOOGLE_APPLICATION_CREDENTIALS environment variable.
+    Environment Variables:
+    - BASEDOSDADOS_CREDENTIALS_PROD: A base64 encoded string containing the GCP
+      credentials.
+    - GOOGLE_APPLICATION_CREDENTIALS: The path to the temporary file where the
+      decoded credentials are stored.
+    Returns:
+    None
+    """
+
     base64_credential = os.environ["BASEDOSDADOS_CREDENTIALS_PROD"]
 
     with open("/tmp/credentials.json", "wb") as f:
@@ -154,9 +150,21 @@ def prepare_gcp_credential() -> None:
 
 
 async def read_bq(query, from_file="/tmp/credentials.json"):
-    logger.debug(f"""Reading BigQuery with query (QUERY_PREVIEW_ENABLED={
+    """
+    Asynchronously reads data from Google BigQuery using a provided SQL query.
+    Args:
+        query (str): The SQL query to execute on BigQuery.
+        from_file (str, optional): The path to the service account credentials JSON file.
+            Defaults to "/tmp/credentials.json".
+    Returns:
+        list: A list of dictionaries, where each dictionary represents a row from the query result.
+    """
+
+    logger.debug(
+        f"""Reading BigQuery with query (QUERY_PREVIEW_ENABLED={
         os.environ['QUERY_PREVIEW_ENABLED']
-    }): {query}""")
+    }): {query}"""
+    )
 
     logger.info(f"Querying BigQuery: {query}")
 
@@ -173,7 +181,22 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
     return rows
 
 
-async def validate_user_access_to_patient_data(user: User, cpf: str):
+async def validate_user_access_to_patient_data(user: User, cpf: str) -> tuple[bool, JSONResponse]:
+    """
+    Validates if a user has access to a patient's data based on their role and permissions.
+    Args:
+        user (User): The user object containing user details and role permissions.
+        cpf (str): The CPF (Cadastro de Pessoas Físicas) number of the patient.
+    Returns:
+        tuple: A tuple containing a boolean and a JSONResponse.
+            - If the user has permission and the data is displayable, returns (True, None).
+            - If the patient is not found, returns (False, JSONResponse) with a 404 status code.
+            - If the user does not have permission, returns (False, JSONResponse) with a 403
+                status code.
+            - If the data is not displayable, returns (False, JSONResponse) with a 403 status
+                code and reasons for restriction.
+    """
+
     # Build the filter clause based on the user's role
     user_permition_filter = user.role.permition.filter_clause.format(
         user_cpf=user.cpf,
@@ -196,13 +219,45 @@ async def validate_user_access_to_patient_data(user: User, cpf: str):
     results = await read_bq(query, from_file="/tmp/credentials.json")
 
     if len(results) == 0:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    elif not results[0]["user_has_permition"]:
-        raise HTTPException(
-            status_code=403, detail="User does not have permission to access this patient")
-    elif not results[0]["data_is_displayable"]:
-        raise HTTPException(
-            status_code=403,
-            detail="Patient is not displayable: " + ",".join(results[0]["data_display_reasons"])
+        return False, JSONResponse(
+            status_code=404,
+            content={
+                "message": "Patient not found",
+                "type": AccessErrorEnum.NOT_FOUND,
+            },
         )
-    return
+    elif not results[0]["user_has_permition"]:
+        return False, JSONResponse(
+            status_code=403,
+            content={
+                "message": "User does not have permission to access this patient",
+                "type": AccessErrorEnum.PERMISSION_DENIED,
+            },
+        )
+    elif not results[0]["data_is_displayable"]:
+        return False, JSONResponse(
+            status_code=403,
+            content={
+                "message": "Patient is not displayable: "
+                + ",".join(results[0]["data_display_reasons"]),
+                "type": AccessErrorEnum.DATA_RESTRICTED,
+            },
+        )
+    return True, None
+
+
+def get_redis_session():
+    """
+    Establishes a Redis session using the configured host, port, and password.
+    Returns:
+        redis.Redis: A Redis session object if the host, port, and password are available in envs.
+        None: If any of the host, port, or password are missing.
+    """
+
+    if REDIS_HOST and REDIS_PORT and REDIS_PASSWORD:
+        return create_redis_session(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
+    else:
+        logger.warning(
+            "Could not establish a Redis session because one or more of the required environment variables are missing."  # noqa
+        )
+        return None

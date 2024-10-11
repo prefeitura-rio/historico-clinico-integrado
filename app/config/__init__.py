@@ -91,9 +91,11 @@ if environment not in [
     "staging",
     "prod",
     "local-staging",
-    "local-prod"
+    "local-prod",
+    "staging-datario",
+    "prod-datario",
 ]:
-    raise ValueError("ENVIRONMENT must be either: 'dev', 'staging', 'prod', 'local-staging', 'local-prod'")  # noqa
+    raise ValueError("Invalid ENVIRONMENT")
 
 inject_environment_variables(environment=environment)
 

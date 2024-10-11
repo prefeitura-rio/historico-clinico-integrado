@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated, Literal
 from fastapi import APIRouter, Depends
+from fastapi.responses import HTMLResponse
 from loguru import logger
 
 from app.types.pydantic_models import RawDataListModel, BulkInsertOutputModel
@@ -20,10 +21,10 @@ from app.datalake.utils import (
 router = APIRouter(prefix="/raw", tags=["Entidades RAW (Formato Raw/Bruto)"])
 
 
-@router.post("/{entity_name}", status_code=201)
+@router.post("/{entity_name}", status_code=201, response_model=BulkInsertOutputModel)
 async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
-    current_user: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
+    _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     raw_data: RawDataListModel,
     upload_to_datalake: bool = True,
 ) -> BulkInsertOutputModel:
@@ -31,6 +32,9 @@ async def create_raw_data(
     records = raw_data.dict().get("data_list")
     data_source = await DataSource.get(cnes=raw_data.cnes)
 
+    # ====================
+    # SEND TO DATALAKE
+    # ====================
     datalake_status = {
         'success': False,
         'message': None,
@@ -59,9 +63,11 @@ async def create_raw_data(
             datalake_status['success'] = True
             datalake_status['message'] = "Data uploaded to Datalake"
     except Exception as e:
-        datalake_status['success'] = True
+        datalake_status['success'] = False
         datalake_status['message'] = f"Error in upload ({entity_name, data_source.cnes}): {e}"
         logger.error(datalake_status['message'])
+
+        return HTMLResponse(status_code=500, content=datalake_status)
 
     return BulkInsertOutputModel(
         count=len(records),
