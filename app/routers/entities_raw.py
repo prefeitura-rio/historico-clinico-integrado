@@ -2,7 +2,6 @@
 from typing import Annotated, Literal
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
-from loguru import logger
 
 from app.types.pydantic_models import RawDataListModel, BulkInsertOutputModel
 from app.dependencies import (
@@ -14,7 +13,8 @@ from app.datalake.uploader import DatalakeUploader
 from app.datalake.utils import (
     get_formatter,
     apply_formatter,
-    convert_model_config_to_dict
+    convert_model_config_to_dict,
+    WrongFormatException
 )
 
 
@@ -31,6 +31,12 @@ async def create_raw_data(
 
     records = raw_data.dict().get("data_list")
     data_source = await DataSource.get(cnes=raw_data.cnes)
+
+    if data_source is None or data_source.system is None:
+        return HTMLResponse(
+            status_code=500,
+            content=f"CNES {raw_data.cnes} is not fully configured"
+        )
 
     # ====================
     # SEND TO DATALAKE
@@ -62,12 +68,10 @@ async def create_raw_data(
                 )
             datalake_status['success'] = True
             datalake_status['message'] = "Data uploaded to Datalake"
+    except WrongFormatException as e:
+        return HTMLResponse(status_code=400, content=f"Invalid Format: {e}")
     except Exception as e:
-        datalake_status['success'] = False
-        datalake_status['message'] = f"Error in upload ({entity_name, data_source.cnes}): {e}"
-        logger.error(datalake_status['message'])
-
-        return HTMLResponse(status_code=500, content=datalake_status)
+        return HTMLResponse(status_code=500, content=f"Error in upload ({entity_name, data_source.cnes}): {e}")
 
     return BulkInsertOutputModel(
         count=len(records),
