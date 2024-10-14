@@ -2,7 +2,6 @@
 from typing import Annotated, Literal
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
-from loguru import logger
 
 from app.types.pydantic_models import RawDataListModel, BulkInsertOutputModel
 from app.dependencies import (
