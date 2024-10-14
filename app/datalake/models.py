@@ -21,7 +21,7 @@ class SMSRioPaciente(BaseModel):
     source_id: Optional[str]
     source_updated_at: Optional[str]
     datalake_loaded_at: str = datetime.now().isoformat()
-    
+
     # Campos adicionais
     data__id: Optional[str]
     data__mpi: Optional[str]
