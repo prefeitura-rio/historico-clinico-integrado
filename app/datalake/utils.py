@@ -103,6 +103,10 @@ def convert_model_config_to_dict(config):
     return result
 
 
+class WrongFormatException(Exception):
+    pass
+
+
 def apply_formatter(records: list[dict], formatter: Callable) -> dict:
     """
     Apply a formatter function to each record in a list and return the formatted data
@@ -120,7 +124,10 @@ def apply_formatter(records: list[dict], formatter: Callable) -> dict:
     # Apply formatter to each record, saving result rows
     rows = []
     for record in records:
-        rows.extend(formatter(record))
+        try:
+            row = formatter(record)
+        except Exception as e:
+            raise WrongFormatException(f"Record is not in correct format: {e}")
 
     # Group rows by table configuration
     tables = {}

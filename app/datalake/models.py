@@ -17,20 +17,20 @@ from pydantic import BaseModel
 # SMSRio
 # ===============
 class SMSRioPaciente(BaseModel):
-    patient_cpf: Optional[str]
-    source_id: Optional[str]
-    source_updated_at: Optional[str]
+    patient_cpf: str
+    source_id: str
+    source_updated_at: str
     datalake_loaded_at: str = datetime.now().isoformat()
 
     # Campos adicionais
     data__id: Optional[str]
     data__mpi: Optional[str]
-    data__cpf: Optional[str]
-    data__nome: Optional[str]
+    data__cpf: str
+    data__nome: str
     data__nome_social: Optional[str]
     data__nome_mae: Optional[str]
     data__nome_pai: Optional[str]
-    data__dt_nasc: Optional[str]
+    data__dt_nasc: str
     data__sexo: Optional[str]
     data__racaCor: Optional[str]
     data__codigoRacaCor: Optional[str]
