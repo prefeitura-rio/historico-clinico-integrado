@@ -126,6 +126,7 @@ def apply_formatter(records: list[dict], formatter: Callable) -> dict:
     for record in records:
         try:
             row = formatter(record)
+            rows.extend(row)
         except Exception as e:
             raise WrongFormatException(f"Record is not in correct format: {e}")
 
