@@ -108,7 +108,7 @@ class SMSRioPaciente(BaseModel):
 
     class Config:
         dataset_id = "brutos_plataforma_smsrio"
-        table_id = "paciente_eventos"
+        table_id = "paciente_cadastro_eventos"
         partition_by_date = True
         partition_column = "source_updated_at"
         biglake_table = True
