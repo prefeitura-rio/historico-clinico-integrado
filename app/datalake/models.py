@@ -17,7 +17,7 @@ from pydantic import BaseModel
 # SMSRio
 # ===============
 class SMSRioPaciente(BaseModel):
-    patient_cpf: str
+    patient_cpf: Optional[str]
     source_id: str
     source_updated_at: str
     datalake_loaded_at: str = datetime.now().isoformat()
@@ -25,12 +25,12 @@ class SMSRioPaciente(BaseModel):
     # Campos adicionais
     data__id: Optional[str]
     data__mpi: Optional[str]
-    data__cpf: str
-    data__nome: str
+    data__cpf: Optional[str]
+    data__nome: Optional[str]
     data__nome_social: Optional[str]
     data__nome_mae: Optional[str]
     data__nome_pai: Optional[str]
-    data__dt_nasc: str
+    data__dt_nasc: Optional[str]
     data__sexo: Optional[str]
     data__racaCor: Optional[str]
     data__codigoRacaCor: Optional[str]
@@ -108,7 +108,7 @@ class SMSRioPaciente(BaseModel):
 
     class Config:
         dataset_id = "brutos_plataforma_smsrio"
-        table_id = "paciente_eventos"
+        table_id = "paciente_cadastro_eventos"
         partition_by_date = True
         partition_column = "source_updated_at"
         biglake_table = True
