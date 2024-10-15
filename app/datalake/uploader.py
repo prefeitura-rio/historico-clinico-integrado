@@ -213,6 +213,7 @@ class DatalakeUploader:
             )
 
         try:
+            logger.info(f"Uploading data to BigQuery: {dataset_id}.{table_id}")
             self._upload_files_in_folder(
                 folder_path=upload_folder,
                 dataset_id=dataset_id,
