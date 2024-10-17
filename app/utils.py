@@ -248,7 +248,7 @@ async def request_limiter_identifier(request: Request):
 
     if forwarded:
         return forwarded.split(",")[0]
-    
+
     path = request.scope["path"]
     endpoint_name = path[::-1].split("/", 1)[1][::-1]
 

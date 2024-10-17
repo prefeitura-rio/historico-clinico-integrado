@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from types import ModuleType
 from typing import Dict, Iterable, Optional, Union
@@ -70,7 +71,7 @@ def register_tortoise(
 async def api_lifespan(app: FastAPI):
     # do sth before db inited
     redis_connection = redis.from_url(
-        f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}", 
+        f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}",
         encoding="utf8"
     )
     await FastAPILimiter.init(
