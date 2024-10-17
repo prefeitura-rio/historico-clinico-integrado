@@ -2,8 +2,7 @@
 import asyncio
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request
-
-from fastapi_simple_rate_limiter import rate_limiter
+from fastapi_limiter.depends import RateLimiter
 
 from app.decorators import router_request
 from app.dependencies import assert_user_is_active, assert_cpf_is_valid
@@ -14,19 +13,20 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
-from app.utils import read_bq, validate_user_access_to_patient_data, get_redis_session
+from app.utils import read_bq, validate_user_access_to_patient_data
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
     BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
     BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID,
+    REQUEST_LIMIT_MAX,
+    REQUEST_LIMIT_WINDOW_SIZE,
 )
 from app.types.errors import (
     AccessErrorModel
 )
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
-redis_session = get_redis_session()
 
 
 @router.get("/user")
@@ -57,9 +57,9 @@ async def get_user_info(
     responses={
         404: {"model": AccessErrorModel},
         403: {"model": AccessErrorModel}
-    }
+    },
+    dependencies=[Depends(RateLimiter(times=REQUEST_LIMIT_MAX, seconds=REQUEST_LIMIT_WINDOW_SIZE))]
 )
-@rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_header(
     user: Annotated[User, Depends(assert_user_is_active)],
     cpf: Annotated[str, Depends(assert_cpf_is_valid)],
@@ -90,9 +90,9 @@ async def get_patient_header(
     method="GET",
     router=router,
     path="/patient/summary/{cpf}",
-    response_model=PatientSummary
+    response_model=PatientSummary,
+    dependencies=[Depends(RateLimiter(times=REQUEST_LIMIT_MAX, seconds=REQUEST_LIMIT_WINDOW_SIZE))]
 )
-@rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_summary(
     user: Annotated[User, Depends(assert_user_is_active)],
     cpf: Annotated[str, Depends(assert_cpf_is_valid)],
@@ -122,9 +122,9 @@ async def get_patient_summary(
     method="GET",
     router=router,
     path="/patient/encounters/{cpf}",
-    response_model=List[Encounter]
+    response_model=List[Encounter],
+    dependencies=[Depends(RateLimiter(times=REQUEST_LIMIT_MAX, seconds=REQUEST_LIMIT_WINDOW_SIZE))]
 )
-@rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_encounters(
     user: Annotated[User, Depends(assert_user_is_active)],
     cpf: Annotated[str, Depends(assert_cpf_is_valid)],

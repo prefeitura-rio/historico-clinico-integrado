@@ -10,7 +10,7 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 from asyncer import asyncify
 from loguru import logger
-from fastapi_simple_rate_limiter.database import create_redis_session
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 
@@ -20,9 +20,6 @@ from app.enums import AccessErrorEnum
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
-    REDIS_HOST,
-    REDIS_PASSWORD,
-    REDIS_PORT,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -246,18 +243,13 @@ async def validate_user_access_to_patient_data(user: User, cpf: str) -> tuple[bo
     return True, None
 
 
-def get_redis_session():
-    """
-    Establishes a Redis session using the configured host, port, and password.
-    Returns:
-        redis.Redis: A Redis session object if the host, port, and password are available in envs.
-        None: If any of the host, port, or password are missing.
-    """
+async def request_limiter_identifier(request: Request):
+    forwarded = request.headers.get("X-Forwarded-For")
 
-    if REDIS_HOST and REDIS_PORT and REDIS_PASSWORD:
-        return create_redis_session(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
-    else:
-        logger.warning(
-            "Could not establish a Redis session because one or more of the required environment variables are missing."  # noqa
-        )
-        return None
+    if forwarded:
+        return forwarded.split(",")[0]
+    
+    path = request.scope["path"]
+    endpoint_name = path[::-1].split("/", 1)[1][::-1]
+
+    return request.client.host + ":" + endpoint_name

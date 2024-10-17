@@ -6,11 +6,19 @@ from .base import *  # noqa: F401, F403
 LOG_LEVEL = getenv_or_action("LOG_LEVEL", action="ignore", default="INFO")
 
 # Database configuration
+# DBO
 DATABASE_HOST = getenv_or_action("DATABASE_HOST", action="raise")
 DATABASE_PORT = getenv_or_action("DATABASE_PORT", action="raise")
 DATABASE_USER = getenv_or_action("DATABASE_USER", action="raise")
 DATABASE_PASSWORD = getenv_or_action("DATABASE_PASSWORD", action="raise")
 DATABASE_NAME = getenv_or_action("DATABASE_NAME", action="raise")
+
+# REDIS
+REDIS_HOST = getenv_or_action("REDIS_HOST", action="ignore")
+REDIS_PASSWORD = getenv_or_action("REDIS_PASSWORD", action="ignore")
+REDIS_PORT = getenv_or_action("REDIS_PORT", action="ignore")
+if REDIS_PORT:
+    REDIS_PORT = int(REDIS_PORT)
 
 # JWT configuration
 if getenv_or_action("JWT_ALGORITHM", action="ignore"):
