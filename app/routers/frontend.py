@@ -21,6 +21,9 @@ from app.config import (
     BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
     BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID,
 )
+from app.types.errors import (
+    AccessErrorModel
+)
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 redis_session = get_redis_session()
@@ -47,7 +50,14 @@ async def get_user_info(
 
 
 @router_request(
-    method="GET", router=router, path="/patient/header/{cpf}", response_model=PatientHeader
+    method="GET",
+    router=router,
+    path="/patient/header/{cpf}",
+    response_model=PatientHeader,
+    responses={
+        404: {"model": AccessErrorModel},
+        403: {"model": AccessErrorModel}
+    }
 )
 @rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_header(
@@ -77,7 +87,10 @@ async def get_patient_header(
 
 
 @router_request(
-    method="GET", router=router, path="/patient/summary/{cpf}", response_model=PatientSummary
+    method="GET",
+    router=router,
+    path="/patient/summary/{cpf}",
+    response_model=PatientSummary
 )
 @rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_summary(
@@ -106,7 +119,10 @@ async def get_patient_summary(
 
 
 @router_request(
-    method="GET", router=router, path="/patient/encounters/{cpf}", response_model=List[Encounter]
+    method="GET",
+    router=router,
+    path="/patient/encounters/{cpf}",
+    response_model=List[Encounter]
 )
 @rate_limiter(limit=5, seconds=60, redis=redis_session)
 async def get_patient_encounters(

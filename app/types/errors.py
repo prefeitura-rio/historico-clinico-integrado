@@ -12,6 +12,6 @@ class AuthenticationErrorModel(BaseModel):
     type: LoginErrorEnum
 
 
-class AccessErrorEnum(BaseModel):
+class AccessErrorModel(BaseModel):
     message: str
     type: AccessErrorEnum
