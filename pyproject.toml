@@ -34,6 +34,7 @@ asyncer = "^0.0.8"
 qrcode = "^7.4.2"
 pyotp = "^2.9.0"
 fastapi-simple-rate-limiter = "^0.0.4"
+fastapi-limiter = "^0.1.6"
 
 
 [tool.poetry.group.dev.dependencies]

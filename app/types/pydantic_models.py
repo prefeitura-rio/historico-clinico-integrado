@@ -4,6 +4,7 @@ from typing import Generic, Optional, List, TypeVar, Any
 from pydantic import BaseModel
 
 
+
 class User2FA(BaseModel):
     id: int
     username: str
