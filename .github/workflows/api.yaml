@@ -48,6 +48,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      redis:
+        image: redis:7
+        command: redis-server --appendonly yes
+        ports:
+          - "6379:6379"
+        volumes:
+          - redis-data:/data
     steps:
       - name: Checkout
         uses: actions/checkout@v3

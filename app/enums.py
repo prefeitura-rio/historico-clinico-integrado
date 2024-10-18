@@ -12,6 +12,13 @@ class PermitionEnum(str, Enum):
     HCI_FULL_PERMITION = "full_permition"
 
 
+class LoginErrorEnum(str, Enum):
+    BAD_CREDENTIALS = "bad_credentials"
+    BAD_OTP = "bad_otp"
+    INACTIVE_EMPLOYEE = "inactive_employee"
+    REQUIRE_2FA = "require_2fa"
+
+
 class AccessErrorEnum(str, Enum):
     NOT_FOUND = "NOT_FOUND"
     PERMISSION_DENIED = "PERMISSION_DENIED"
