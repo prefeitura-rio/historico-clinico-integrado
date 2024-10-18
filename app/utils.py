@@ -247,7 +247,8 @@ async def request_limiter_identifier(request: Request):
     forwarded = request.headers.get("X-Forwarded-For")
 
     if forwarded:
-        logger.debug(f"(Forwarded) Request Limiter Identifier: {forwarded.split(",")[0]}")
+        identifier = forwarded.split(',')[0]
+        logger.debug(f"(Forwarded) Request Limiter Identifier: {identifier}")
         return forwarded.split(",")[0]
 
     path = request.scope["path"]
