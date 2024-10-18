@@ -66,7 +66,7 @@ async def login_without_2fa(
     response_model=bool,
     responses={
         401: {"model": AuthenticationErrorModel}
-    }
+    },
 )
 async def is_2fa_active(
     form_data: LoginForm,
