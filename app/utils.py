@@ -248,13 +248,13 @@ async def request_limiter_identifier(request: Request):
 
     if forwarded:
         identifier = forwarded.split(',')[0]
-        logger.debug(f"(Forwarded) Request Limiter Identifier: {identifier}")
+        logger.info(f"(Forwarded) Request Limiter Identifier: {identifier}")
         return forwarded.split(",")[0]
 
     path = request.scope["path"]
     endpoint_name = path[::-1].split("/", 1)[1][::-1]
 
     identifier = request.client.host + ":" + endpoint_name
-    logger.debug(f"Request Limiter Identifier: {identifier}")
+    logger.info(f"Request Limiter Identifier: {identifier}")
 
     return request.client.host + ":" + endpoint_name
