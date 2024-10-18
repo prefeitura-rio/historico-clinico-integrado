@@ -244,17 +244,32 @@ async def validate_user_access_to_patient_data(user: User, cpf: str) -> tuple[bo
 
 
 async def request_limiter_identifier(request: Request):
+    """
+    Generates a unique identifier for rate limiting based on the request's client host and
+        endpoint name.
+    Args:
+        request (Request): The incoming HTTP request object.
+    Returns:
+        str: A unique identifier in the format "host:endpoint_name".
+    Logs:
+        - The path and endpoint name of the request.
+        - The client host, either from the "X-Forwarded-For" header or directly from the request.
+        - The generated unique identifier.
+    """
     forwarded = request.headers.get("X-Forwarded-For")
-
-    if forwarded:
-        identifier = forwarded.split(',')[0]
-        logger.info(f"(Forwarded) Request Limiter Identifier: {identifier}")
-        return forwarded.split(",")[0]
 
     path = request.scope["path"]
     endpoint_name = path[::-1].split("/", 1)[1][::-1]
+    logger.info(f"Request Limiter :: Path/Endpoint: {path}/{endpoint_name}")
 
-    identifier = request.client.host + ":" + endpoint_name
-    logger.info(f"Request Limiter Identifier: {identifier}")
+    if forwarded:
+        host = forwarded.split(',')[0]
+        logger.info(f"(Forwarded) Request Limiter :: Host: {host}")
+    else:
+        host = request.client.host
+        logger.info(f"Request Limiter :: Host: {host}")
 
-    return request.client.host + ":" + endpoint_name
+    identifier = host + ":" + endpoint_name
+    logger.info(f"Request Limiter :: ID: {identifier}")
+
+    return identifier
