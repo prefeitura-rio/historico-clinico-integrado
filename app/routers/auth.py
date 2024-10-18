@@ -142,7 +142,7 @@ async def login_with_2fa(
                 status_code=401,
                 content={
                     "message": "User is not an active employee",
-                    "type": LoginErrorEnum.NOT_ACTIVE_EMPLOYEE,
+                    "type": LoginErrorEnum.INACTIVE_EMPLOYEE,
                 },
             )
 
