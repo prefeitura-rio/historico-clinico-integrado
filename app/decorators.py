@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import json
 from functools import wraps
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Sequence, Union
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.models import User, UserHistory
 
@@ -15,13 +15,14 @@ def router_request(
     path: str,
     response_model: Any = None,
     responses: Optional[Dict[Union[int, str], Dict[str, Any]]] = None,
+    dependencies: Sequence[Depends] | None = None,
 ):
     def decorator(f):
         router_method = getattr(router, method.lower())
         if not router_method:
             raise AttributeError(f"Method {method} is not valid.")
 
-        @router_method(path=path, response_model=response_model, responses=responses)
+        @router_method(path=path, response_model=response_model, responses=responses, dependencies=dependencies)
         @wraps(f)
         async def wrapper(*args, **kwargs):
             user: User = None

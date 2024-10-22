@@ -70,7 +70,7 @@ class Encounter(BaseModel):
     clinical_motivation: Optional[str]
     clinical_outcome: Optional[str]
     clinical_exams: List[ClinicalExam]
-    procedures: List[Procedure]
+    procedures: Optional[str]
     filter_tags: List[str]
 
 

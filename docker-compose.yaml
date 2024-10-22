@@ -10,16 +10,29 @@ services:
       - no-new-privileges:true
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:7
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
   api:
     build: .
     depends_on:
       - db
+      - redis
     environment:
       ENVIRONMENT: dev
       INFISICAL_ADDRESS: ${INFISICAL_ADDRESS}
       INFISICAL_TOKEN: ${INFISICAL_TOKEN}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8000:80"
 
 volumes:
   postgres-data:
+  redis-data:

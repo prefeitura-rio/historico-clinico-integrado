@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse,JSONResponse
 
 from app import config
 from app.models import User
@@ -13,6 +13,10 @@ from app.types.pydantic_models import Token, Enable2FA
 from app.utils import authenticate_user, generate_user_token, read_bq
 from app.security import TwoFactorAuth
 from app.dependencies import assert_user_is_active
+from app.enums import LoginErrorEnum
+from app.types.errors import (
+    AuthenticationErrorModel
+)
 from app.config import (
     BIGQUERY_ERGON_TABLE_ID,
 )
@@ -20,24 +24,34 @@ from app.config import (
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
 
-@router.post("/token")
+@router.post(
+    "/token",
+    response_model=Token,
+    responses={
+        401: {"model": AuthenticationErrorModel}
+    }
+)
 async def login_without_2fa(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
 
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+        return JSONResponse(
+            status_code=401,
+            content={
+                "message": "Incorrect Username or Password",
+                "type": LoginErrorEnum.BAD_CREDENTIALS,
+            },
         )
 
     if user.is_2fa_required:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="2FA required. Use the /2fa/login/ endpoint",
-            headers={"WWW-Authenticate": "Bearer"},
+        return JSONResponse(
+            status_code=401,
+            content={
+                "message": "2FA required. Use the /2fa/login/ endpoint",
+                "type": LoginErrorEnum.REQUIRE_2FA,
+            },
         )
 
     return {
@@ -47,32 +61,48 @@ async def login_without_2fa(
     }
 
 
-@router.post("/2fa/is-2fa-active/")
+@router.post(
+    "/2fa/is-2fa-active/",
+    response_model=bool,
+    responses={
+        401: {"model": AuthenticationErrorModel}
+    },
+)
 async def is_2fa_active(
     form_data: LoginForm,
 ) -> bool:
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+        return JSONResponse(
+            status_code=401,
+            content={
+                "message": "Incorrect Username or Password",
+                "type": LoginErrorEnum.BAD_CREDENTIALS,
+            },
         )
 
     return user.is_2fa_activated
 
 
-@router.post("/2fa/login/")
+@router.post(
+    "/2fa/login/",
+    response_model=Token,
+    responses={
+        401: {"model": AuthenticationErrorModel}
+    }
+)
 async def login_with_2fa(
     form_data: LoginFormWith2FA,
 ) -> Token:
 
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+        return JSONResponse(
+            status_code=401,
+            content={
+                "message": "Incorrect Username or Password",
+                "type": LoginErrorEnum.BAD_CREDENTIALS,
+            },
         )
 
     # ----------------------------------------
@@ -83,10 +113,12 @@ async def login_with_2fa(
 
     is_valid = two_factor_auth.verify_totp_code(form_data.totp_code)
     if not is_valid:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect OTP",
-            headers={"WWW-Authenticate": "Bearer"},
+        return JSONResponse(
+            status_code=401,
+            content={
+                "message": "Incorrect OTP",
+                "type": LoginErrorEnum.BAD_OTP,
+            },
         )
     if not user.is_2fa_activated:
         user.is_2fa_activated = True
@@ -106,10 +138,12 @@ async def login_with_2fa(
         )
         # If has ERGON register and is an inactive employee: Unauthorized
         if len(ergon_register) > 0 and ergon_register[0].get("status_ativo", False) is False:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User is not an active employee",
-                headers={"WWW-Authenticate": "Bearer"},
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "message": "User is not an active employee",
+                    "type": LoginErrorEnum.INACTIVE_EMPLOYEE,
+                },
             )
 
     return {
@@ -119,7 +153,13 @@ async def login_with_2fa(
     }
 
 
-@router.post("/2fa/enable/")
+@router.post(
+    "/2fa/enable/",
+    response_model=Enable2FA,
+    responses={
+        400: {"model": str}
+    }
+)
 async def enable_2fa(
     current_user: Annotated[User, Depends(assert_user_is_active)],
 ) -> Enable2FA:
@@ -135,7 +175,15 @@ async def enable_2fa(
     return {"secret_key": two_factor_auth.secret_key}
 
 
-@router.post("/2fa/generate-qrcode/")
+@router.post(
+    "/2fa/generate-qrcode/",
+    response_model=bytes,
+    responses={
+        400: {"model": str},
+        401: {"model": AuthenticationErrorModel},
+        404: {"model": str}
+    }
+)
 async def generate_qrcode(
     form_data: LoginForm,
 ) -> bytes:
