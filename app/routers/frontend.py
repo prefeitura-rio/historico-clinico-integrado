@@ -172,7 +172,7 @@ async def get_metadata(_: Annotated[User, Depends(assert_user_is_active)]) -> di
             {"tag": "HOSPITAL", "description": "Hospital"},
             {"tag": "CENTRO SAUDE ESCOLA", "description": "Centro Saúde Escola"},
             {"tag": "UPA", "description": "UPA"},
-            {"tag": "CCO", "description": "CCO"},
+            {"tag": "CCO", "description": "Centro Carioca do Olho"},
             {"tag": "MATERNIDADE", "description": "Maternidade"},
             {"tag": "CER", "description": "CER"},
             {"tag": "POLICLINICA", "description": "Policlínica"},
