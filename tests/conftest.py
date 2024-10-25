@@ -4,6 +4,7 @@ import pytest
 import random
 from httpx import AsyncClient
 from tortoise import Tortoise
+from asgi_lifespan import LifespanManager
 
 import scripts.database_init_table
 import scripts.create_user
@@ -36,8 +37,9 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 async def client():
-    async with AsyncClient(app=app, base_url="http://test") as client_object:
-        yield client_object
+    async with LifespanManager(app):
+        async with AsyncClient(app=app, base_url="http://test") as client_object:
+            yield client_object
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -19,19 +19,16 @@ BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID = getenv_or_action(
 )
 BIGQUERY_ERGON_TABLE_ID = getenv_or_action("BIGQUERY_ERGON_TABLE_ID", action="raise")
 
-# Redis
-REDIS_HOST = getenv_or_action("REDIS_HOST", action="ignore")
-REDIS_PASSWORD = getenv_or_action("REDIS_PASSWORD", action="ignore")
-REDIS_PORT = getenv_or_action("REDIS_PORT", action="ignore")
-if REDIS_PORT:
-    REDIS_PORT = int(REDIS_PORT)
-
 # JWT configuration
 JWT_SECRET_KEY = getenv_or_action("JWT_SECRET_KEY", default=token_bytes(32).hex())
 JWT_ALGORITHM = getenv_or_action("JWT_ALGORITHM", default="HS256")
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
     getenv_or_action("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", default="30")
 )
+
+# Request Limit Configuration
+REQUEST_LIMIT_MAX = int(getenv_or_action("REQUEST_LIMIT_MAX", action="raise"))
+REQUEST_LIMIT_WINDOW_SIZE = int(getenv_or_action("REQUEST_LIMIT_WINDOW_SIZE", action="raise"))
 
 # Timezone configuration
 TIMEZONE = "America/Sao_Paulo"

@@ -5,13 +5,11 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from tortoise.contrib.fastapi import register_tortoise
 
 from app import config
-from app.db import TORTOISE_ORM
+from app.lifespan import api_lifespan
 from app.routers import auth, entities_raw, frontend, misc
 from app.utils import prepare_gcp_credential
-
 
 logger.remove()
 logger.add(sys.stdout, level=config.LOG_LEVEL)
@@ -27,7 +25,8 @@ logger.debug("Preparing GCP credentials")
 prepare_gcp_credential()
 
 app = FastAPI(
-    title="Unificador de Prontuários - SMSRio",
+    title="Histórico Clínico Integrado - SMSRIO",
+    lifespan=api_lifespan
 )
 
 logger.debug("Configuring CORS with the following settings:")
@@ -51,10 +50,3 @@ app.include_router(entities_raw.router)
 app.include_router(auth.router)
 app.include_router(frontend.router)
 app.include_router(misc.router)
-
-register_tortoise(
-    app,
-    config=TORTOISE_ORM,
-    generate_schemas=False,
-    add_exception_handlers=True,
-)
