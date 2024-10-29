@@ -18,6 +18,10 @@ class LoginErrorEnum(str, Enum):
     INACTIVE_EMPLOYEE = "inactive_employee"
     REQUIRE_2FA = "require_2fa"
 
+class AcceptTermsEnum(str, Enum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+
 
 class AccessErrorEnum(str, Enum):
     NOT_FOUND = "NOT_FOUND"
