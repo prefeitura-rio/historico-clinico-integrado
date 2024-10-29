@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import datetime
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request
 from fastapi_limiter.depends import RateLimiter
@@ -45,6 +46,7 @@ async def get_user_info(
         "role": user.role.job_title if user.role else None,
         "email": user.email,
         "username": user.username,
+        "is_use_terms_accepted": user.is_use_terms_accepted,
         "cpf": cpf,
     }
 
@@ -148,6 +150,24 @@ async def get_patient_encounters(
         return results
     else:
         return []
+
+
+@router_request(
+    method="POST",
+    router=router,
+    path="/user/accept-terms/",
+    response_model=bool,
+)
+async def accept_use_terms(
+    user: Annotated[User, Depends(assert_user_is_active)],
+    request: Request,
+) -> List[Encounter]:
+
+    user.is_use_terms_accepted = True
+    user.use_terms_accepted_at = datetime.datetime.now()
+    await user.save()
+
+    return user
 
 
 @router.get("/patient/filter_tags")
