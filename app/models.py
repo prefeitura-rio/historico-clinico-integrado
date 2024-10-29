@@ -41,6 +41,9 @@ class User(Model):
     is_2fa_required = fields.BooleanField(default=False)
     is_2fa_activated = fields.BooleanField(default=False)
     is_ergon_validation_required = fields.BooleanField(default=False)
+    # Terms of use
+    is_use_terms_accepted = fields.BooleanField(default=False)
+    use_terms_accepted_at = fields.DatetimeField(null=True)
     # Metadata
     is_active = fields.BooleanField(default=True)
     is_superuser = fields.BooleanField(default=False)
