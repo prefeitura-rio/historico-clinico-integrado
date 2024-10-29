@@ -3,7 +3,8 @@ from pydantic import BaseModel
 
 from app.enums import (
     LoginErrorEnum,
-    AccessErrorEnum
+    AccessErrorEnum,
+    AcceptTermsEnum
 )
 
 
@@ -15,3 +16,8 @@ class AuthenticationErrorModel(BaseModel):
 class AccessErrorModel(BaseModel):
     message: str
     type: AccessErrorEnum
+
+
+class TermAcceptanceErrorModel(BaseModel):
+    message: str
+    type: AcceptTermsEnum
