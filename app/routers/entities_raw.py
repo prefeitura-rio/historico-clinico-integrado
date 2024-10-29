@@ -26,7 +26,6 @@ async def create_raw_data(
     entity_name: Literal["patientrecords", "patientconditions", "encounter"],
     _: Annotated[User, Depends(assert_user_has_pipeline_write_permition)],
     raw_data: RawDataListModel,
-    upload_to_datalake: bool = True,
 ) -> BulkInsertOutputModel:
 
     records = raw_data.dict().get("data_list")
@@ -56,18 +55,19 @@ async def create_raw_data(
             system=data_source.system.value,
             entity=entity_name
         )
-        if upload_to_datalake and formatter:
-            uploader = DatalakeUploader(
-                dump_mode="append",
-                force_unique_file_name=True,
+        if not formatter:
+            return HTMLResponse(
+                status_code=500,
+                content=f"Formatter not found for {entity_name} and {data_source.cnes}"
             )
-            for config, dataframe in apply_formatter(records, formatter).items():
-                uploader.upload(
-                    dataframe=dataframe,
-                    **convert_model_config_to_dict(config)
-                )
-            datalake_status['success'] = True
-            datalake_status['message'] = "Data uploaded to Datalake"
+        for config, dataframe in apply_formatter(records, formatter).items():
+            uploader = DatalakeUploader()
+            uploader.upload(
+                dataframe=dataframe,
+                config=convert_model_config_to_dict(config)
+            )
+        datalake_status['success'] = True
+        datalake_status['message'] = "Data uploaded to Datalake"
     except WrongFormatException as e:
         return HTMLResponse(status_code=400, content=f"Invalid Format: {e}")
     except Exception as e:
