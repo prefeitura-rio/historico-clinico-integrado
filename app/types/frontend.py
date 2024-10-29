@@ -78,6 +78,7 @@ class UserInfo(BaseModel):
     name: Optional[str]
     cpf: Optional[str]
     username: Optional[str]
+    is_use_terms_accepted: Optional[bool]
     email: Optional[str]
     role: Optional[str]
 
