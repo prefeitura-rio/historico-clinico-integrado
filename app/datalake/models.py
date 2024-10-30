@@ -108,7 +108,7 @@ class SMSRioPaciente(BaseModel):
 
     class Config:
         dataset_id = "brutos_plataforma_smsrio"
-        table_id = "paciente_cadastro_eventos"
+        table_id = "_paciente_eventos"
         biglake_table = False
         time_partition_column = "datalake_loaded_at"
 
@@ -200,7 +200,7 @@ class VitacarePaciente(BaseModel):
 
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
-        table_id = "paciente_eventos"
+        table_id = "_paciente_eventos"
         biglake_table = False
         time_partition_column = "datalake_loaded_at"
 
@@ -243,6 +243,6 @@ class VitacareAtendimento(BaseModel):
 
     class Config:
         dataset_id = "brutos_prontuario_vitacare"
-        table_id = "atendimento_eventos"
+        table_id = "_atendimento_eventos"
         biglake_table = False
         time_partition_column = "datalake_loaded_at"
