@@ -5,7 +5,7 @@ import shutil
 import base64
 from typing import Optional
 from google.cloud import bigquery
-
+from asyncify import asyncify
 import pandas as pd
 import basedosdados as bd
 
@@ -145,7 +145,7 @@ class DatalakeUploader:
                 )
         logger.info("Data uploaded to BigQuery")
 
-    def _upload_as_biglake(
+    async def _upload_as_biglake(
         self,
         dataframe: pd.DataFrame,
         dataset_id: str,
@@ -213,7 +213,7 @@ class DatalakeUploader:
         finally:
             shutil.rmtree(upload_folder)
 
-    def _upload_as_native_table(
+    async def _upload_as_native_table(
         self,
         dataframe: pd.DataFrame,
         dataset_id: str,
@@ -274,12 +274,13 @@ class DatalakeUploader:
             job_config=bigquery.LoadJobConfig(**job_config_params),
             num_retries=5,
         )
-        job = client.get_job(job_result.result().job_id)
+        result = await asyncify(job_result.result)()
+        job = client.get_job(result.job_id)
 
         return job.state == "DONE"
 
-    def upload(self, dataframe: pd.DataFrame, config: dict) -> None:
+    async def upload(self, dataframe: pd.DataFrame, config: dict) -> None:
         if config["biglake_table"]:
-            self._upload_as_biglake(dataframe, **config)
+            await self._upload_as_biglake(dataframe, **config)
         else:
-            self._upload_as_native_table(dataframe, **config)
+            await self._upload_as_native_table(dataframe, **config)

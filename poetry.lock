@@ -55,6 +55,17 @@ files = [
 typing_extensions = ">=3.7.2"
 
 [[package]]
+name = "annotated-types"
+version = "0.7.0"
+description = "Reusable constraint types to use with typing.Annotated"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "annotated_types-0.7.0-py3-none-any.whl", hash = "sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53"},
+    {file = "annotated_types-0.7.0.tar.gz", hash = "sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89"},
+]
+
+[[package]]
 name = "anyio"
 version = "4.3.0"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
@@ -112,6 +123,21 @@ files = [
 
 [package.dependencies]
 anyio = ">=3.4.0,<5.0"
+
+[[package]]
+name = "asyncify"
+version = "0.10.0"
+description = "sync 2 async"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "asyncify-0.10.0-py3-none-any.whl", hash = "sha256:9e2bbf1f88ec8a2238b1ff2690c98c1710db967abdc50e51b64b4b22a03a38f3"},
+    {file = "asyncify-0.10.0.tar.gz", hash = "sha256:548f7bf14e418bc6b37fa5b1384d76a007c4f8704022c521951f081fdf3efead"},
+]
+
+[package.dependencies]
+funkify = ">=0.4.0"
+xtyping = ">=0.5.0"
 
 [[package]]
 name = "asyncpg"
@@ -687,6 +713,17 @@ files = [
 mccabe = ">=0.7.0,<0.8.0"
 pycodestyle = ">=2.11.0,<2.12.0"
 pyflakes = ">=3.1.0,<3.2.0"
+
+[[package]]
+name = "funkify"
+version = "0.4.5"
+description = "Funkify modules so that they are callable"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "funkify-0.4.5-py3-none-any.whl", hash = "sha256:43f1e6c27263468a60ba560dfc13e6e4df57aa75376438a62f741ffc7c83cdfe"},
+    {file = "funkify-0.4.5.tar.gz", hash = "sha256:42df845f4afa63e0e66239a986d26b6572ab0b7ad600d7d6365d44d8a0cff3d5"},
+]
 
 [[package]]
 name = "google-api-core"
@@ -2913,7 +2950,22 @@ files = [
 [package.extras]
 dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 
+[[package]]
+name = "xtyping"
+version = "0.8.2"
+description = "xtyping = typing + typing_extensions"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "xtyping-0.8.2-py3-none-any.whl", hash = "sha256:9c80bbf5bcc9aa4ec5d5ad4b05c1778ac5312476a7169502e79f31eedbf77590"},
+    {file = "xtyping-0.8.2.tar.gz", hash = "sha256:219d14d2782d986e86d7310e4190701e2b521f158350cf9b5afc0f0c793cb98f"},
+]
+
+[package.dependencies]
+annotated-types = ">=0.5.0"
+typing-extensions = ">=4.4.0"
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "3e4740d0388a7b40649aae504d6922357306084c7b6a5caeb1a2afba94c01d74"
+content-hash = "f7d6eabcb4f3b42549234e5c9b1c52987d3cda99fc546a740d4ae3e333a476c2"

@@ -62,7 +62,7 @@ async def create_raw_data(
             )
         for config, dataframe in apply_formatter(records, formatter).items():
             uploader = DatalakeUploader()
-            uploader.upload(
+            await uploader.upload(
                 dataframe=dataframe,
                 config=convert_model_config_to_dict(config)
             )

@@ -37,6 +37,7 @@ fastapi-simple-rate-limiter = "^0.0.4"
 fastapi-limiter = "^0.1.6"
 asgi-lifespan = "^2.1.0"
 google-cloud-bigquery = "^3.26.0"
+asyncify = "^0.10.0"
 
 
 [tool.poetry.group.dev.dependencies]
