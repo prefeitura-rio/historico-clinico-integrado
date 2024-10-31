@@ -221,6 +221,7 @@ class DatalakeUploader:
         create_disposition: str = "CREATE_IF_NEEDED",
         write_disposition: str = "WRITE_APPEND",
         source_format: str = "PARQUET",
+        **kwargs,
     ) -> None:
         """
         Uploads a pandas DataFrame to a Google BigQuery table as a native table.
