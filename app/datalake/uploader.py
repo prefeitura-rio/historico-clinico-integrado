@@ -11,6 +11,7 @@ import basedosdados as bd
 
 from loguru import logger
 
+from app.datalake.utils import generate_bigquery_schema
 
 class DatalakeUploader:
 
@@ -256,9 +257,15 @@ class DatalakeUploader:
                 raise ValueError(
                     f"Partition column '{date_partition_column}' not found in DataFrame columns"
                 )
+            
+            dataframe["data_particao"] = pd.to_datetime(dataframe[date_partition_column])
             job_config_params["time_partitioning"] = bigquery.TimePartitioning(
                 type_=bigquery.TimePartitioningType.DAY,
-                field=date_partition_column
+                field="data_particao"
+            )
+            job_config_params["schema"]=generate_bigquery_schema(
+                dataframe,
+                datetime_as="DATE"
             )
 
         job_result = client.load_table_from_dataframe(
