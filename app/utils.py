@@ -198,7 +198,7 @@ async def validate_user_access_to_patient_data(user: User, cpf: str) -> tuple[bo
     user_permition_filter = user.role.permition.filter_clause.format(
         user_cpf=user.cpf,
         user_ap=user.data_source.ap,
-        user_cnes=user.data_source,
+        user_cnes=user.data_source.cnes,
     )
 
     # Build the query
