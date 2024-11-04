@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import datetime
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request
 from fastapi_limiter.depends import RateLimiter
+from fastapi.responses import JSONResponse
 
 from app.decorators import router_request
 from app.dependencies import assert_user_is_active, assert_cpf_is_valid
@@ -13,6 +15,7 @@ from app.types.frontend import (
     Encounter,
     UserInfo,
 )
+from app.types.errors import AcceptTermsEnum
 from app.utils import read_bq, validate_user_access_to_patient_data
 from app.config import (
     BIGQUERY_PROJECT,
@@ -23,7 +26,8 @@ from app.config import (
     REQUEST_LIMIT_WINDOW_SIZE,
 )
 from app.types.errors import (
-    AccessErrorModel
+    AccessErrorModel,
+    TermAcceptanceErrorModel
 )
 
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
@@ -45,8 +49,44 @@ async def get_user_info(
         "role": user.role.job_title if user.role else None,
         "email": user.email,
         "username": user.username,
+        "is_use_terms_accepted": user.is_use_terms_accepted,
         "cpf": cpf,
     }
+
+
+@router_request(
+    method="POST",
+    router=router,
+    path="/user/accept-terms/",
+    response_model=TermAcceptanceErrorModel,
+    responses={
+        500: {"model": TermAcceptanceErrorModel},
+    },
+)
+async def accept_use_terms(
+    user: Annotated[User, Depends(assert_user_is_active)],
+    request: Request,
+) -> TermAcceptanceErrorModel:
+
+    try:
+        user.is_use_terms_accepted = True
+        user.use_terms_accepted_at = datetime.datetime.now()
+        await user.save()
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Success",
+                "type": AcceptTermsEnum.SUCCESS,
+            },
+        )
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "message": "Patient not found",
+                "type": AcceptTermsEnum.FAILURE,
+            },
+        )
 
 
 @router_request(
