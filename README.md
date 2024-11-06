@@ -1,6 +1,6 @@
 # Histórico Clínico Integrado (HCI)
 - Responsável de Infraestrutura: Gabriel Milan (Escritório de Dados)
-- Administrador: Pedro Marques (SMS)
+- Administrador: Pedro Marques (DIT@SMS)
 
 ## O que é o HCI
 - O HCI tem como objetivo integrar os dados de saúde municipais de diferentes unidades de saúde, seja da atenção primária, hospitalar, etc.
