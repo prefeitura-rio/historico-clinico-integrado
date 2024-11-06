@@ -128,6 +128,7 @@ async def login_with_2fa(
     # Validate access status in ERGON database
     # ----------------------------------------
     if user.is_ergon_validation_required:
+        is_active_employee = False
         ergon_register = await read_bq(
             f"""
             SELECT *
@@ -136,8 +137,17 @@ async def login_with_2fa(
             """,
             from_file="/tmp/credentials.json",
         )
-        # If has ERGON register and is an inactive employee: Unauthorized
-        if len(ergon_register) > 0 and ergon_register[0].get("status_ativo", False) is False:
+        # If has no ERGON register: Unauthorized
+        if len(ergon_register) == 0:
+            is_active_employee = False
+        # If has ERGON register and status_ativo is false: Unauthorized
+        elif ergon_register[0].get("status_ativo", False) is False:
+            is_active_employee = False
+        # If has ERGON register and status_ativo is true: Unauthorized
+        else:
+            is_active_employee = True
+
+        if not is_active_employee:
             return JSONResponse(
                 status_code=401,
                 content={
