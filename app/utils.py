@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import base64
+from typing import Optional, Tuple
 import jwt
 
 from google.cloud import bigquery
@@ -16,10 +17,12 @@ from passlib.context import CryptContext
 
 from app import config
 from app.models import User
-from app.enums import AccessErrorEnum
+from app.security import TwoFactorAuth
+from app.enums import AccessErrorEnum, LoginStatusEnum
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
+    BIGQUERY_ERGON_TABLE_ID,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -43,7 +46,34 @@ def generate_user_token(user: User) -> str:
     return access_token
 
 
-async def authenticate_user(username: str, password: str) -> User:
+async def employee_verify(user: User) -> bool:
+    if not user.is_ergon_validation_required:
+        return True
+        
+    ergon_register = await read_bq(
+        f"""SELECT * FROM {BIGQUERY_ERGON_TABLE_ID} WHERE cpf_particao = {user.cpf}""",
+        from_file="/tmp/credentials.json",
+    )
+    if len(ergon_register) == 0:
+        return False
+    elif ergon_register[0].get("status_ativo", False) is False:
+        return False
+    else:
+        return True
+
+
+async def totp_verify(user: User, totp_code: str) -> bool:    
+    secret_key = await TwoFactorAuth.get_or_create_secret_key(user)
+    two_factor_auth = TwoFactorAuth(user, secret_key)
+
+    return two_factor_auth.verify_totp_code(totp_code)
+
+
+async def authenticate_user(
+    username: str,
+    password: str,
+    totp_code: Optional[str] = None
+) -> Tuple[User, bool, str]:
     """Authenticate a user.
 
     Args:
@@ -54,11 +84,49 @@ async def authenticate_user(username: str, password: str) -> User:
         User: The authenticated user.
     """
     user = await User.get_or_none(username=username).prefetch_related("role")
+
+    # USER EXISTS
     if not user:
-        return None
-    if not password_verify(password, user.password):
-        return None
-    return user
+        return {
+            "user": None,
+            "status": LoginStatusEnum.USER_NOT_FOUND, 
+        }
+    
+    # CORRECT PASSWORD
+    is_password_correct = password_verify(password, user.password)
+    if not is_password_correct:
+        return {
+            "user": None,
+            "status": LoginStatusEnum.BAD_CREDENTIALS, 
+        }
+    
+    # ERGON VALIDATION
+    is_employee = await employee_verify(user)
+    if not is_employee:
+        return {
+            "user": user,
+            "status": LoginStatusEnum.INACTIVE_EMPLOYEE, 
+        }
+    
+    # 2FA TOTP SENT
+    if user.is_2fa_required and not totp_code:
+        return {
+            "user": user,
+            "status": LoginStatusEnum.REQUIRE_2FA, 
+        }
+    
+    # 2FA TOTP VALIDATION
+    is_2fa_valid = await totp_verify(user, totp_code)
+    if not is_2fa_valid:
+        return {
+            "user": user,
+            "status": LoginStatusEnum.BAD_OTP, 
+        }
+    
+    return {
+        "user": user,
+        "status": LoginStatusEnum.SUCCESS,
+    }
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):

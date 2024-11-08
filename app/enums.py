@@ -12,11 +12,14 @@ class PermitionEnum(str, Enum):
     HCI_FULL_PERMITION = "full_permition"
 
 
-class LoginErrorEnum(str, Enum):
-    BAD_CREDENTIALS = "bad_credentials"
-    BAD_OTP = "bad_otp"
-    INACTIVE_EMPLOYEE = "inactive_employee"
-    REQUIRE_2FA = "require_2fa"
+class LoginStatusEnum(str, Enum):
+    USER_NOT_FOUND = "user_not_found"       # User don't exist in the DB
+    BAD_CREDENTIALS = "bad_credentials"     # User exist but the password is wrong
+    REQUIRE_2FA = "require_2fa"             # User exist and the password is correct, but 2FA is required
+    BAD_OTP = "bad_otp"                     # User exist and the password is correct, but the OTP is wrong
+    INACTIVE_EMPLOYEE = "inactive_employee" # User exist but is not an active employee
+    SUCCESS = "success"                     # User exist, password and OTP are correct
+
 
 class AcceptTermsEnum(str, Enum):
     SUCCESS = "success"
