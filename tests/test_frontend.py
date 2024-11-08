@@ -7,7 +7,7 @@ sys.path.insert(0, "../")
 
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
-async def test_login(
+async def test_login_without_2fa(
     client: AsyncClient,
     test_password: str,
 ):
