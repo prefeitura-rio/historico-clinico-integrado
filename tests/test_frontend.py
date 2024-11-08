@@ -7,6 +7,21 @@ sys.path.insert(0, "../")
 
 @pytest.mark.anyio
 @pytest.mark.run(order=1)
+async def test_login_without_2fa(
+    client: AsyncClient,
+    test_password: str,
+):
+    response = await client.post(
+        "/auth/token",
+        headers={"content-type": "application/x-www-form-urlencoded"},
+        data={"username": "frontend", "password": test_password},
+    )
+
+    assert response.status_code == 200
+
+
+@pytest.mark.anyio
+@pytest.mark.run(order=1)
 async def test_patientheader(
     client: AsyncClient,
     token_frontend: str,

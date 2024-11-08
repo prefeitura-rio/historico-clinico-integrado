@@ -5,20 +5,17 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import StreamingResponse,JSONResponse
+from loguru import logger
 
 from app import config
-from app.models import User
 from app.types.frontend import LoginFormWith2FA, LoginForm
-from app.types.pydantic_models import Token, Enable2FA
-from app.utils import authenticate_user, generate_user_token, read_bq
+from app.types.pydantic_models import Token
+from app.utils import authenticate_user, generate_user_token
 from app.security import TwoFactorAuth
 from app.dependencies import assert_user_is_active
-from app.enums import LoginErrorEnum
+from app.enums import LoginStatusEnum
 from app.types.errors import (
     AuthenticationErrorModel
-)
-from app.config import (
-    BIGQUERY_ERGON_TABLE_ID,
 )
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -35,27 +32,20 @@ async def login_without_2fa(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
 
-    user = await authenticate_user(form_data.username, form_data.password)
-    if not user:
-        return JSONResponse(
-            status_code=401,
-            content={
-                "message": "Incorrect Username or Password",
-                "type": LoginErrorEnum.BAD_CREDENTIALS,
-            },
-        )
+    login_result = await authenticate_user(form_data.username, form_data.password)
+    logger.info(f"login_result: {login_result['status']}")
 
-    if user.is_2fa_required:
+    if login_result['status'] != LoginStatusEnum.SUCCESS:
         return JSONResponse(
             status_code=401,
             content={
-                "message": "2FA required. Use the /2fa/login/ endpoint",
-                "type": LoginErrorEnum.REQUIRE_2FA,
+                "message": "Something went wrong",
+                "type": login_result['status'],
             },
         )
 
     return {
-        "access_token": generate_user_token(user),
+        "access_token": generate_user_token(login_result['user']),
         "token_type": "bearer",
         "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
     }
@@ -71,17 +61,23 @@ async def login_without_2fa(
 async def is_2fa_active(
     form_data: LoginForm,
 ) -> bool:
-    user = await authenticate_user(form_data.username, form_data.password)
-    if not user:
+    login_result = await authenticate_user(form_data.username, form_data.password)
+    logger.info(f"login_result: {login_result['status']}")
+
+    if login_result['status'] in [
+        LoginStatusEnum.USER_NOT_FOUND,
+        LoginStatusEnum.BAD_CREDENTIALS,
+        LoginStatusEnum.INACTIVE_EMPLOYEE,
+    ]:
         return JSONResponse(
             status_code=401,
             content={
-                "message": "Incorrect Username or Password",
-                "type": LoginErrorEnum.BAD_CREDENTIALS,
+                "message": "Something went wrong",
+                "type": login_result['status'],
             },
         )
 
-    return user.is_2fa_activated
+    return login_result['user'].is_2fa_activated
 
 
 @router.post(
@@ -95,94 +91,30 @@ async def login_with_2fa(
     form_data: LoginFormWith2FA,
 ) -> Token:
 
-    user = await authenticate_user(form_data.username, form_data.password)
-    if not user:
+    login_result = await authenticate_user(
+        form_data.username,
+        form_data.password,
+        form_data.totp_code,
+    )
+    logger.info(f"login_result: {login_result['status']}")
+
+    if login_result['status'] == LoginStatusEnum.SUCCESS:
+        login_result['user'].is_2fa_activated = True
+        await login_result['user'].save()
+
+        return {
+            "access_token": generate_user_token(login_result['user']),
+            "token_type": "bearer",
+            "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
+        }
+    else:
         return JSONResponse(
             status_code=401,
             content={
-                "message": "Incorrect Username or Password",
-                "type": LoginErrorEnum.BAD_CREDENTIALS,
+                "message": "Something went wrong",
+                "type": login_result['status'],
             },
         )
-
-    # ----------------------------------------
-    # 2FA Verification
-    # ----------------------------------------
-    secret_key = await TwoFactorAuth.get_or_create_secret_key(user)
-    two_factor_auth = TwoFactorAuth(user, secret_key)
-
-    is_valid = two_factor_auth.verify_totp_code(form_data.totp_code)
-    if not is_valid:
-        return JSONResponse(
-            status_code=401,
-            content={
-                "message": "Incorrect OTP",
-                "type": LoginErrorEnum.BAD_OTP,
-            },
-        )
-    if not user.is_2fa_activated:
-        user.is_2fa_activated = True
-        await user.save()
-
-    # ----------------------------------------
-    # Validate access status in ERGON database
-    # ----------------------------------------
-    if user.is_ergon_validation_required:
-        is_active_employee = False
-        ergon_register = await read_bq(
-            f"""
-            SELECT *
-            FROM {BIGQUERY_ERGON_TABLE_ID}
-            WHERE cpf_particao = {user.cpf}
-            """,
-            from_file="/tmp/credentials.json",
-        )
-        # If has no ERGON register: Unauthorized
-        if len(ergon_register) == 0:
-            is_active_employee = False
-        # If has ERGON register and status_ativo is false: Unauthorized
-        elif ergon_register[0].get("status_ativo", False) is False:
-            is_active_employee = False
-        # If has ERGON register and status_ativo is true: Unauthorized
-        else:
-            is_active_employee = True
-
-        if not is_active_employee:
-            return JSONResponse(
-                status_code=401,
-                content={
-                    "message": "User is not an active employee",
-                    "type": LoginErrorEnum.INACTIVE_EMPLOYEE,
-                },
-            )
-
-    return {
-        "access_token": generate_user_token(user),
-        "token_type": "bearer",
-        "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
-    }
-
-
-@router.post(
-    "/2fa/enable/",
-    response_model=Enable2FA,
-    responses={
-        400: {"model": str}
-    }
-)
-async def enable_2fa(
-    current_user: Annotated[User, Depends(assert_user_is_active)],
-) -> Enable2FA:
-    if current_user.is_2fa_activated:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="2FA already enabled",
-        )
-
-    secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user)
-    two_factor_auth = TwoFactorAuth(current_user, secret_key)
-
-    return {"secret_key": two_factor_auth.secret_key}
 
 
 @router.post(
@@ -197,22 +129,31 @@ async def enable_2fa(
 async def generate_qrcode(
     form_data: LoginForm,
 ) -> bytes:
-    current_user = await authenticate_user(form_data.username, form_data.password)
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+    login_result = await authenticate_user(form_data.username, form_data.password)
+    logger.info(f"login_result: {login_result['status']}")
+
+
+    if login_result['status'] in [
+        LoginStatusEnum.USER_NOT_FOUND,
+        LoginStatusEnum.BAD_CREDENTIALS,
+        LoginStatusEnum.INACTIVE_EMPLOYEE,
+    ]:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "message": "Something went wrong",
+                "type": login_result['status'],
+            },
         )
 
-    if current_user.is_2fa_activated:
+    if login_result['user'].is_2fa_activated:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="2FA already activated using QR Code",
         )
 
-    secret_key = await TwoFactorAuth.get_or_create_secret_key(current_user)
-    two_factor_auth = TwoFactorAuth(current_user, secret_key)
+    secret_key = await TwoFactorAuth.get_or_create_secret_key(login_result['user'])
+    two_factor_auth = TwoFactorAuth(login_result['user'], secret_key)
 
     qr_code = two_factor_auth.qr_code
     if qr_code is None:
