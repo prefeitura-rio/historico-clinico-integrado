@@ -49,7 +49,7 @@ def generate_user_token(user: User) -> str:
 async def employee_verify(user: User) -> bool:
     if not user.is_ergon_validation_required:
         return True
-        
+
     ergon_register = await read_bq(
         f"""SELECT * FROM {BIGQUERY_ERGON_TABLE_ID} WHERE cpf_particao = {user.cpf}""",
         from_file="/tmp/credentials.json",
@@ -65,7 +65,7 @@ async def employee_verify(user: User) -> bool:
 async def totp_verify(user: User, totp_code: str) -> bool:
     if user.is_2fa_required is False:
         return True
-    
+
     secret_key = await TwoFactorAuth.get_or_create_secret_key(user)
     two_factor_auth = TwoFactorAuth(user, secret_key)
 
@@ -92,41 +92,41 @@ async def authenticate_user(
     if not user:
         return {
             "user": None,
-            "status": LoginStatusEnum.USER_NOT_FOUND, 
+            "status": LoginStatusEnum.USER_NOT_FOUND,
         }
-    
+
     # CORRECT PASSWORD
     is_password_correct = password_verify(password, user.password)
     if not is_password_correct:
         return {
             "user": None,
-            "status": LoginStatusEnum.BAD_CREDENTIALS, 
+            "status": LoginStatusEnum.BAD_CREDENTIALS,
         }
-    
+
     # ERGON VALIDATION
     is_employee = await employee_verify(user)
     if not is_employee:
         return {
             "user": user,
-            "status": LoginStatusEnum.INACTIVE_EMPLOYEE, 
+            "status": LoginStatusEnum.INACTIVE_EMPLOYEE,
         }
-    
+
     # 2FA TOTP SENT
     if user.is_2fa_required and not totp_code:
         return {
             "user": user,
-            "status": LoginStatusEnum.REQUIRE_2FA, 
+            "status": LoginStatusEnum.REQUIRE_2FA,
         }
-    
+
     # 2FA TOTP VALIDATION
     if user.is_2fa_required and totp_code:
         is_2fa_valid = await totp_verify(user, totp_code)
         if not is_2fa_valid:
             return {
                 "user": user,
-                "status": LoginStatusEnum.BAD_OTP, 
+                "status": LoginStatusEnum.BAD_OTP,
             }
-    
+
     return {
         "user": user,
         "status": LoginStatusEnum.SUCCESS,

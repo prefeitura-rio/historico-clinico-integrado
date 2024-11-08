@@ -76,7 +76,7 @@ async def is_2fa_active(
                 "type": login_result['status'],
             },
         )
-    
+
     return login_result['user'].is_2fa_activated
 
 
@@ -92,12 +92,12 @@ async def login_with_2fa(
 ) -> Token:
 
     login_result = await authenticate_user(
-        form_data.username, 
+        form_data.username,
         form_data.password,
         form_data.totp_code,
     )
     logger.info(f"login_result: {login_result['status']}")
-    
+
     if login_result['status'] == LoginStatusEnum.SUCCESS:
         login_result['user'].is_2fa_activated = True
         await login_result['user'].save()
@@ -132,7 +132,7 @@ async def generate_qrcode(
     login_result = await authenticate_user(form_data.username, form_data.password)
     logger.info(f"login_result: {login_result['status']}")
 
-    
+
     if login_result['status'] in [
         LoginStatusEnum.USER_NOT_FOUND,
         LoginStatusEnum.BAD_CREDENTIALS,
