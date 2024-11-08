@@ -62,7 +62,10 @@ async def employee_verify(user: User) -> bool:
         return True
 
 
-async def totp_verify(user: User, totp_code: str) -> bool:    
+async def totp_verify(user: User, totp_code: str) -> bool:
+    if user.is_2fa_required is False:
+        return True
+    
     secret_key = await TwoFactorAuth.get_or_create_secret_key(user)
     two_factor_auth = TwoFactorAuth(user, secret_key)
 
@@ -116,12 +119,13 @@ async def authenticate_user(
         }
     
     # 2FA TOTP VALIDATION
-    is_2fa_valid = await totp_verify(user, totp_code)
-    if not is_2fa_valid:
-        return {
-            "user": user,
-            "status": LoginStatusEnum.BAD_OTP, 
-        }
+    if user.is_2fa_required and totp_code:
+        is_2fa_valid = await totp_verify(user, totp_code)
+        if not is_2fa_valid:
+            return {
+                "user": user,
+                "status": LoginStatusEnum.BAD_OTP, 
+            }
     
     return {
         "user": user,

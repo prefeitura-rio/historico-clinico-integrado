@@ -5,20 +5,17 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import StreamingResponse,JSONResponse
+from loguru import logger
 
 from app import config
-from app.models import User
 from app.types.frontend import LoginFormWith2FA, LoginForm
-from app.types.pydantic_models import Token, Enable2FA
-from app.utils import authenticate_user, generate_user_token, read_bq
+from app.types.pydantic_models import Token
+from app.utils import authenticate_user, generate_user_token
 from app.security import TwoFactorAuth
 from app.dependencies import assert_user_is_active
 from app.enums import LoginStatusEnum
 from app.types.errors import (
     AuthenticationErrorModel
-)
-from app.config import (
-    BIGQUERY_ERGON_TABLE_ID,
 )
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -36,6 +33,7 @@ async def login_without_2fa(
 ) -> Token:
 
     login_result = await authenticate_user(form_data.username, form_data.password)
+    logger.info(f"login_result: {login_result['status']}")
 
     if login_result['status'] != LoginStatusEnum.SUCCESS:
         return JSONResponse(
@@ -64,6 +62,7 @@ async def is_2fa_active(
     form_data: LoginForm,
 ) -> bool:
     login_result = await authenticate_user(form_data.username, form_data.password)
+    logger.info(f"login_result: {login_result['status']}")
 
     if login_result['status'] in [
         LoginStatusEnum.USER_NOT_FOUND,
@@ -97,6 +96,7 @@ async def login_with_2fa(
         form_data.password,
         form_data.totp_code,
     )
+    logger.info(f"login_result: {login_result['status']}")
     
     if login_result['status'] == LoginStatusEnum.SUCCESS:
         login_result['user'].is_2fa_activated = True
@@ -130,6 +130,7 @@ async def generate_qrcode(
     form_data: LoginForm,
 ) -> bytes:
     login_result = await authenticate_user(form_data.username, form_data.password)
+    logger.info(f"login_result: {login_result['status']}")
 
     
     if login_result['status'] in [
