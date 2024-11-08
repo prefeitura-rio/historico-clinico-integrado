@@ -72,6 +72,8 @@ class Encounter(BaseModel):
     clinical_exams: List[ClinicalExam]
     procedures: Optional[str]
     filter_tags: List[str]
+    prescription: Optional[str]
+    provider: Optional[str]
 
 
 class UserInfo(BaseModel):

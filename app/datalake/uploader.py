@@ -257,7 +257,7 @@ class DatalakeUploader:
                 raise ValueError(
                     f"Partition column '{date_partition_column}' not found in DataFrame columns"
                 )
-            
+
             dataframe["data_particao"] = pd.to_datetime(dataframe[date_partition_column])
             job_config_params["time_partitioning"] = bigquery.TimePartitioning(
                 type_=bigquery.TimePartitioningType.DAY,
