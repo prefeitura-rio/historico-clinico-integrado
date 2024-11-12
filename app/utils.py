@@ -54,11 +54,11 @@ async def employee_verify(user: User) -> bool:
         f"""SELECT * FROM {BIGQUERY_ERGON_TABLE_ID} WHERE cpf_particao = {user.cpf}""",
         from_file="/tmp/credentials.json",
     )
-    if len(ergon_register) == 0 or len(ergon_register["dados"]) == 0:
+    if len(ergon_register) == 0 or len(ergon_register[0]["dados"]) == 0:
         logger.info(f"User {user.username} not found in Ergon")
         return False
 
-    dado = ergon_register['dados'][0]
+    dado = ergon_register[0]['dados'][0]
     if dado["status_ativo"] is False:
         return False
     else:
