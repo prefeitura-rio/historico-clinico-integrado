@@ -1,4 +1,4 @@
-# Histórico Clínico Integrado (HCI)
+# Histórico Clínico Integrado
 - Responsável de Infraestrutura: Gabriel Milan (Escritório de Dados)
 - Administrador: Pedro Marques (DIT@SMS)
 
