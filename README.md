@@ -25,7 +25,7 @@ INFISICAL_TOKEN=<Token do projeto>
 - Garanta instalação do poetry e pyenv com python 3.11
 - Crie um ambiente poetry *dentro do projeto*.
    - Por padrão, o poetry armazena os arquivos do ambiente fora do projeto.
-   - Neste caso, para facilitar a configuração da depuração, iremos configurar para salvar os arquivos em uma pasta `.venv` na raiz do projeto.
+   - Neste caso, para facilitar a configuração da depuração, iremos configurar para salvar os arquivos em uma pasta `.venv` na raiz do projeto
    - Rode: `poetry config virtualenvs.in-project true`
    - Se já tinha um ambiente, remova com `poetry env remove <ID_DO_ENV>` e inicie um novo ambiente
 - Na pasta raiz, rode `poetry shell` e depois `poetry install`
