@@ -73,6 +73,7 @@ class Encounter(BaseModel):
     procedures: Optional[str]
     filter_tags: List[str]
     prescription: Optional[str]
+    medicines_administered: Optional[str]
     provider: Optional[str]
 
 
