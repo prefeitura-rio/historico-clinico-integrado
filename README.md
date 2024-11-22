@@ -13,7 +13,7 @@
    - Banco de Dados (PostgreSQL)
 
 ## Preparação de Ambiente
-- Comece rodando `pre-commit install` na raiz do repositório
+- Comece rodando `pre-commit install` na raiz do repositório.
 - O projeto da API está na pasta `api/` e esta será a pasta raiz de **agora em diante**
 - Dentro da raiz, crie um arquivo `.env` e nele defina duas variáveis de ambiente:
    - Peça ao Administrador mais informações sobre seus valores.
