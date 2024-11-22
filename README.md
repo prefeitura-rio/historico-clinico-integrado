@@ -2,7 +2,7 @@
 - Responsável de Infraestrutura: Gabriel Milan (Escritório de Dados)
 - Administrador: Pedro Marques (SMS)
 
-## O que é o HCI
+## O que é o HCI?
 - O HCI tem como objetivo integrar os dados de saúde municipais de diferentes unidades de saúde, seja da atenção primária, hospitalar, etc.
 - Existem diferentes tipos de prontuário sendo utilizados nas unidades, o que faz com que existem diferentes fonte, com formatos e dados diferentes.
 - Precisamos ler dados destas fontes e integrá-los em um formato consistente, que atenda os profissionais da área de saúde.
