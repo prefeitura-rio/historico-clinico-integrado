@@ -9,8 +9,8 @@
 
 ### O Sistema
 - O HCI possui dois componentes:
-   - API (desenvolvida em Fast API, Python 3.11)
-   - Banco de Dados (PostgreSQL)
+   - API (desenvolvida em Fast API, Python 3.11); e
+   - Banco de Dados (PostgreSQL).
 
 ## Preparação de Ambiente
 - Comece rodando `pre-commit install` na raiz do repositório.
