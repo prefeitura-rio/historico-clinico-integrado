@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from app.models import User
 from app.security import TwoFactorAuth
 

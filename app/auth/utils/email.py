@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from loguru import logger
 import requests
 import redis
@@ -36,7 +37,7 @@ async def validate_code(user: User, code: str):
     if stored_code.decode() == code:
         redis_client.delete(f"2fa:{user.id}")
         return True
-    
+
     return False
 
 

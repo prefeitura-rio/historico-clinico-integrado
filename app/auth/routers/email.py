@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -40,7 +41,7 @@ async def generate_2fa_code(
                 type=result['status']
             ),
         )
-    
+
     code = generate_2fa_code()
     store_code(result['user'], code)
 
