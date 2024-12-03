@@ -26,6 +26,12 @@ JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
     getenv_or_action("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", default="30")
 )
 
+# 2FA
+DATARELAY_URL = getenv_or_action("DATARELAY_URL", action="raise")
+DATARELAY_MAILMAN_TOKEN = getenv_or_action("DATARELAY_MAILMAN_TOKEN", action="raise")
+EMAIL_SUBJECT_2FA = getenv_or_action("EMAIL_SUBJECT_2FA", action="raise")
+EMAIL_BODY_2FA = getenv_or_action("EMAIL_BODY_2FA", action="raise")
+
 # Request Limit Configuration
 REQUEST_LIMIT_MAX = int(getenv_or_action("REQUEST_LIMIT_MAX", action="raise"))
 REQUEST_LIMIT_WINDOW_SIZE = int(getenv_or_action("REQUEST_LIMIT_WINDOW_SIZE", action="raise"))
