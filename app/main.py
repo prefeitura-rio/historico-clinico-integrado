@@ -8,7 +8,8 @@ from loguru import logger
 
 from app import config
 from app.lifespan import api_lifespan
-from app.routers import auth, entities_raw, frontend, misc
+from app.routers import entities_raw, frontend, misc
+from app.auth import routers as auth
 from app.utils import prepare_gcp_credential
 
 logger.remove()

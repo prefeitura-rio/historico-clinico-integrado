@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 from typing import Optional, Tuple
 import jwt
 
-from app.config import config
+from app import config
 from app.models import User
 from app.enums import LoginStatusEnum
-from app.security import employee_verify, totp_verify
+from app.utils import employee_verify
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

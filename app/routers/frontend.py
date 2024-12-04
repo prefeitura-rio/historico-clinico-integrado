@@ -26,10 +26,9 @@ from app.config import (
     REQUEST_LIMIT_WINDOW_SIZE,
 )
 from app.types.errors import (
-    AccessErrorModel,
     TermAcceptanceErrorModel
 )
-
+from app.auth.types import AccessErrorModel
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
 
