@@ -8,6 +8,7 @@ from loguru import logger
 
 from app import config
 from app.types import Token
+from app.security import TwoFactorAuth
 from app.auth.types import LoginForm, LoginFormWith2FA
 from app.auth.enums import LoginStatusEnum
 from app.auth.types import AuthenticationErrorModel
@@ -58,9 +59,9 @@ async def login_with_2fa(
 ) -> Token:
 
     login_result = await authenticate_user(
-        form_data.username,
-        form_data.password,
-        form_data.code,
+        username=form_data.username,
+        password=form_data.password,
+        code=form_data.code,
         verificator=validate_code,
     )
     logger.info(f"login_result: {login_result['status']}")
