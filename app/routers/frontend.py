@@ -107,37 +107,36 @@ async def search_patient(
     cns: str = None,
     name: str = None,
 ) -> List[dict]:
-    if sum([bool(cpf), bool(cns), bool(name)]) != 1:
+    filled_param_count = sum([bool(cpf), bool(cns), bool(name)])
+    if filled_param_count == 0:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "One of the parameters is required"},
+        )
+    elif filled_param_count > 1:
         return JSONResponse(
             status_code=400,
             content={"message": "Only one of the parameters is allowed"},
         )
 
-    validation_job = validate_user_access_to_patient_data(user, cpf)
-
     clause = ""
     if cns:
-        clause = f"cns = {cns}"
+        clause = f"valor_cns = {cns}"
     elif cpf:
         clause = f"cpf_particao = {cpf}"
     elif name:
-        clause = f"nome_completo = '{name}'"
+        clause = f"search(nome,'{name}')"
 
-    results_job = read_bq(
+    results = await read_bq(
         f"""
-        SELECT nome_completo, cns, cpf
+        SELECT nome, valor_cns as cns, cpf
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
         WHERE {clause}
         """,
         from_file="/tmp/credentials.json",
     )
-    validation, results = await asyncio.gather(validation_job, results_job)
 
-    has_access, response = validation
-    if not has_access:
-        return response
-
-    return results.to_dict(orient="records")
+    return results
 
 @router_request(
     method="GET",
