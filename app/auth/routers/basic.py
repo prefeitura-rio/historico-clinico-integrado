@@ -3,19 +3,19 @@ import io
 from typing import Annotated
 
 from fastapi import Depends
+from fastapi import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app import config
-from app.auth.routers import router
-from app.types.pydantic_models import Token
-from app.utils import authenticate_user, generate_user_token
-from app.enums import LoginStatusEnum
-from app.types.errors import (
-    AuthenticationErrorModel
-)
+from app.types import Token
+from app.auth.utils import authenticate_user, generate_user_token
+from app.auth.enums import LoginStatusEnum
+from app.auth.types import AuthenticationErrorModel
 
+
+router = APIRouter(prefix="/basic")
 
 @router.post(
     "/token",

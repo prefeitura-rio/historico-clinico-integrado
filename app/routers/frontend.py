@@ -20,6 +20,7 @@ from app.utils import read_bq, validate_user_access_to_patient_data
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
+    BIGQUERY_PATIENT_SEARCH_TABLE_ID,
     BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
     BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID,
     REQUEST_LIMIT_MAX,
@@ -87,6 +88,56 @@ async def accept_use_terms(
             },
         )
 
+
+@router_request(
+    method="GET",
+    router=router,
+    path="/patient/search",
+    response_model=List[dict],
+    responses={
+        404: {"model": AccessErrorModel},
+        403: {"model": AccessErrorModel}
+    },
+    dependencies=[Depends(RateLimiter(times=REQUEST_LIMIT_MAX, seconds=REQUEST_LIMIT_WINDOW_SIZE))]
+)
+async def search_patient(
+    request: Request,
+    user: Annotated[User, Depends(assert_user_is_active)],
+    cpf: str = None,
+    cns: str = None,
+    name: str = None,
+) -> List[dict]:
+    if sum([bool(cpf), bool(cns), bool(name)]) != 1:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "Only one of the parameters is allowed"},
+        )
+
+    validation_job = validate_user_access_to_patient_data(user, cpf)
+
+    clause = ""
+    if cns:
+        clause = f"cns = {cns}"
+    elif cpf:
+        clause = f"cpf_particao = {cpf}"
+    elif name:
+        clause = f"nome_completo = '{name}'"
+
+    results_job = read_bq(
+        f"""
+        SELECT nome_completo, cns, cpf
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
+        WHERE {clause}
+        """,
+        from_file="/tmp/credentials.json",
+    )
+    validation, results = await asyncio.gather(validation_job, results_job)
+
+    has_access, response = validation
+    if not has_access:
+        return response
+    
+    return results.to_dict(orient="records")
 
 @router_request(
     method="GET",

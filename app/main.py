@@ -7,10 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app import config
+from app.utils import prepare_gcp_credential
 from app.lifespan import api_lifespan
 from app.routers import entities_raw, frontend, misc
-from app.auth import routers as auth
-from app.utils import prepare_gcp_credential
+from app.auth.routers import router as auth_routers
 
 logger.remove()
 logger.add(sys.stdout, level=config.LOG_LEVEL)
@@ -47,7 +47,7 @@ app.add_middleware(
     allow_credentials=config.ALLOW_CREDENTIALS,
 )
 
+app.include_router(auth_routers)
 app.include_router(entities_raw.router)
-app.include_router(auth.router)
 app.include_router(frontend.router)
 app.include_router(misc.router)

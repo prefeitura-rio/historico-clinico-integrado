@@ -31,7 +31,7 @@ def store_code(user: User, code: str, ttl: int = 300):
 async def validate_code(user: User, code: str):
     stored_code = redis_client.get(f"2fa:{user.id}")
 
-    if store_code is None:
+    if stored_code is None:
         return False
 
     if stored_code.decode() == code:
@@ -48,11 +48,12 @@ def generate_2fa_code():
 async def send_2fa_email_to_user(user: User, code: str):
     logger.info(f"Sending 2FA code {code} to {user.email}")
     response = requests.post(
-        url=DATARELAY_URL,
+        url=f"{DATARELAY_URL}data/mailman",
         headers={
-            'x-api-key': DATARELAY_MAILMAN_TOKEN
+            'x-api-key': DATARELAY_MAILMAN_TOKEN,
+            'Content-Type': 'application/json'
         },
-        body={
+        json={
             "to_addresses": [user.email],
             "cc_addresses": [],
             "bcc_addresses": [],

@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-from fastapi import HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app import config
+from app.types import Token
 from app.auth.enums import LoginStatusEnum
-from app.types.pydantic_models import Token
 from app.auth.types import AuthenticationErrorModel
-from app.auth.routers import router
 from app.auth.types import LoginForm, LoginFormWith2FA
 from app.auth.utils import (
     authenticate_user,
@@ -21,25 +20,31 @@ from app.auth.utils.email import (
 )
 
 
+router = APIRouter(prefix="/email")
+
+
 @router.post(
-    "/2fa/email/generate-code/",
+    "/generate-code/",
     response_model=dict,
     responses={
         401: {"model": AuthenticationErrorModel}
     }
 )
-async def generate_2fa_code(
+async def gen_2fa_code(
     login: LoginForm
 ):
     result = await authenticate_user(login.username, login.password)
 
-    if result['status'] != LoginStatusEnum.SUCCESS:
+    if result['status'] not in [
+        LoginStatusEnum.SUCCESS,
+        LoginStatusEnum.REQUIRE_2FA
+    ]:
         raise JSONResponse(
             status_code=401,
-            content=AuthenticationErrorModel(
-                message="Something went wrong",
-                type=result['status']
-            ),
+            content={
+                "message": "Something went wrong",
+                "type": result['status']
+            },
         )
 
     code = generate_2fa_code()
@@ -52,12 +57,12 @@ async def generate_2fa_code(
         success = False
 
     if not success:
-        raise JSONResponse(
+        return JSONResponse(
             status_code=401,
-            content=AuthenticationErrorModel(
-                message="Error during the email queueing process. Try Again.",
-                type=LoginStatusEnum.EMAIL_QUEUE_ERROR
-            ),
+            content={
+                "message": "Error during the email queueing process. Try Again.",
+                "type": LoginStatusEnum.EMAIL_QUEUE_ERROR
+            },
         )
 
     return {
@@ -66,7 +71,7 @@ async def generate_2fa_code(
 
 
 @router.post(
-    "/2fa/email/login/",
+    "/login/",
     response_model=Token,
     responses={
         401: {"model": AuthenticationErrorModel}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 import jwt
 
 from app import config
@@ -33,7 +33,7 @@ def generate_user_token(user: User) -> str:
 async def authenticate_user(
     username: str,
     password: str,
-    verificator, # Async Callable[User, str]
+    verificator: Callable[[User, str], bool] = None,
     code: Optional[str] = None,
 ) -> Tuple[User, bool, str]:
     user = await User.get_or_none(username=username).prefetch_related("role")
@@ -62,25 +62,23 @@ async def authenticate_user(
         }
 
     # 2FA TOTP SENT
-    if user.is_2fa_required and not code:
+    if (not code) or (not verificator):
         return {
             "user": user,
             "status": LoginStatusEnum.REQUIRE_2FA,
         }
 
-    # 2FA TOTP VALIDATION
-    if user.is_2fa_required and code:
-        is_2fa_valid = await verificator(user, code)
-        if not is_2fa_valid:
-            return {
-                "user": user,
-                "status": LoginStatusEnum.BAD_OTP,
-            }
-
-    return {
-        "user": user,
-        "status": LoginStatusEnum.SUCCESS,
-    }
+    is_2fa_valid = await verificator(user, code)
+    if not is_2fa_valid:
+        return {
+            "user": user,
+            "status": LoginStatusEnum.BAD_OTP,
+        }
+    else:
+        return {
+            "user": user,
+            "status": LoginStatusEnum.SUCCESS,
+        }
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):

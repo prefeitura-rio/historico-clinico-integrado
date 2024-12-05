@@ -2,24 +2,23 @@
 import io
 
 from fastapi import HTTPException, status
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse,JSONResponse
 from loguru import logger
 
 from app import config
-from app.types.frontend import LoginFormWith2FA, LoginForm
-from app.types.pydantic_models import Token
-from app.security import TwoFactorAuth
-from app.enums import LoginStatusEnum
-from app.types.errors import (
-    AuthenticationErrorModel
-)
-from app.auth.routers import router
+from app.types import Token
+from app.auth.types import LoginForm, LoginFormWith2FA
+from app.auth.enums import LoginStatusEnum
+from app.auth.types import AuthenticationErrorModel
 from app.auth.utils import authenticate_user, generate_user_token
 from app.auth.utils.totp import validate_code
 
 
+router = APIRouter(prefix="/totp")
+
 @router.post(
-    "/2fa/totp/is-2fa-active/",
+    "/is-2fa-active/",
     response_model=bool,
     responses={
         401: {"model": AuthenticationErrorModel}
@@ -48,7 +47,7 @@ async def is_2fa_active(
 
 
 @router.post(
-    "/2fa/totp/login/",
+    "/login/",
     response_model=Token,
     responses={
         401: {"model": AuthenticationErrorModel}
@@ -86,7 +85,7 @@ async def login_with_2fa(
 
 
 @router.post(
-    "/2fa/totp/generate-qrcode/",
+    "/generate-qrcode/",
     response_model=bytes,
     responses={
         400: {"model": str},
