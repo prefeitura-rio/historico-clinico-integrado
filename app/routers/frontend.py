@@ -136,7 +136,7 @@ async def search_patient(
     has_access, response = validation
     if not has_access:
         return response
-    
+
     return results.to_dict(orient="records")
 
 @router_request(
