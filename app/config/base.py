@@ -18,6 +18,7 @@ BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID = getenv_or_action(
     "BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID", action="raise"
 )
 BIGQUERY_ERGON_TABLE_ID = getenv_or_action("BIGQUERY_ERGON_TABLE_ID", action="raise")
+BIGQUERY_PATIENT_SEARCH_TABLE_ID = getenv_or_action("BIGQUERY_PATIENT_SEARCH_TABLE_ID", action="raise")
 
 # JWT configuration
 JWT_SECRET_KEY = getenv_or_action("JWT_SECRET_KEY", default=token_bytes(32).hex())
@@ -25,6 +26,12 @@ JWT_ALGORITHM = getenv_or_action("JWT_ALGORITHM", default="HS256")
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
     getenv_or_action("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", default="30")
 )
+
+# 2FA
+DATARELAY_URL = getenv_or_action("DATARELAY_URL", action="raise")
+DATARELAY_MAILMAN_TOKEN = getenv_or_action("DATARELAY_MAILMAN_TOKEN", action="raise")
+EMAIL_SUBJECT_2FA = getenv_or_action("EMAIL_SUBJECT_2FA", action="raise")
+EMAIL_BODY_2FA = getenv_or_action("EMAIL_BODY_2FA", action="raise")
 
 # Request Limit Configuration
 REQUEST_LIMIT_MAX = int(getenv_or_action("REQUEST_LIMIT_MAX", action="raise"))

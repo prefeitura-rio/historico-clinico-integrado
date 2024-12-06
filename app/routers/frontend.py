@@ -20,16 +20,16 @@ from app.utils import read_bq, validate_user_access_to_patient_data
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
+    BIGQUERY_PATIENT_SEARCH_TABLE_ID,
     BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
     BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID,
     REQUEST_LIMIT_MAX,
     REQUEST_LIMIT_WINDOW_SIZE,
 )
 from app.types.errors import (
-    AccessErrorModel,
     TermAcceptanceErrorModel
 )
-
+from app.auth.types import AccessErrorModel
 router = APIRouter(prefix="/frontend", tags=["Frontend Application"])
 
 
@@ -88,6 +88,55 @@ async def accept_use_terms(
             },
         )
 
+
+@router_request(
+    method="GET",
+    router=router,
+    path="/patient/search",
+    response_model=List[dict],
+    responses={
+        404: {"model": AccessErrorModel},
+        403: {"model": AccessErrorModel}
+    },
+    dependencies=[Depends(RateLimiter(times=REQUEST_LIMIT_MAX, seconds=REQUEST_LIMIT_WINDOW_SIZE))]
+)
+async def search_patient(
+    request: Request,
+    user: Annotated[User, Depends(assert_user_is_active)],
+    cpf: str = None,
+    cns: str = None,
+    name: str = None,
+) -> List[dict]:
+    filled_param_count = sum([bool(cpf), bool(cns), bool(name)])
+    if filled_param_count == 0:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "One of the parameters is required"},
+        )
+    elif filled_param_count > 1:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "Only one of the parameters is allowed"},
+        )
+
+    clause = ""
+    if cns:
+        clause = f"valor_cns = {cns}"
+    elif cpf:
+        clause = f"cpf_particao = {cpf}"
+    elif name:
+        clause = f"search(nome,'{name}')"
+
+    results = await read_bq(
+        f"""
+        SELECT nome, valor_cns as cns, cpf
+        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
+        WHERE {clause}
+        """,
+        from_file="/tmp/credentials.json",
+    )
+
+    return results
 
 @router_request(
     method="GET",

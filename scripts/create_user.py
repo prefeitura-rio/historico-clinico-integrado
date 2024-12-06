@@ -8,7 +8,7 @@ from tortoise.exceptions import IntegrityError
 from app.config import getenv_or_action
 from app.db import TORTOISE_ORM
 from app.models import User
-from app.utils import password_hash
+from app.auth.utils import password_hash
 
 
 async def create_admin_user():

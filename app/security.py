@@ -8,7 +8,7 @@ import qrcode
 from pyotp import TOTP
 
 from app.models import User
-from app.types.pydantic_models import User2FA as UserPydantic
+from app.auth.types.totp import User2FA as UserPydantic
 
 
 class TwoFactorAuth:

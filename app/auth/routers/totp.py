@@ -1,58 +1,25 @@
 # -*- coding: utf-8 -*-
 import io
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import HTTPException, status
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse,JSONResponse
 from loguru import logger
 
 from app import config
-from app.types.frontend import LoginFormWith2FA, LoginForm
-from app.types.pydantic_models import Token
-from app.utils import authenticate_user, generate_user_token
+from app.types import Token
 from app.security import TwoFactorAuth
-from app.dependencies import assert_user_is_active
-from app.enums import LoginStatusEnum
-from app.types.errors import (
-    AuthenticationErrorModel
-)
-
-router = APIRouter(prefix="/auth", tags=["Autenticação"])
+from app.auth.types import LoginForm, LoginFormWith2FA
+from app.auth.enums import LoginStatusEnum
+from app.auth.types import AuthenticationErrorModel
+from app.auth.utils import authenticate_user, generate_user_token
+from app.auth.utils.totp import validate_code
 
 
-@router.post(
-    "/token",
-    response_model=Token,
-    responses={
-        401: {"model": AuthenticationErrorModel}
-    }
-)
-async def login_without_2fa(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-) -> Token:
-
-    login_result = await authenticate_user(form_data.username, form_data.password)
-    logger.info(f"login_result: {login_result['status']}")
-
-    if login_result['status'] != LoginStatusEnum.SUCCESS:
-        return JSONResponse(
-            status_code=401,
-            content={
-                "message": "Something went wrong",
-                "type": login_result['status'],
-            },
-        )
-
-    return {
-        "access_token": generate_user_token(login_result['user']),
-        "token_type": "bearer",
-        "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
-    }
-
+router = APIRouter(prefix="/totp")
 
 @router.post(
-    "/2fa/is-2fa-active/",
+    "/is-2fa-active/",
     response_model=bool,
     responses={
         401: {"model": AuthenticationErrorModel}
@@ -61,7 +28,7 @@ async def login_without_2fa(
 async def is_2fa_active(
     form_data: LoginForm,
 ) -> bool:
-    login_result = await authenticate_user(form_data.username, form_data.password)
+    login_result = await authenticate_user(form_data.username,form_data.password)
     logger.info(f"login_result: {login_result['status']}")
 
     if login_result['status'] in [
@@ -81,7 +48,7 @@ async def is_2fa_active(
 
 
 @router.post(
-    "/2fa/login/",
+    "/login/",
     response_model=Token,
     responses={
         401: {"model": AuthenticationErrorModel}
@@ -92,9 +59,10 @@ async def login_with_2fa(
 ) -> Token:
 
     login_result = await authenticate_user(
-        form_data.username,
-        form_data.password,
-        form_data.totp_code,
+        username=form_data.username,
+        password=form_data.password,
+        code=form_data.code,
+        verificator=validate_code,
     )
     logger.info(f"login_result: {login_result['status']}")
 
@@ -118,7 +86,7 @@ async def login_with_2fa(
 
 
 @router.post(
-    "/2fa/generate-qrcode/",
+    "/generate-qrcode/",
     response_model=bytes,
     responses={
         400: {"model": str},

@@ -10,7 +10,7 @@ from jwt import PyJWTError
 
 from app import config
 from app.models import User
-from app.types.pydantic_models import TokenData
+from app.types import TokenData
 from app.validators import CPFValidator
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
