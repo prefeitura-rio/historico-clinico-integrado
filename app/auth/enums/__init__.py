@@ -10,3 +10,4 @@ class LoginStatusEnum(str, Enum):
     INACTIVE_EMPLOYEE = "inactive_employee" # User exist but is not an active employee
     SUCCESS = "success"                     # User exist, password and OTP are correct
     EMAIL_QUEUE_ERROR = "email_queue_error" # User exist, error in email queueing
+    EMAIL_ANONYMIZATION_ERROR = "email_anonymization_error"  # User exist, error in email anonymization

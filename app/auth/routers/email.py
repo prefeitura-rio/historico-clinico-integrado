@@ -10,13 +10,14 @@ from app.auth.types import AuthenticationErrorModel
 from app.auth.types import LoginForm, LoginFormWith2FA
 from app.auth.utils import (
     authenticate_user,
-    generate_user_token
+    generate_user_token,
 )
 from app.auth.utils.email import (
     generate_2fa_code,
     store_code,
     validate_code,
-    send_2fa_email_to_user
+    send_2fa_email_to_user,
+    anonymize_and_verify_email,
 )
 
 
@@ -64,10 +65,23 @@ async def gen_2fa_code(
                 "type": LoginStatusEnum.EMAIL_QUEUE_ERROR
             },
         )
+    try:
+        anonymized_email = anonymize_and_verify_email(result['user'].email)
 
-    return {
-        "message": "Código enviado com sucesso."
-    }
+        return {
+            "message": "Código enviado com sucesso.",
+            "email": anonymized_email,
+        }
+
+    except ValueError as e:
+        logger.error(f"Error during the email anonymization process. {e}")
+        return JSONResponse(
+            status_code=401,
+            content={
+                "message": "Error during the email anonymization process. Try Again.",
+                "type": LoginStatusEnum.EMAIL_ANONYMIZATION_ERROR
+            },
+        )
 
 
 @router.post(
