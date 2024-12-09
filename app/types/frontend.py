@@ -3,17 +3,6 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 
-class LoginForm(BaseModel):
-    username: str
-    password: str
-
-
-class LoginFormWith2FA(BaseModel):
-    username: str
-    password: str
-    totp_code: str
-
-
 # Clinic Family model
 class FamilyClinic(BaseModel):
     cnes: Optional[str]
