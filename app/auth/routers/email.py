@@ -40,7 +40,7 @@ async def gen_2fa_code(
         LoginStatusEnum.SUCCESS,
         LoginStatusEnum.REQUIRE_2FA
     ]:
-        raise JSONResponse(
+        return JSONResponse(
             status_code=401,
             content={
                 "message": "Something went wrong",
