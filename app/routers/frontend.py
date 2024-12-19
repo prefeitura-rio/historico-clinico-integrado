@@ -121,15 +121,15 @@ async def search_patient(
 
     clause = ""
     if cns:
-        clause = f"valor_cns = {cns}"
+        clause = f"cns_particao = {cns}"
     elif cpf:
-        clause = f"cpf_particao = {cpf}"
+        clause = f"cpf = '{cpf}'"
     elif name:
         clause = f"search(nome,'{name}')"
 
     results = await read_bq(
         f"""
-        SELECT nome, valor_cns as cns, cpf
+        SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
         WHERE {clause}
         """,
