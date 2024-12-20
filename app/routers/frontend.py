@@ -89,16 +89,12 @@ async def accept_use_terms(
         )
 
 
-@router_request(
-    method="GET",
-    router=router,
-    path="/patient/search",
+@router.get("/patient/search",
     response_model=List[dict],
     responses={
         404: {"model": AccessErrorModel},
         403: {"model": AccessErrorModel}
     },
-    dependencies=[Depends(RateLimiter(times=REQUEST_LIMIT_MAX, seconds=REQUEST_LIMIT_WINDOW_SIZE))]
 )
 async def search_patient(
     request: Request,
