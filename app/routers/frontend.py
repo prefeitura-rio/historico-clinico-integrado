@@ -128,6 +128,7 @@ async def search_patient(
         SELECT *
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
         WHERE {clause}
+        ORDER BY nome ASC
         """,
         from_file="/tmp/credentials.json",
     )
