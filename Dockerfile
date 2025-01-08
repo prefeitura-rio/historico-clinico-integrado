@@ -13,7 +13,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Install virtualenv and create a virtual environment
-RUN pip install --no-cache-dir -U poetry && \
+RUN pip install --no-cache-dir -U "poetry<1.8.0" && \
     poetry config virtualenvs.create false
 
 # Copy the poetry.lock and pyproject.toml files
