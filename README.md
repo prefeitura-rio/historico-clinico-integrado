@@ -54,4 +54,4 @@ INFISICAL_TOKEN=<Token do projeto>
 
 ## Testes Automatizados
 - Os testes estão definidos na pasta `api/tests/`
-- Para rodar os testes basta executar no terminal `pytest --disable-warnings`
+- Para rodar os testes basta executar no terminal `pytest --disable-warnings`.
