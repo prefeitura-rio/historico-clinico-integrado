@@ -123,7 +123,7 @@ async def search_patient(
     elif cpf:
         clause = f"cpf = '{cpf}'"
     elif name:
-        name_cleaned = ''.join(c for c in unicodedata.normalize('NFD', name) if unicodedata.category(c)
+        name_cleaned = ''.join(c for c in unicodedata.normalize('NFD', name) if unicodedata.category(c) != 'Mn')
         clause = f"search(nome,'{name_cleaned}')"
 
     results = await read_bq(
