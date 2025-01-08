@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -U poetry && \
 # Copy the poetry.lock and pyproject.toml files
 # and install dependencies
 COPY poetry.lock pyproject.toml ./
-RUN poetry install --no-dev --no-interaction --no-ansi
+RUN poetry install --no-interaction --no-ansi
 
 # Install dos2unix
 RUN apt-get update && apt-get install -y dos2unix
