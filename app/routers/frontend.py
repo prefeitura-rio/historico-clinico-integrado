@@ -104,7 +104,7 @@ async def search_patient(
     cns: str = None,
     name: str = None,
 ) -> List[dict]:
-    
+
     filled_param_count = sum([bool(cpf), bool(cns), bool(name)])
     if filled_param_count == 0:
         return JSONResponse(
