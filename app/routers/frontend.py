@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import unicodedata
 import datetime
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request
@@ -103,6 +104,7 @@ async def search_patient(
     cns: str = None,
     name: str = None,
 ) -> List[dict]:
+    
     filled_param_count = sum([bool(cpf), bool(cns), bool(name)])
     if filled_param_count == 0:
         return JSONResponse(
@@ -121,7 +123,8 @@ async def search_patient(
     elif cpf:
         clause = f"cpf = '{cpf}'"
     elif name:
-        clause = f"search(nome,'{name}')"
+        name_cleaned = ''.join(c for c in unicodedata.normalize('NFD', name) if unicodedata.category(c)
+        clause = f"search(nome,'{name_cleaned}')"
 
     results = await read_bq(
         f"""
