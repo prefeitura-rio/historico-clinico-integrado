@@ -44,6 +44,11 @@ class Procedure(BaseModel):
     description: Optional[str]
     notes: Optional[str]
 
+
+class AdministedMedicines(BaseModel):
+    name: Optional[str]
+    prescription_date: Optional[str]
+
 # Medical Visit model
 class Encounter(BaseModel):
     entry_datetime: str
@@ -62,9 +67,8 @@ class Encounter(BaseModel):
     procedures: Optional[str]
     filter_tags: List[str]
     prescription: Optional[str]
-    medicines_administered: Optional[str]
+    medicines_administered: Optional[List[AdministedMedicines]]
     provider: Optional[str]
-
 
 class UserInfo(BaseModel):
     name: Optional[str]
