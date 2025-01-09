@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Optional, List
 from pydantic import BaseModel
-
+from datetime import datetime
 
 # Clinic Family model
 class FamilyClinic(BaseModel):
@@ -47,7 +47,7 @@ class Procedure(BaseModel):
 
 class AdministedMedicines(BaseModel):
     name: Optional[str]
-    prescription_date: Optional[str]
+    prescription_date: Optional[datetime]
 
 # Medical Visit model
 class Encounter(BaseModel):
