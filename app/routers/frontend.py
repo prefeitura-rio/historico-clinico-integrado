@@ -131,8 +131,8 @@ async def search_patient(
             LIMIT 1
             """,
             from_file="/tmp/credentials.json",
-        )[0]
-        cpf = result['cpf']
+        )
+        cpf = result[0]['cpf']
 
     # --------------------------------
     # SEARCH BY NAME OR CPF
@@ -143,16 +143,6 @@ async def search_patient(
     elif name:
         name_cleaned = ''.join(c for c in unicodedata.normalize('NFD', name) if unicodedata.category(c) != 'Mn')
         clause = f"search(nome,'{name_cleaned}')"
-
-    results = await read_bq(
-        f"""
-        SELECT
-            cpf
-        FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
-        WHERE {clause}
-        """,
-        from_file="/tmp/credentials.json",
-    )
 
     user_permition_filter = user.role.permition.filter_clause.format(
         user_cpf=user.cpf,
