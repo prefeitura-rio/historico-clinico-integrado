@@ -22,6 +22,7 @@ from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
     BIGQUERY_PATIENT_SEARCH_TABLE_ID,
+    BIGQUERY_PATIENT_INDEX_TABLE_ID,
     BIGQUERY_PATIENT_SUMMARY_TABLE_ID,
     BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID,
     REQUEST_LIMIT_MAX,
@@ -117,24 +118,50 @@ async def search_patient(
             content={"message": "Only one of the parameters is allowed"},
         )
 
-    clause = ""
+    # --------------------------------
+    # INDEX USAGE IN CASE OF CNS SEARCH
+    # --------------------------------
     if cns:
-        clause = f"cns_particao = {cns}"
-    elif cpf:
+        result = await read_bq(
+            f"""
+            SELECT
+                cpf
+            FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_INDEX_TABLE_ID}
+            WHERE cns_particao = {cns}
+            LIMIT 1
+            """,
+            from_file="/tmp/credentials.json",
+        )
+        cpf = result[0]['cpf']
+
+    # --------------------------------
+    # SEARCH BY NAME OR CPF
+    # --------------------------------
+    clause = ""
+    if cpf:
         clause = f"cpf = '{cpf}'"
     elif name:
         name_cleaned = ''.join(c for c in unicodedata.normalize('NFD', name) if unicodedata.category(c) != 'Mn')
         clause = f"search(nome,'{name_cleaned}')"
 
+    user_permition_filter = user.role.permition.filter_clause.format(
+        user_cpf=user.cpf,
+        user_ap=user.data_source.ap,
+        user_cnes=user.data_source.cnes,
+    )
     results = await read_bq(
         f"""
-        SELECT *
+        SELECT
+            * except(exibicao),
+            cast({user_permition_filter} as bool) as is_available
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
         WHERE {clause}
-        ORDER BY nome ASC
+        ORDER BY nome
         """,
         from_file="/tmp/credentials.json",
     )
+
+    results = sorted(results, key=lambda x: x['nome'])
 
     return results
 
