@@ -126,15 +126,24 @@ async def search_patient(
         name_cleaned = ''.join(c for c in unicodedata.normalize('NFD', name) if unicodedata.category(c) != 'Mn')
         clause = f"search(nome,'{name_cleaned}')"
 
+    user_permition_filter = user.role.permition.filter_clause.format(
+        user_cpf=user.cpf,
+        user_ap=user.data_source.ap,
+        user_cnes=user.data_source.cnes,
+    )
+
     results = await read_bq(
         f"""
-        SELECT *
+        SELECT 
+            * except(exibicao),
+            cast({user_permition_filter} as bool) as can_click
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
         WHERE {clause}
-        ORDER BY nome ASC
         """,
         from_file="/tmp/credentials.json",
     )
+
+    results = sorted(results, key=lambda x: x['nome'])
 
     return results
 
