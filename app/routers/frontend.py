@@ -134,7 +134,7 @@ async def search_patient(
 
     results = await read_bq(
         f"""
-        SELECT 
+        SELECT
             * except(exibicao),
             cast({user_permition_filter} as bool) as is_available
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
