@@ -136,7 +136,7 @@ async def search_patient(
         f"""
         SELECT 
             * except(exibicao),
-            cast({user_permition_filter} as bool) as can_click
+            cast({user_permition_filter} as bool) as is_available
         FROM `{BIGQUERY_PROJECT}`.{BIGQUERY_PATIENT_SEARCH_TABLE_ID}
         WHERE {clause}
         """,
