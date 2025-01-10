@@ -133,7 +133,7 @@ async def search_patient(
             from_file="/tmp/credentials.json",
         )[0]
         cpf = result['cpf']
-    
+
     # --------------------------------
     # SEARCH BY NAME OR CPF
     # --------------------------------
