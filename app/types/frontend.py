@@ -49,6 +49,21 @@ class AdministedMedicines(BaseModel):
     name: Optional[str]
     prescription_date: Optional[datetime]
 
+class Measures(BaseModel):
+    height: Optional[float]
+    weight: Optional[float]
+    abdominal_circumference: Optional[float]
+    heart_rate: Optional[float]
+    respiratory_rate: Optional[float]
+    blood_glucose: Optional[float]
+    glycated_hemoglobin: Optional[float]
+    bmi: Optional[float]
+    systolic_pressure: Optional[float]
+    diastolic_pressure: Optional[float]
+    pulse_rate: Optional[float]
+    oxygen_saturation: Optional[float]
+    temperature: Optional[float]
+
 # Medical Visit model
 class Encounter(BaseModel):
     entry_datetime: str
@@ -65,6 +80,7 @@ class Encounter(BaseModel):
     clinical_outcome: Optional[str]
     clinical_exams: List[ClinicalExam]
     procedures: Optional[str]
+    measures: Measures
     filter_tags: List[str]
     prescription: Optional[str]
     medicines_administered: Optional[List[AdministedMedicines]]
