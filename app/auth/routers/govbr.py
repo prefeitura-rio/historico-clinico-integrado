@@ -16,7 +16,6 @@ from app.auth.utils import generate_user_token
 
 router = APIRouter(prefix="/govbr")
 
-
 @router.post(
     "/login/",
     response_model=Token,
