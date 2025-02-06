@@ -40,7 +40,7 @@ async def login_with_govbr(
             data={
                 "grant_type": "authorization_code",
                 "code": form_data.code,
-                "redirect_uri": config.GOVBR_REDIRECT_URI,
+                "redirect_uri": config.GOVBR_REDIRECT_URL,
                 "code_verifier": form_data.code_verifier,
             },
         )
