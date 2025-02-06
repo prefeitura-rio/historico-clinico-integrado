@@ -17,7 +17,6 @@
 - O projeto da API está na pasta `api/` e esta será a pasta raiz de **agora em diante**
 - Dentro da raiz, crie um arquivo `.env` e nele defina duas variáveis de ambiente:
    - Peça ao Administrador mais informações sobre seus valores.
-
 ```
 INFISICAL_ADDRESS=<Endereço do Servidor Infisical>
 INFISICAL_TOKEN=<Token do projeto>
