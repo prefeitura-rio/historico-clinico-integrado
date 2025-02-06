@@ -34,11 +34,18 @@ DATARELAY_MAILMAN_TOKEN = getenv_or_action("DATARELAY_MAILMAN_TOKEN", action="ra
 EMAIL_SUBJECT_2FA = getenv_or_action("EMAIL_SUBJECT_2FA", action="raise")
 EMAIL_BODY_2FA = getenv_or_action("EMAIL_BODY_2FA", action="raise")
 
+# GOVBR
+GOVBR_PROVIDER_URL = getenv_or_action("GOVBR_PROVIDER_URL", action="raise")
+GOVBR_CLIENT_ID = getenv_or_action("GOVBR_CLIENT_ID", action="raise")
+GOVBR_CLIENT_SECRET = getenv_or_action("GOVBR_CLIENT_SECRET", action="raise")
+GOVBR_REDIRECT_URL = getenv_or_action("GOVBR_REDIRECT_URL", action="raise")
+
 # Request Limit Configuration
 REQUEST_LIMIT_MAX = int(getenv_or_action("REQUEST_LIMIT_MAX", action="raise"))
 REQUEST_LIMIT_WINDOW_SIZE = int(getenv_or_action("REQUEST_LIMIT_WINDOW_SIZE", action="raise"))
 
 # Timezone configuration
+
 TIMEZONE = "America/Sao_Paulo"
 
 # Sentry
