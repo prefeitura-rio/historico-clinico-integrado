@@ -70,8 +70,12 @@ def prepare_gcp_credential() -> None:
 
     base64_credential = os.environ["BASEDOSDADOS_CREDENTIALS_PROD"]
 
+    # Create tmp directory if it doesn't exist
+    os.makedirs("/tmp", exist_ok=True)
+
     with open("/tmp/credentials.json", "wb") as f:
         f.write(base64.b64decode(base64_credential))
+
 
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/tmp/credentials.json"
     return

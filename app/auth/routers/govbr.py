@@ -3,6 +3,7 @@ import httpx
 import jwt
 from fastapi import HTTPException
 from fastapi import APIRouter
+import base64
 
 from app import config
 from app.models import User
@@ -30,13 +31,15 @@ async def login_with_govbr(
     # -----------------------------
     # GET THE ACCESS TOKEN
     # -----------------------------
+    authorization_b64 = base64.b64encode(f"{config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}".encode()).decode()
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{config.GOVBR_PROVIDER_URL}/token",
             headers={
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": f"Basic {config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}",
+                "Authorization": f"Basic {authorization_b64}",
             },
+
             data={
                 "grant_type": "authorization_code",
                 "code": form_data.code,
@@ -44,7 +47,15 @@ async def login_with_govbr(
                 "code_verifier": form_data.code_verifier,
             },
         )
-        response.raise_for_status()
+    response_json = response.json()
+    
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=401,
+            detail=f"Erro ao obter o token de acesso: {response_json['error_description']}"
+        )
+
+    access_token = response_json['access_token']
 
     # -----------------------------
     # VALIDATE THE ID_TOKEN
@@ -55,11 +66,19 @@ async def login_with_govbr(
         response = await client.get(
             f"{config.GOVBR_PROVIDER_URL}/jwk",
         )
-        response.raise_for_status()
-    keys = response.json()['keys']
+    response_json = response.json()
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=401, detail="Erro ao obter as chaves do JWK") 
+       
+    key = response_json['keys'][0]
 
     # Validate the id_token
-    payload = jwt.decode(form_data.id_token, keys, algorithms=["RS256"])
+    try:
+        payload = jwt.decode(access_token, key['n'], algorithms=["RS256"])
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
 
     # -----------------------------
     # LOGIN
