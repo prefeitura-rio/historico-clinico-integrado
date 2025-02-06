@@ -26,3 +26,8 @@ class LoginFormWith2FA(BaseModel):
     username: str
     password: str
     code: str
+
+class LoginFormGovbr(BaseModel):
+    code: str
+    state: str
+    code_verifier: str
