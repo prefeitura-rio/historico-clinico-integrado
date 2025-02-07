@@ -5,6 +5,7 @@ import base64
 from fastapi import HTTPException
 from fastapi import APIRouter
 from loguru import logger
+from jwt.algorithms import RSAAlgorithm
 
 from app import config
 from app.models import User
@@ -48,8 +49,9 @@ async def login_with_govbr(
                     "redirect_uri": config.GOVBR_REDIRECT_URL,
                     "code_verifier": form_data.code_verifier,
                 },
+                timeout=10.0,
             )
-    except httpx.ConnectError:
+    except (httpx.ConnectError, httpx.ReadTimeout) as e:
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao conectar com o endpoint de autenticação: {config.GOVBR_PROVIDER_URL}/token"
@@ -69,20 +71,30 @@ async def login_with_govbr(
     # -----------------------------
 
     # Get keys from the jwk endpoint
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            f"{config.GOVBR_PROVIDER_URL}/jwk",
-        )
-    response_json = response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{config.GOVBR_PROVIDER_URL}/jwk", timeout=10.0)
+    except (httpx.ConnectError, httpx.ReadTimeout) as e:
+        logger.error(f"Erro de conexão ao obter JWK: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro ao obter as chaves do JWK")
 
+    response_json = response.json()
     if response.status_code != 200:
         raise HTTPException(status_code=401, detail="Erro ao obter as chaves do JWK") 
-       
-    key = response_json['keys'][0]
+
+    # Extrai a chave pública do JWK
+    try:
+        jwk_key = response_json['keys'][0]  # Pegamos a primeira chave (depende do provedor)
+        public_key = RSAAlgorithm.from_jwk(jwk_key)  # Converte a JWK para RSA
+    except Exception as e:
+        logger.error(f"Erro ao processar a JWK: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro ao processar a chave pública do JWK")
 
     # Validate the id_token
     try:
-        payload = jwt.decode(access_token, key['n'], algorithms=["RS256"])
+        payload = jwt.decode(access_token, public_key, algorithms=["RS256"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
