@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import httpx
 import jwt
+import base64
 from fastapi import HTTPException
 from fastapi import APIRouter
-import base64
+from loguru import logger
 
 from app import config
 from app.models import User
@@ -31,9 +32,12 @@ async def login_with_govbr(
     # GET THE ACCESS TOKEN
     # -----------------------------
     authorization_b64 = base64.b64encode(f"{config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}".encode()).decode()
+    url = f"{config.GOVBR_PROVIDER_URL}/token"
+    logger.info(f"Connecting with GOV.BR to retrieve token: {url}")
+
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            f"{config.GOVBR_PROVIDER_URL}/token",
+            url=url,
             headers={
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Authorization": f"Basic {authorization_b64}",
@@ -47,7 +51,6 @@ async def login_with_govbr(
             },
         )
     response_json = response.json()
-    
     if response.status_code != 200:
         raise HTTPException(
             status_code=401,
