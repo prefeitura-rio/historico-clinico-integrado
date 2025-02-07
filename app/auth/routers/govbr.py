@@ -33,7 +33,8 @@ async def login_with_govbr(
     # -----------------------------
     authorization_b64 = base64.b64encode(f"{config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}".encode()).decode()
     url = f"{config.GOVBR_PROVIDER_URL}/token"
-    logger.info(f"Connecting with GOV.BR to retrieve token: {url}")
+    logger.info(f"Connecting: {url}")
+    logger.info(f"Redirect URL: {config.GOVBR_REDIRECT_URL}")
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
