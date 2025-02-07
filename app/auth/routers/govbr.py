@@ -131,7 +131,7 @@ async def login_with_govbr(
     if not cpf:
         raise HTTPException(status_code=401, detail="CPF não encontrado no token")
 
-    user = await User.objects.get_or_none(cpf=cpf)
+    user = await User.get_or_none(cpf=cpf)
     if not user:
         raise HTTPException(
             status_code=401, detail=f"Usuário com CPF {cpf} não encontrado.")
