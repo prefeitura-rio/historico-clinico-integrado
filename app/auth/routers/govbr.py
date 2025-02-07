@@ -18,6 +18,7 @@ from app.auth.utils import generate_user_token
 
 router = APIRouter(prefix="/govbr")
 
+
 @router.post(
     "/login/",
     response_model=Token,
@@ -28,11 +29,12 @@ router = APIRouter(prefix="/govbr")
 async def login_with_govbr(
     form_data: LoginFormGovbr,
 ) -> Token:
-    
+
     # -----------------------------
     # GET THE ACCESS TOKEN
     # -----------------------------
-    authorization_b64 = base64.b64encode(f"{config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}".encode()).decode()
+    authorization_b64 = base64.b64encode(
+        f"{config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}".encode()).decode()
 
     try:
         async with httpx.AsyncClient() as client:
@@ -56,7 +58,7 @@ async def login_with_govbr(
             status_code=500,
             detail=f"Erro ao conectar com o endpoint de autenticação: {config.GOVBR_PROVIDER_URL}/token"
         )
-    
+
     response_json = response.json()
     if response.status_code != 200:
         raise HTTPException(
@@ -70,6 +72,13 @@ async def login_with_govbr(
     # VALIDATE THE ID_TOKEN
     # -----------------------------
 
+    # Obtém o payload sem validar ainda (para extrair o 'kid')
+    try:
+        unverified_header = jwt.get_unverified_header(access_token)
+        key_id = unverified_header.get("kid")  # Obtém o ID da chave
+    except jwt.DecodeError:
+        raise HTTPException(status_code=401, detail="Token inválido, cabeçalho não pode ser lido")
+
     # Get keys from the jwk endpoint
     try:
         async with httpx.AsyncClient() as client:
@@ -80,43 +89,60 @@ async def login_with_govbr(
 
     response_json = response.json()
     if response.status_code != 200:
-        raise HTTPException(status_code=401, detail="Erro ao obter as chaves do JWK") 
+        raise HTTPException(status_code=401, detail="Erro ao obter as chaves do JWK")
 
-    # Extrai a chave pública do JWK
+    # Escolhe a chave correta pelo 'kid'
+    matching_key = None
+    for jwk_key in response_json['keys']:
+        if jwk_key["kid"] == key_id:
+            matching_key = jwk_key
+            break
+
+    if not matching_key:
+        raise HTTPException(
+            status_code=401, detail="Nenhuma chave correspondente ao token encontrado no JWK")
+
+    # Converte a JWK para chave pública RSA
     try:
-        jwk_key = response_json['keys'][0]  # Pegamos a primeira chave (depende do provedor)
-        public_key = RSAAlgorithm.from_jwk(jwk_key)  # Converte a JWK para RSA
+        public_key = RSAAlgorithm.from_jwk(matching_key)
     except Exception as e:
         logger.error(f"Erro ao processar a JWK: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro ao processar a chave pública do JWK")
 
-    # Validate the id_token
+    # Valida o token com os parâmetros do provedor
     try:
-        payload = jwt.decode(access_token, public_key, algorithms=["RS256"])
+        payload = jwt.decode(
+            access_token,
+            public_key,
+            algorithms=["RS256"],
+            audience=config.GOVBR_CLIENT_ID,  # Garante que o token seja para este cliente
+            issuer=f"{config.GOVBR_PROVIDER_URL}/",  # Valida o emissor do token
+            leeway=30  # Adiciona margem de 30s para evitar problemas de clock skew
+        )
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expirado")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Token inválido")
-
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
 
     # -----------------------------
     # LOGIN
     # -----------------------------
-    name, cpf = payload['name'], payload['sub']
-    user = await User.objects.get_or_none(cpf=cpf)
+    name, cpf = payload.get('name'), payload.get('sub')
+    if not name or not cpf:
+        raise HTTPException(status_code=401, detail="Token inválido, sem nome ou CPF")
 
+    user = await User.objects.get_or_none(cpf=cpf)
     if not user:
-        # TODO: Create a new user
-        raise HTTPException(status_code=401, detail=f"User {name} not found with this CPF {cpf}")
+        raise HTTPException(
+            status_code=401, detail=f"Usuário {name} não encontrado com este CPF {cpf}")
 
     is_employee = await employee_verify(user)
     if not is_employee:
-        raise HTTPException(status_code=401, detail=f"User {name} is not an employee")
+        raise HTTPException(
+            status_code=401, detail=f"Usuário {name} não é um funcionário autorizado")
 
     return {
         "access_token": generate_user_token(user),
         "token_type": "bearer",
         "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
     }
-
-
