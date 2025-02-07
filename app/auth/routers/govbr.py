@@ -32,25 +32,29 @@ async def login_with_govbr(
     # GET THE ACCESS TOKEN
     # -----------------------------
     authorization_b64 = base64.b64encode(f"{config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}".encode()).decode()
-    url = f"{config.GOVBR_PROVIDER_URL}/token"
-    logger.info(f"Connecting: {url}")
-    logger.info(f"Redirect URL: {config.GOVBR_REDIRECT_URL}")
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            url=url,
-            headers={
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": f"Basic {authorization_b64}",
-            },
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url=f"{config.GOVBR_PROVIDER_URL}/token",
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": f"Basic {authorization_b64}",
+                },
 
-            data={
-                "grant_type": "authorization_code",
-                "code": form_data.code,
-                "redirect_uri": config.GOVBR_REDIRECT_URL,
-                "code_verifier": form_data.code_verifier,
-            },
+                data={
+                    "grant_type": "authorization_code",
+                    "code": form_data.code,
+                    "redirect_uri": config.GOVBR_REDIRECT_URL,
+                    "code_verifier": form_data.code_verifier,
+                },
+            )
+    except httpx.ConnectError:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao conectar com o endpoint de autenticação: {config.GOVBR_PROVIDER_URL}/token"
         )
+    
     response_json = response.json()
     if response.status_code != 200:
         raise HTTPException(
