@@ -89,7 +89,7 @@ async def login_with_govbr(
 
     response_json = response.json()
     if response.status_code != 200:
-        raise HTTPException(status_code=401, detail="Erro ao obter as chaves do JWK")
+        raise HTTPException(status_code=500, detail="Erro ao obter as chaves do JWK")
 
     # Escolhe a chave correta pelo 'kid'
     matching_key = None
@@ -100,7 +100,7 @@ async def login_with_govbr(
 
     if not matching_key:
         raise HTTPException(
-            status_code=401, detail="Nenhuma chave correspondente ao token encontrado no JWK")
+            status_code=500, detail="Nenhuma chave correspondente ao token encontrado no JWK")
 
     # Converte a JWK para chave pública RSA
     try:
@@ -120,26 +120,26 @@ async def login_with_govbr(
             leeway=30  # Adiciona margem de 30s para evitar problemas de clock skew
         )
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expirado")
+        raise HTTPException(status_code=500, detail="Token expirado")
     except jwt.InvalidTokenError as e:
-        raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Token inválido: {str(e)}")
 
     # -----------------------------
     # LOGIN
     # -----------------------------
-    name, cpf = payload.get('name'), payload.get('sub')
-    if not name or not cpf:
-        raise HTTPException(status_code=401, detail="Token inválido, sem nome ou CPF")
+    cpf = payload.get('sub')
+    if not cpf:
+        raise HTTPException(status_code=401, detail="CPF não encontrado no token")
 
     user = await User.objects.get_or_none(cpf=cpf)
     if not user:
         raise HTTPException(
-            status_code=401, detail=f"Usuário {name} não encontrado com este CPF {cpf}")
+            status_code=401, detail=f"Usuário com CPF {cpf} não encontrado.")
 
     is_employee = await employee_verify(user)
     if not is_employee:
         raise HTTPException(
-            status_code=401, detail=f"Usuário {name} não é um funcionário autorizado")
+            status_code=401, detail=f"Usuário com CPF {cpf} não é um funcionário autorizado.")
 
     return {
         "access_token": generate_user_token(user),
