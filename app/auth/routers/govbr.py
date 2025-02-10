@@ -2,8 +2,7 @@
 import httpx
 import jwt
 import base64
-from fastapi import HTTPException
-from fastapi import APIRouter
+from fastapi import HTTPException, APIRouter
 from loguru import logger
 from jwt.algorithms import RSAAlgorithm
 
@@ -11,96 +10,80 @@ from app import config
 from app.models import User
 from app.types import Token
 from app.utils import employee_verify
-from app.auth.types import LoginFormGovbr
-from app.auth.types import AuthenticationErrorModel
+from app.auth.types import LoginFormGovbr, AuthenticationErrorModel
 from app.auth.utils import generate_user_token
 
 
 router = APIRouter(prefix="/govbr")
 
+# Configuração do retry
+retry_transport = httpx.RetryTransport(
+    retries=3,  # Número de tentativas
+    backoff_factor=0.5,  # Tempo de espera entre as tentativas (exponencial)
+    status_codes={500, 502, 503, 504},  # Apenas erros do servidor ativam retry
+)
+
+async def fetch_with_retry(method, url, **kwargs):
+    """Executa uma requisição HTTP com retry nativo do httpx."""
+    async with httpx.AsyncClient(transport=retry_transport) as client:
+        try:
+            response = await client.request(method, url, **kwargs)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Erro HTTP {e.response.status_code} ao acessar {url}: {e}")
+            raise HTTPException(status_code=e.response.status_code, detail=f"Erro ao acessar GovBR: {e.response.text}")
+        except httpx.RequestError as e:
+            logger.error(f"Erro na requisição ao GovBR ({url}): {e}")
+            raise HTTPException(status_code=500, detail="Falha na comunicação com GovBR. Tente novamente.")
 
 @router.post(
     "/login/",
     response_model=Token,
-    responses={
-        401: {"model": AuthenticationErrorModel}
-    },
+    responses={401: {"model": AuthenticationErrorModel}},
 )
-async def login_with_govbr(
-    form_data: LoginFormGovbr,
-) -> Token:
-
+async def login_with_govbr(form_data: LoginFormGovbr) -> Token:
     # -----------------------------
     # GET THE ACCESS TOKEN
     # -----------------------------
     authorization_b64 = base64.b64encode(
-        f"{config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}".encode()).decode()
+        f"{config.GOVBR_CLIENT_ID}:{config.GOVBR_CLIENT_SECRET}".encode()
+    ).decode()
 
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                url=f"{config.GOVBR_PROVIDER_URL}/token",
-                headers={
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Authorization": f"Basic {authorization_b64}",
-                },
+    token_url = f"{config.GOVBR_PROVIDER_URL}/token"
+    token_data = {
+        "grant_type": "authorization_code",
+        "code": form_data.code,
+        "redirect_uri": config.GOVBR_REDIRECT_URL,
+        "code_verifier": form_data.code_verifier,
+    }
+    token_headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": f"Basic {authorization_b64}",
+    }
 
-                data={
-                    "grant_type": "authorization_code",
-                    "code": form_data.code,
-                    "redirect_uri": config.GOVBR_REDIRECT_URL,
-                    "code_verifier": form_data.code_verifier,
-                },
-                timeout=10.0,
-            )
-    except (httpx.ConnectError, httpx.ReadTimeout) as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao conectar com o endpoint de autenticação: {config.GOVBR_PROVIDER_URL}/token"
-        )
-
-    response_json = response.json()
-    if response.status_code != 200:
-        raise HTTPException(
-            status_code=401,
-            detail=f"Erro ao obter o token de acesso: {response_json['error_description']}"
-        )
-
-    access_token = response_json['access_token']
+    response_json = await fetch_with_retry("POST", token_url, headers=token_headers, data=token_data, timeout=10.0)
+    access_token = response_json.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Token de acesso não recebido.")
 
     # -----------------------------
     # VALIDATE THE ID_TOKEN
     # -----------------------------
-
-    # Obtém o payload sem validar ainda (para extrair o 'kid')
     try:
         unverified_header = jwt.get_unverified_header(access_token)
-        key_id = unverified_header.get("kid")  # Obtém o ID da chave
+        key_id = unverified_header.get("kid")
     except jwt.DecodeError:
         raise HTTPException(status_code=401, detail="Token inválido, cabeçalho não pode ser lido")
 
-    # Get keys from the jwk endpoint
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{config.GOVBR_PROVIDER_URL}/jwk", timeout=10.0)
-    except (httpx.ConnectError, httpx.ReadTimeout) as e:
-        logger.error(f"Erro de conexão ao obter JWK: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro ao obter as chaves do JWK")
+    # Obtém as chaves JWK do provedor GovBR
+    jwk_url = f"{config.GOVBR_PROVIDER_URL}/jwk"
+    jwk_response = await fetch_with_retry("GET", jwk_url, timeout=10.0)
 
-    response_json = response.json()
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Erro ao obter as chaves do JWK")
-
-    # Escolhe a chave correta pelo 'kid'
-    matching_key = None
-    for jwk_key in response_json['keys']:
-        if jwk_key["kid"] == key_id:
-            matching_key = jwk_key
-            break
-
+    # Encontra a chave correta pelo 'kid'
+    matching_key = next((key for key in jwk_response['keys'] if key["kid"] == key_id), None)
     if not matching_key:
-        raise HTTPException(
-            status_code=500, detail="Nenhuma chave correspondente ao token encontrado no JWK")
+        raise HTTPException(status_code=500, detail="Nenhuma chave correspondente ao token encontrada no JWK")
 
     # Converte a JWK para chave pública RSA
     try:
@@ -109,20 +92,20 @@ async def login_with_govbr(
         logger.error(f"Erro ao processar a JWK: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro ao processar a chave pública do JWK")
 
-    # Valida o token com os parâmetros do provedor
+    # Valida o token
     try:
         payload = jwt.decode(
             access_token,
             public_key,
             algorithms=["RS256"],
-            audience=config.GOVBR_CLIENT_ID,  # Garante que o token seja para este cliente
-            issuer=f"{config.GOVBR_PROVIDER_URL}/",  # Valida o emissor do token
-            leeway=30  # Adiciona margem de 30s para evitar problemas de clock skew
+            audience=config.GOVBR_CLIENT_ID,
+            issuer=f"{config.GOVBR_PROVIDER_URL}/",
+            leeway=30,
         )
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=500, detail="Token expirado")
+        raise HTTPException(status_code=401, detail="Token expirado")
     except jwt.InvalidTokenError as e:
-        raise HTTPException(status_code=500, detail=f"Token inválido: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
 
     # -----------------------------
     # LOGIN
@@ -133,13 +116,11 @@ async def login_with_govbr(
 
     user = await User.get_or_none(cpf=cpf)
     if not user:
-        raise HTTPException(
-            status_code=401, detail=f"Usuário com CPF {cpf} não encontrado.")
+        raise HTTPException(status_code=401, detail=f"Usuário com CPF {cpf} não encontrado.")
 
     is_employee = await employee_verify(user)
     if not is_employee:
-        raise HTTPException(
-            status_code=401, detail=f"Usuário com CPF {cpf} não é um funcionário autorizado.")
+        raise HTTPException(status_code=401, detail=f"Usuário com CPF {cpf} não é um funcionário autorizado.")
 
     return {
         "access_token": generate_user_token(user),
