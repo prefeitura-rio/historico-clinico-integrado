@@ -60,7 +60,7 @@ class Measures(BaseModel):
     bmi: Optional[float]
     systolic_pressure: Optional[float]
     diastolic_pressure: Optional[float]
-    pulse_rate: Optional[float]
+    pulse_rate: Optional[str]
     oxygen_saturation: Optional[float]
     temperature: Optional[float]
 
