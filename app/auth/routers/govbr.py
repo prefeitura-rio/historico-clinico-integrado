@@ -17,7 +17,7 @@ from app.auth.utils import generate_user_token
 router = APIRouter(prefix="/govbr")
 
 # Configuração do retry
-retry_transport = httpx.RetryTransport(
+retry_transport = httpx.AsyncHTTPTransport(
     retries=3,  # Número de tentativas
     backoff_factor=0.5,  # Tempo de espera entre as tentativas (exponencial)
     status_codes={500, 502, 503, 504},  # Apenas erros do servidor ativam retry
