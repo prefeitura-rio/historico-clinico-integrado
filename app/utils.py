@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import json
+import requests
 import os
 import base64
 
@@ -16,8 +17,11 @@ from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
     BIGQUERY_ERGON_TABLE_ID,
+    DATARELAY_URL,
+    DATARELAY_MAILMAN_TOKEN,
+    EMAIL_SUBJECT_ACCOUNT_CREATION,
+    EMAIL_BODY_ACCOUNT_CREATION,
 )
-
 
 async def employee_verify(user: User) -> bool:
     if not user.is_ergon_validation_required:
@@ -205,3 +209,28 @@ async def request_limiter_identifier(request: Request):
     logger.info(f"Request Limiter :: ID: {identifier}")
 
     return identifier
+
+async def send_email_to_created_user(name, email, username, password):
+    response = requests.post(
+        url=f"{DATARELAY_URL}data/mailman",
+        headers={
+            'x-api-key': DATARELAY_MAILMAN_TOKEN,
+            'Content-Type': 'application/json'
+        },
+        json={
+            "to_addresses": [email],
+            "cc_addresses": [],
+            "bcc_addresses": [],
+            "subject": EMAIL_SUBJECT_ACCOUNT_CREATION,
+            "body": EMAIL_BODY_ACCOUNT_CREATION.format(
+                name=name,
+                username=username,
+                password=password,
+            ),
+            "is_html_body": True
+        }
+    )
+    if response.status_code == 200:
+        return True
+    else:
+        return False

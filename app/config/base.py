@@ -34,6 +34,10 @@ DATARELAY_MAILMAN_TOKEN = getenv_or_action("DATARELAY_MAILMAN_TOKEN", action="ra
 EMAIL_SUBJECT_2FA = getenv_or_action("EMAIL_SUBJECT_2FA", action="raise")
 EMAIL_BODY_2FA = getenv_or_action("EMAIL_BODY_2FA", action="raise")
 
+# User Creation
+EMAIL_BODY_ACCOUNT_CREATION = getenv_or_action("EMAIL_BODY_ACCOUNT_CREATION", action="raise")
+EMAIL_SUBJECT_CREATION = getenv_or_action("EMAIL_SUBJECT_CREATION", action="raise")
+
 # GOVBR
 GOVBR_PROVIDER_URL = getenv_or_action("GOVBR_PROVIDER_URL", action="raise")
 GOVBR_CLIENT_ID = getenv_or_action("GOVBR_CLIENT_ID", action="raise")

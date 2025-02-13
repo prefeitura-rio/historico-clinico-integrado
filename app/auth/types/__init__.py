@@ -31,3 +31,12 @@ class LoginFormGovbr(BaseModel):
     code: str
     state: str
     code_verifier: str
+
+
+class UserCreationModel(BaseModel):
+    name: str
+    cpf: str
+    email: str
+    cnes: str
+    role: str
+    access_level: str
