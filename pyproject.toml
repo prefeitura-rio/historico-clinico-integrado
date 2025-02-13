@@ -38,6 +38,7 @@ fastapi-limiter = "^0.1.6"
 asgi-lifespan = "^2.1.0"
 google-cloud-bigquery = "^3.26.0"
 asyncify = "^0.10.0"
+cryptography = "^44.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
