@@ -21,12 +21,6 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM])
         user_data: dict = payload.get("sub")
-        if user_data is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid Token payload",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
         token_data = TokenData(user_data)
     except PyJWTError as exc:
         raise HTTPException(
@@ -34,7 +28,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             detail=f"JWT module error: {str(exc)}",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Error decoding token: {str(exc)}",
+        ) from exc
 
+    # Check if user exists
     user = await User.get_or_none(username=token_data.username)
 
     # Update user
