@@ -4,7 +4,7 @@ from tortoise import BaseDBAsyncClient
 
 async def upgrade(db: BaseDBAsyncClient) -> str:
     return """
-        ALTER TABLE "user" DROP CONSTRAINT "fk_user_datasour_4e42e1df";
+        ALTER TABLE "user" DROP CONSTRAINT "user_data_source_id_fkey";
         ALTER TABLE "user" DROP CONSTRAINT "fk_user_systemro_cd2eaaa6";
         ALTER TABLE "user" ADD "ap" VARCHAR(2);
         ALTER TABLE "user" ADD "access_level" VARCHAR(50);
@@ -16,9 +16,9 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
         ALTER TABLE "user" DROP COLUMN "role_id";
         ALTER TABLE "user" DROP COLUMN "is_2fa_activated";
         ALTER TABLE "user" DROP COLUMN "secret_key";
+        DROP TABLE IF EXISTS "systemrole";
         DROP TABLE IF EXISTS "permition";
         DROP TABLE IF EXISTS "datasource";
-        DROP TABLE IF EXISTS "systemrole";
         DROP TABLE IF EXISTS "meta__tableinitialization";
         CREATE INDEX "idx_user_access__8a819a" ON "user" ("access_level");"""
 
