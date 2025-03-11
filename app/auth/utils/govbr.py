@@ -11,8 +11,8 @@ async def get_user_data(cpf: str) -> dict:
 
     user_infos = await read_bq(
         f"""
-        SELECT * 
-        FROM {BIGQUERY_ACCESS_TABLE_ID} 
+        SELECT *
+        FROM {BIGQUERY_ACCESS_TABLE_ID}
         WHERE cpf_particao = {int(cpf)}
         LIMIT 1
         """,
