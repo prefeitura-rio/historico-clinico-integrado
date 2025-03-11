@@ -20,14 +20,14 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
     try:
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        user_data: dict = payload.get("sub")
+        if user_data is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid Token payload",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        token_data = TokenData(username=username)
+        token_data = TokenData(user_data)
     except PyJWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -35,15 +35,35 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 
-    user = await User.get_or_none(username=token_data.username).prefetch_related(
-        "role", "role__permition", "data_source"
-    )
-    if user is None:
+    user = await User.get_or_none(username=token_data.username)
+
+    # Update user
+    if user:
+        user.name = token_data.name
+        user.cpf = token_data.cpf
+        user.access_level = token_data.access_level
+        user.cnes = token_data.cnes
+        user.job_title = token_data.job_title
+        user.ap = token_data.ap
+        await user.save()
+        return user
+
+    # Create user
+    try:
+        user = await User.create(
+            username=token_data.username,
+            name=token_data.name,
+            cpf=token_data.cpf,
+            access_level=token_data.access_level,
+            cnes=token_data.cnes,
+            ap=token_data.ap,
+        )
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Username in Token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+            detail=f"Error creating user: {str(exc)}",
+        ) from exc
+
     return user
 
 async def assert_user_is_active(current_user: Annotated[User, Depends(get_current_user)]):
@@ -57,28 +77,6 @@ async def assert_user_is_superuser(current_user: Annotated[User, Depends(get_cur
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="User don't have permition to access this endpoint",
-    )
-
-async def assert_user_has_pipeline_write_permition(current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.role.permition.slug.value in [
-        'pipeline_write',
-        'pipeline_readwrite',
-    ]:
-        return current_user
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="User don't have permition to Write data into HCI",
-    )
-
-async def assert_user_has_pipeline_read_permition(current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.role.permition.slug.value in [
-        'pipeline_read',
-        'pipeline_readwrite',
-    ]:
-        return current_user
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="User don't have permition to Read data from HCI",
     )
 
 def assert_cpf_is_valid(cpf: str):

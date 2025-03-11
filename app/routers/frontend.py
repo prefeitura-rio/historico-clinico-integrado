@@ -48,7 +48,7 @@ async def get_user_info(
 
     return {
         "name": user.name,
-        "role": user.role.job_title if user.role else None,
+        "role": user.job_title,
         "email": user.email,
         "username": user.username,
         "is_use_terms_accepted": user.is_use_terms_accepted,

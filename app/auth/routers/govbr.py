@@ -7,11 +7,10 @@ from loguru import logger
 from jwt.algorithms import RSAAlgorithm
 
 from app import config
-from app.models import User
 from app.types import Token
-from app.utils import employee_verify
 from app.auth.types import LoginFormGovbr, AuthenticationErrorModel
-from app.auth.utils import generate_user_token
+from app.auth.utils import generate_token_from_user_data
+from app.auth.utils.govbr import get_user_data
 
 
 router = APIRouter(prefix="/govbr")
@@ -109,16 +108,12 @@ async def login_with_govbr(form_data: LoginFormGovbr) -> Token:
     if not cpf:
         raise HTTPException(status_code=401, detail="CPF não encontrado no token")
 
-    user = await User.get_or_none(cpf=cpf)
-    if not user:
-        raise HTTPException(status_code=401, detail=f"Usuário com CPF {cpf} não encontrado.")
-
-    is_employee = await employee_verify(user)
-    if not is_employee:
-        raise HTTPException(status_code=401, detail=f"Usuário com CPF {cpf} não é um funcionário autorizado.")
+    user_data = await get_user_data(cpf)
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Usuário não encontrado")
 
     return {
-        "access_token": generate_user_token(user),
+        "access_token": generate_token_from_user_data(user_data),
         "token_type": "bearer",
         "token_expire_minutes": int(config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
     }

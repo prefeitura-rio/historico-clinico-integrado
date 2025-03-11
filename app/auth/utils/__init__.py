@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, Callable
 import jwt
 
 from app import config
-from app.models import User
-from app.enums import LoginStatusEnum
-from app.utils import employee_verify
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def generate_user_token(user: User) -> str:
+def generate_token_from_user_data(user_data: dict) -> str:
     """
     Generates a JWT access token for a given user.
     Args:
-        user (User): The user object for which the token is being generated.
+        user_data (dict): The user data for which the token is being generated.
     Returns:
         str: The generated JWT access token.
     """
@@ -25,60 +21,10 @@ def generate_user_token(user: User) -> str:
     access_token_expires = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user_data}, expires_delta=access_token_expires
     )
 
     return access_token
-
-async def authenticate_user(
-    username: str,
-    password: str,
-    verificator: Callable[[User, str], bool] = None,
-    code: Optional[str] = None,
-) -> Tuple[User, bool, str]:
-    user = await User.get_or_none(username=username).prefetch_related("role")
-
-    # USER EXISTS
-    if not user:
-        return {
-            "user": None,
-            "status": LoginStatusEnum.USER_NOT_FOUND,
-        }
-
-    # CORRECT PASSWORD
-    is_password_correct = password_verify(password, user.password)
-    if not is_password_correct:
-        return {
-            "user": None,
-            "status": LoginStatusEnum.BAD_CREDENTIALS,
-        }
-
-    # ERGON VALIDATION
-    is_employee = await employee_verify(user)
-    if not is_employee:
-        return {
-            "user": user,
-            "status": LoginStatusEnum.INACTIVE_EMPLOYEE,
-        }
-
-    # 2FA TOTP SENT
-    if (not code) or (not verificator):
-        return {
-            "user": user,
-            "status": LoginStatusEnum.REQUIRE_2FA,
-        }
-
-    is_2fa_valid = await verificator(user, code)
-    if not is_2fa_valid:
-        return {
-            "user": user,
-            "status": LoginStatusEnum.BAD_OTP,
-        }
-    else:
-        return {
-            "user": user,
-            "status": LoginStatusEnum.SUCCESS,
-        }
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
