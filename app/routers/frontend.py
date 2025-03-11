@@ -17,7 +17,7 @@ from app.types.frontend import (
     UserInfo,
 )
 from app.types.errors import AcceptTermsEnum
-from app.utils import read_bq, validate_user_access_to_patient_data
+from app.utils import read_bq, validate_user_access_to_patient_data, get_filter_clause
 from app.config import (
     BIGQUERY_PROJECT,
     BIGQUERY_PATIENT_HEADER_TABLE_ID,
@@ -144,11 +144,7 @@ async def search_patient(
         name_cleaned = ''.join(c for c in unicodedata.normalize('NFD', name) if unicodedata.category(c) != 'Mn')
         clause = f"search(nome,'{name_cleaned}')"
 
-    user_permition_filter = user.role.permition.filter_clause.format(
-        user_cpf=user.cpf,
-        user_ap=user.data_source.ap,
-        user_cnes=user.data_source.cnes,
-    )
+    user_permition_filter = get_filter_clause(user)
     results = await read_bq(
         f"""
         SELECT
