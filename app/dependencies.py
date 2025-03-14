@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Annotated
-
+import json
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import HTTPException
@@ -20,7 +20,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
     try:
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM])
-        user_data: dict = payload.get("sub")
+        user_data: str = payload.get("sub")
+        user_data = json.loads(user_data)
         token_data = TokenData(user_data)
     except PyJWTError as exc:
         raise HTTPException(
