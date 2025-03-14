@@ -22,7 +22,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM])
         user_data: str = payload.get("sub")
         user_data = json.loads(user_data)
-        token_data = TokenData(user_data)
+        token_data = TokenData(**user_data)
     except PyJWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
