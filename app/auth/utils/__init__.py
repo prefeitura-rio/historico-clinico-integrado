@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
@@ -21,7 +22,7 @@ def generate_token_from_user_data(user_data: dict) -> str:
     access_token_expires = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
     access_token = create_access_token(
-        data={"sub": user_data}, expires_delta=access_token_expires
+        data={"sub": json.dumps(user_data)}, expires_delta=access_token_expires
     )
 
     return access_token

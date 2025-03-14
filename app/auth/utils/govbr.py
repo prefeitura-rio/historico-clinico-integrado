@@ -27,8 +27,8 @@ async def get_user_data(cpf: str) -> dict:
         "username": registry["cpf"],
         "name": registry["nome_completo"],
         "cpf": registry["cpf"],
-        "job_title": registry["funcao_detalhada"],
         "access_level": registry["nivel_acesso"],
+        "job_title": registry["funcao_detalhada"],
         "cnes": registry["unidade_cnes"],
         "ap": registry["unidade_ap"],
     }
