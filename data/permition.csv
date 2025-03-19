@@ -1,8 +1,0 @@
-slug,description,filter_clause
-pipeline_write,Não permite ao usuário acesso a dados do HCI,"1 = 0"
-pipeline_read,Não permite ao usuário acesso a dados do HCI,"1 = 0"
-pipeline_readwrite,Não permite ao usuário acesso a dados do HCI,"1 = 0"
-only_from_same_cpf,Permite ao usuário acesso a apenas dados do próprio paciente,"cpf = '{user_cpf}'"
-only_from_same_unit,Permite ao usuário acesso apenas a dados de pacientes com algum cadastro na sua unidade de trabalho,"'{user_cnes}' IN UNNEST(exibicao.unidades_cadastro)"
-only_from_same_ap,Permite ao usuário acesso apenas a dados de pacientes com algum cadastro na sua AP,"'{user_ap}' IN UNNEST(exibicao.ap_cadastro)"
-full_permition,Permite acesso a todos os dados de paciente,"1 = 1"
