@@ -24,7 +24,6 @@ RUN apt-get update && apt-get install -y dos2unix
 
 # Copy remaining files
 COPY ./scripts ./
-COPY ./data /data
 COPY ./migrations /migrations
 COPY ./compose-entrypoint.sh /compose-entrypoint.sh
 
