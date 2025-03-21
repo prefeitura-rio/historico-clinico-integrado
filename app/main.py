@@ -9,7 +9,7 @@ from loguru import logger
 from app import config
 from app.utils import prepare_gcp_credential
 from app.lifespan import api_lifespan
-from app.routers import entities_raw, frontend, misc
+from app.routers import frontend, misc
 from app.auth.routers import router as auth_routers
 
 logger.remove()
@@ -48,6 +48,5 @@ app.add_middleware(
 )
 
 app.include_router(auth_routers)
-app.include_router(entities_raw.router)
 app.include_router(frontend.router)
 app.include_router(misc.router)

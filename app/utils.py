@@ -112,6 +112,22 @@ async def read_bq(query, from_file="/tmp/credentials.json"):
 
     return rows
 
+def get_filter_clause(user: User) -> str:
+    """
+    Builds a filter clause based on the user's role and permissions.
+    """
+    filter_clause = {
+        "full_permition": "1 = 1",
+        "only_from_same_cpf": "cpf = '{user_cpf}'",
+        "only_from_same_ap": "'{user_cnes}' IN UNNEST(exibicao.unidades_cadastro)",
+        "only_from_same_cnes": "'{user_ap}' IN UNNEST(exibicao.ap_cadastro)",
+    }
+    return filter_clause[user.access_level].format(
+        user_cpf=user.cpf,
+        user_ap=user.ap,
+        user_cnes=user.cnes,
+    )
+
 
 async def validate_user_access_to_patient_data(user: User, cpf: str) -> tuple[bool, JSONResponse]:
     """
@@ -128,13 +144,7 @@ async def validate_user_access_to_patient_data(user: User, cpf: str) -> tuple[bo
             - If the data is not displayable, returns (False, JSONResponse) with a 403 status
                 code and reasons for restriction.
     """
-
-    # Build the filter clause based on the user's role
-    user_permition_filter = user.role.permition.filter_clause.format(
-        user_cpf=user.cpf,
-        user_ap=user.data_source.ap,
-        user_cnes=user.data_source.cnes,
-    )
+    user_permition_filter = get_filter_clause(user)
 
     # Build the query
     query = f"""

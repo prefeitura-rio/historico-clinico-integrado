@@ -18,6 +18,7 @@ BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID = getenv_or_action(
     "BIGQUERY_PATIENT_ENCOUNTERS_TABLE_ID", action="raise"
 )
 BIGQUERY_ERGON_TABLE_ID = getenv_or_action("BIGQUERY_ERGON_TABLE_ID", action="raise")
+BIGQUERY_ACCESS_TABLE_ID = getenv_or_action("BIGQUERY_ACCESS_TABLE_ID", action="raise")
 BIGQUERY_PATIENT_SEARCH_TABLE_ID = getenv_or_action("BIGQUERY_PATIENT_SEARCH_TABLE_ID", action="raise")
 BIGQUERY_PATIENT_INDEX_TABLE_ID = getenv_or_action("BIGQUERY_PATIENT_INDEX_TABLE_ID", action="raise")
 

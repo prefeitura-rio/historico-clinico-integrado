@@ -1,55 +1,68 @@
-[tool.poetry]
+[project]
 name = "app"
 version = "0.1.0"
 description = "API for FHIR Utils"
-authors = ["Escritório de Dados <escritoriodedados@gmail.com>"]
+authors = [{ name = "Escritório de Dados", email = "escritoriodedados@gmail.com" }]
+requires-python = "~=3.11"
 license = "MIT"
-homepage = "https://github.com/prefeitura-rio/fhir-utils"
-repository = "https://github.com/prefeitura-rio/fhir-utils"
-keywords = ["fhir", "utilities", "data", "health", "government"]
+keywords = [
+    "fhir",
+    "utilities",
+    "data",
+    "health",
+    "government",
+]
+dependencies = [
+    "aerich>=0.7.2,<0.8",
+    "aioredis>=2.0.1,<3",
+    "bcrypt<4.1",
+    "fastapi==0.109.2",
+    "loguru>=0.7.0,<0.8",
+    "passlib[bcrypt]>=1.7.4,<2",
+    "python-multipart==0.0.7",
+    "sentry-sdk[fastapi]>=1.37.1,<2",
+    "tortoise-orm[asyncpg]==0.19.3",
+    "uvicorn[standard]>=0.24.0.post1,<0.25",
+    "httpx>=0.26.0,<0.27",
+    "pytest>=7.4.4,<8",
+    "infisical==1.5.0",
+    "pandas>=2.1.4,<3",
+    "validate-docbr>=1.10.0,<2",
+    "pyjwt>=2.8.0,<3",
+    "urllib3==2.0.7",
+    "idna==3.7",
+    "basedosdados>=2.0.0b16,<3",
+    "nltk>=3.9.1,<4",
+    "asyncer>=0.0.8,<0.0.9",
+    "qrcode>=7.4.2,<8",
+    "pyotp>=2.9.0,<3",
+    "fastapi-simple-rate-limiter>=0.0.4,<0.0.5",
+    "fastapi-limiter>=0.1.6,<0.2",
+    "asgi-lifespan>=2.1.0,<3",
+    "google-cloud-bigquery>=3.26.0,<4",
+    "asyncify>=0.10.0,<0.11",
+    "cryptography>=44.0.0,<45",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-aerich = "^0.7.2"
-aioredis = "^2.0.1"
-bcrypt = "<4.1"
-fastapi = "0.109.2"
-loguru = "^0.7.0"
-passlib = { extras = ["bcrypt"], version = "^1.7.4" }
-python-multipart = "0.0.7"
-sentry-sdk = { version = "^1.37.1", extras = ["fastapi"] }
-tortoise-orm = { extras = ["asyncpg"], version = "0.19.3" }
-uvicorn = { extras = ["standard"], version = "^0.24.0.post1" }
-httpx = "^0.26.0"
-pytest = "^7.4.4"
-infisical = "1.5.0"
-pandas = "^2.1.4"
-validate-docbr = "^1.10.0"
-pyjwt = "^2.8.0"
-urllib3 = "2.0.7"
-idna = "3.7"
-basedosdados = "^2.0.0b16"
-nltk = "^3.9.1"
-asyncer = "^0.0.8"
-qrcode = "^7.4.2"
-pyotp = "^2.9.0"
-fastapi-simple-rate-limiter = "^0.0.4"
-fastapi-limiter = "^0.1.6"
-asgi-lifespan = "^2.1.0"
-google-cloud-bigquery = "^3.26.0"
-asyncify = "^0.10.0"
-cryptography = "^44.0.0"
+[project.urls]
+Homepage = "https://github.com/prefeitura-rio/fhir-utils"
+Repository = "https://github.com/prefeitura-rio/fhir-utils"
 
+[dependency-groups]
+dev = [
+    "black>=24.4.2,<25",
+    "flake8>=6.1.0,<7",
+    "pre-commit>=3.5.0,<4",
+    "pytest-asyncio>=0.21.1,<0.22",
+    "taskipy>=1.12.2,<2",
+    "isort>=5.12.0,<6",
+    "pytest-cov>=4.1.0,<5",
+    "pytest-ordering>=0.6,<0.7",
+]
 
-[tool.poetry.group.dev.dependencies]
-black = {version = "^24.4.2", allow-prereleases = true}
-flake8 = "^6.1.0"
-pre-commit = "^3.5.0"
-pytest-asyncio = "^0.21.1"
-taskipy = "^1.12.2"
-isort = "^5.12.0"
-pytest-cov = "^4.1.0"
-pytest-ordering = "^0.6"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.aerich]
 tortoise_orm = "app.db.TORTOISE_ORM"
@@ -78,7 +91,3 @@ create_user = "python scripts/create_user.py"
 lint = "black . && isort . && flake8 ."
 serve = "uvicorn app.main:app --reload --port 8001"
 test = "pytest"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
