@@ -102,23 +102,22 @@ spec:
                   number: 80
 
 ---
-# Horizontal Pod Autoscaler (HPA) baseado em uso de CPU
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
 metadata:
-  name: hci-api-hpa
+  name: hci-api-scaledobject
   namespace: hci
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: hci-api-prod
-  minReplicas: 1
-  maxReplicas: 5
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 50
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus-prometheus.prometheus.svc.cluster.local:9090
+        metricName: tyk_http_requests_total
+        query: sum(rate(tyk_http_requests_total{api_name=~"prontuario-integrado"}[1m]))
+        threshold: "10"
