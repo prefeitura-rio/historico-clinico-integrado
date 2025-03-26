@@ -56,6 +56,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         user = await User.create(
             username=token_data.username,
             name=token_data.name,
+            email=token_data.email,
+            job_title=token_data.job_title,
             cpf=token_data.cpf,
             access_level=token_data.access_level,
             cnes=token_data.cnes,

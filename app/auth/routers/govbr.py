@@ -112,6 +112,8 @@ async def login_with_govbr(form_data: LoginFormGovbr) -> Token:
     if not user_data:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
 
+    user_data["email"] = payload.get('email', f"{cpf}@gov.br")
+
     return {
         "access_token": generate_token_from_user_data(user_data),
         "token_type": "bearer",
