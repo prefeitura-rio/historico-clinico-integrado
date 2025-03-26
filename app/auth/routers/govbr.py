@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 import httpx
-import jwt
 import base64
 from fastapi import HTTPException, APIRouter
 from loguru import logger
-from jwt.algorithms import RSAAlgorithm
+
 
 from app import config
 from app.types import Token
 from app.auth.types import LoginFormGovbr, AuthenticationErrorModel
 from app.auth.utils import generate_token_from_user_data
-from app.auth.utils.govbr import get_user_data
+from app.auth.utils.govbr import get_user_data_from_access_list, decode_token
 
 
 router = APIRouter(prefix="/govbr")
@@ -58,61 +57,34 @@ async def login_with_govbr(form_data: LoginFormGovbr) -> Token:
 
     response_json = await fetch_with_retry("POST", token_url, headers=token_headers, data=token_data, timeout=10.0)
     access_token = response_json.get("access_token")
+    id_token = response_json.get("id_token")
+
     if not access_token:
         raise HTTPException(status_code=401, detail="Token de acesso não recebido.")
-
-    # -----------------------------
-    # VALIDATE THE ID_TOKEN
-    # -----------------------------
-    try:
-        unverified_header = jwt.get_unverified_header(access_token)
-        key_id = unverified_header.get("kid")
-    except jwt.DecodeError:
-        raise HTTPException(status_code=401, detail="Token inválido, cabeçalho não pode ser lido")
-
-    # Obtém as chaves JWK do provedor GovBR
+    
+    logger.info(f"Fetching JWK from GovBR...")
     jwk_url = f"{config.GOVBR_PROVIDER_URL}/jwk"
     jwk_response = await fetch_with_retry("GET", jwk_url, timeout=10.0)
+    
+    logger.info(f"Decoding ID token...")
+    payload_id_token = await decode_token(id_token, jwk_response)
 
-    # Encontra a chave correta pelo 'kid'
-    matching_key = next((key for key in jwk_response['keys'] if key["kid"] == key_id), None)
-    if not matching_key:
-        raise HTTPException(status_code=500, detail="Nenhuma chave correspondente ao token encontrada no JWK")
-
-    # Converte a JWK para chave pública RSA
-    try:
-        public_key = RSAAlgorithm.from_jwk(matching_key)
-    except Exception as e:
-        logger.error(f"Erro ao processar a JWK: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro ao processar a chave pública do JWK")
-
-    # Valida o token
-    try:
-        payload = jwt.decode(
-            access_token,
-            public_key,
-            algorithms=["RS256"],
-            audience=config.GOVBR_CLIENT_ID,
-            issuer=f"{config.GOVBR_PROVIDER_URL}/",
-            leeway=30,
-        )
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expirado")
-    except jwt.InvalidTokenError as e:
-        raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
+    logger.info(f"Decoding Access token...")
+    payload_access_token = await decode_token(access_token, jwk_response)
 
     # -----------------------------
     # LOGIN
     # -----------------------------
-    cpf = payload.get('sub')
-    if not cpf:
-        raise HTTPException(status_code=401, detail="CPF não encontrado no token")
+    cpf = payload_access_token.get('sub')
+    email = payload_id_token.get('email', f"{cpf}@gov.br")
 
-    user_data = await get_user_data(cpf)
+    logger.info(f"User: {cpf} ({email})")
+    user_data = await get_user_data_from_access_list(cpf)
+
     if not user_data:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
 
-    user_data["email"] = payload.get('email', f"{cpf}@gov.br")
+    user_data["email"] = email
 
     return {
         "access_token": generate_token_from_user_data(user_data),
