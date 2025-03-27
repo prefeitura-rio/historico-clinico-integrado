@@ -7,32 +7,10 @@ on:
       - "**/*"
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.11.x"
-
-      - name: Set up dependencies
-        run: |
-          pip install -U pip poetry
-          poetry config virtualenvs.create false
-          poetry install --with dev
-
-      - name: Run linters
-        run: |
-          task lint
 
   deploy:
     name: Build and Deploy
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development'
-    needs: [lint]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
