@@ -31,12 +31,12 @@ class RawDataListModel(BaseModel):
 @router.post("/{entity_name}")
 async def load_data(
     _: Annotated[User, Depends(get_current_user)],
-    entity_name: Literal["patientrecords", "encounters"],
+    entity_name: Literal["patientrecords", "encounter"],
     raw_data: RawDataListModel
 ):
     if entity_name == "patientrecords":
         entity_name = "paciente"
-    elif entity_name == "encounters":
+    elif entity_name == "encounter":
         entity_name = "atendimento"
 
     async with httpx.AsyncClient() as client:
@@ -51,7 +51,8 @@ async def load_data(
                 "grant_type": "password",
                 "username": config.DATALAKE_HUB_USERNAME,
                 "password": config.DATALAKE_HUB_PASSWORD,
-            }
+            },
+            timeout=90
         )
 
         token = response.json().get("access_token")
@@ -62,7 +63,8 @@ async def load_data(
             headers={
                 "Authorization": f"Bearer {token}"
             },
-            json=json.loads(raw_data.json())
+            json=json.loads(raw_data.json()),
+            timeout=90
         )
 
     return JSONResponse(
