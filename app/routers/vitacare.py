@@ -56,7 +56,7 @@ async def load_data(
         )
 
         if response.status_code != 200:
-            raise JSONResponse(
+            return JSONResponse(
                 status_code=response.status_code,
                 content={
                     "message": "Failed to get token from datalake hub",
