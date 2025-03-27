@@ -29,11 +29,18 @@ JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
     getenv_or_action("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", default="30")
 )
 
-# 2FA
+# Auth
 DATARELAY_URL = getenv_or_action("DATARELAY_URL", action="raise")
 DATARELAY_MAILMAN_TOKEN = getenv_or_action("DATARELAY_MAILMAN_TOKEN", action="raise")
 EMAIL_SUBJECT_2FA = getenv_or_action("EMAIL_SUBJECT_2FA", action="raise")
 EMAIL_BODY_2FA = getenv_or_action("EMAIL_BODY_2FA", action="raise")
+
+# Vitacare 
+VITACARE_HASHED_PASSWORD = getenv_or_action("VITACARE_HASHED_PASSWORD", action="raise")
+VITACARE_USERNAME = getenv_or_action("VITACARE_USERNAME", action="raise")
+DATALAKE_HUB_URL = getenv_or_action("DATALAKE_HUB_URL", action="raise")
+DATALAKE_HUB_USERNAME = getenv_or_action("DATALAKE_HUB_USERNAME", action="raise")
+DATALAKE_HUB_PASSWORD = getenv_or_action("DATALAKE_HUB_PASSWORD", action="raise")
 
 # GOVBR
 GOVBR_PROVIDER_URL = getenv_or_action("GOVBR_PROVIDER_URL", action="raise")
