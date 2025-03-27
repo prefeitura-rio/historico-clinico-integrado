@@ -25,12 +25,14 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         user_data = json.loads(user_data)
         token_data = TokenData(**user_data)
     except PyJWTError as exc:
+        logger.error(f"Error decoding token: {str(exc)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"JWT module error: {str(exc)}",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
     except Exception as exc:
+        logger.error(f"Error decoding token: {str(exc)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Error decoding token: {str(exc)}",
@@ -42,13 +44,20 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     # Update user
     if user:
         logger.info(f"User {user.username} found in database")
-        user.name = token_data.name
-        user.cpf = token_data.cpf
-        user.access_level = token_data.access_level
-        user.cnes = token_data.cnes
-        user.job_title = token_data.job_title
-        user.ap = token_data.ap
-        await user.save()
+        try:
+            user.name = token_data.name
+            user.cpf = token_data.cpf
+            user.access_level = token_data.access_level
+            user.cnes = token_data.cnes
+            user.job_title = token_data.job_title
+            user.ap = token_data.ap
+            await user.save()
+        except Exception as exc:
+            logger.error(f"Error updating user: {str(exc)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Error updating user: {str(exc)}",
+            ) from exc
         return user
 
     # Create user
