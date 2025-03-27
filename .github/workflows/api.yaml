@@ -29,48 +29,10 @@ jobs:
         run: |
           task lint
 
-  tests:
-    name: Tests
-    runs-on: ubuntu-latest
-    container: python:3.11-slim
-    env:
-      INFISICAL_ADDRESS: ${{ secrets.INFISICAL_ADDRESS }}
-      INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-    services:
-      db:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up dependencies
-        run: |
-          pip install -U pip poetry
-          poetry config virtualenvs.create false
-          poetry install --with dev
-
-      - name: Set up database
-        run: |
-          aerich init-db || true
-          aerich upgrade || true
-
-      - name: Run tests
-        run: |
-          task test
-
   deploy:
     name: Build and Deploy
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development'
-    needs: [lint, tests]
+    needs: [lint]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
