@@ -4,7 +4,7 @@ from fastapi import Depends, APIRouter
 from fastapi.responses import JSONResponse
 from typing import Annotated
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
 from loguru import logger
 
@@ -31,9 +31,14 @@ class RawDataListModel(BaseModel):
 @router.post("/{entity_name}")
 async def load_data(
     _: Annotated[User, Depends(get_current_user)],
-    entity_name: str,
+    entity_name: Literal["patientrecords", "encounters"],
     raw_data: RawDataListModel
 ):
+    if entity_name == "patientrecords":
+        entity_name = "paciente"
+    elif entity_name == "encounters":
+        entity_name = "atendimento"
+
     async with httpx.AsyncClient() as client:
         logger.info(f"Getting token from datalake hub...")
         response = await client.post(
