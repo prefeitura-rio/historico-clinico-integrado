@@ -55,6 +55,15 @@ async def load_data(
             timeout=90
         )
 
+        if response.status_code != 200:
+            raise JSONResponse(
+                status_code=response.status_code,
+                content={
+                    "message": "Failed to get token from datalake hub",
+                    "content": response.json()
+                }
+            )
+
         token = response.json().get("access_token")
 
         logger.info(f"Sending data to datalake hub...")
@@ -69,5 +78,8 @@ async def load_data(
 
     return JSONResponse(
         status_code=response.status_code,
-        content=response.json()
+        content={
+            "message": "Response from datalake hub",
+            "content": response.json()
+        }
     )
