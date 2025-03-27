@@ -48,13 +48,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      redis:
-        image: redis:7
-        command: redis-server --appendonly yes
-        ports:
-          - "6379:6379"
-        volumes:
-          - redis-data:/data
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -73,3 +66,82 @@ jobs:
       - name: Run tests
         run: |
           task test
+
+  deploy:
+    name: Build and Deploy
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development'
+    needs: [lint, tests]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      GCR_SERVICE: ${{ secrets.GCR_SERVICE }}
+      GCR_REGION: ${{ secrets.GCR_REGION }}
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - id: auth
+        name: Login to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_PLAIN }}
+          token_format: access_token
+          service_account: github-actions@rj-sms.iam.gserviceaccount.com
+
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v1
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Build and Push image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            us-central1-docker.pkg.dev/rj-sms/docker/prontuario-integrado:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      - name: Google Auth
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ env.GCP_SA_KEY }}'
+
+      - name: Deploy to Google Cloud Run (Production)
+        if: github.ref == 'refs/heads/main'
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          service: ${{ env.GCR_SERVICE }}-production
+          region: ${{ env.GCR_REGION }}
+          image: us-central1-docker.pkg.dev/rj-sms/docker/prontuario-integrado:${{ github.sha }}
+          flags: '--add-cloudsql-instances=rj-sms:us-central1:postgres --port=80 --allow-unauthenticated --concurrency=20 --memory=1024Mi --min-instances=1'
+          secrets: |
+            ENVIRONMENT=PRONTUARIO_INTEGRADO_PROD_ENVIRONMENT:latest
+            INFISICAL_ADDRESS=PRONTUARIO_INTEGRADO_PROD_INFISICAL_ADDRESS:latest
+            INFISICAL_TOKEN=PRONTUARIO_INTEGRADO_PROD_INFISICAL_TOKEN:latest
+
+      - name: Deploy to Google Cloud Run (Staging)
+        if: github.ref == 'refs/heads/development'
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          service: ${{ env.GCR_SERVICE }}-staging
+          region: ${{ env.GCR_REGION }}
+          image: us-central1-docker.pkg.dev/rj-sms/docker/prontuario-integrado:${{ github.sha }}
+          flags: '--add-cloudsql-instances=rj-sms:us-central1:postgres --port=80 --allow-unauthenticated --concurrency=20 --memory=1024Mi --min-instances=1'
+          secrets: |
+            ENVIRONMENT=PRONTUARIO_INTEGRADO_STAGING_ENVIRONMENT:latest
+            INFISICAL_ADDRESS=PRONTUARIO_INTEGRADO_STAGING_INFISICAL_ADDRESS:latest
+            INFISICAL_TOKEN=PRONTUARIO_INTEGRADO_STAGING_INFISICAL_TOKEN:latest
