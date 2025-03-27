@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from tortoise.exceptions import ValidationError
 import jwt
 from jwt import PyJWTError
+from loguru import logger
 
 from app import config
 from app.models import User
@@ -40,6 +41,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
     # Update user
     if user:
+        logger.info(f"User {user.username} found in database")
         user.name = token_data.name
         user.cpf = token_data.cpf
         user.access_level = token_data.access_level
@@ -54,12 +56,16 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         user = await User.create(
             username=token_data.username,
             name=token_data.name,
+            email=token_data.email,
+            job_title=token_data.job_title,
             cpf=token_data.cpf,
             access_level=token_data.access_level,
             cnes=token_data.cnes,
             ap=token_data.ap,
         )
+        logger.info(f"User {user.username} created in database")
     except Exception as exc:
+        logger.error(f"Error creating user: {str(exc)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Error creating user: {str(exc)}",

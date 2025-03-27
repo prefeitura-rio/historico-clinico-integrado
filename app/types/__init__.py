@@ -12,6 +12,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str]
     name: Optional[str]
+    email: str
     cpf: Optional[str]
     access_level: Optional[str]
     job_title: Optional[str]

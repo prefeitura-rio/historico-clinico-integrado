@@ -11,10 +11,11 @@ from app.validators import CPFValidator
 class User(Model):
     id = fields.IntField(pk=True)
     username = fields.CharField(max_length=255, unique=True)
+    password = fields.CharField(max_length=255, null=True)
     name = fields.CharField(max_length=255, null=True)
     cpf = fields.CharField(max_length=11, unique=True, null=True, validators=[CPFValidator()])
     access_level = fields.CharEnumField(PermitionEnum, index=True, max_length=50, null=True)
-    email = fields.CharField(max_length=255, unique=True)
+    email = fields.CharField(max_length=255, unique=True, null=True)
     job_title = fields.CharField(max_length=255, null=True)
     cnes = fields.CharField(max_length=50, null=True)
     ap = fields.CharField(max_length=2, null=True)

@@ -74,10 +74,13 @@ async def api_lifespan(app: FastAPI):
         f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}",
         encoding="utf8"
     )
-    await FastAPILimiter.init(
-        redis=redis_connection,
-        identifier=request_limiter_identifier,
-    )
+    try:
+        await FastAPILimiter.init(
+            redis=redis_connection,
+            identifier=request_limiter_identifier,
+        )
+    except Exception as e:
+        logger.error(f"Error initializing FastAPILimiter: {e}")
 
     async with register_tortoise(
         app,
@@ -89,4 +92,7 @@ async def api_lifespan(app: FastAPI):
         yield
 
     # do sth after db closed
-    await FastAPILimiter.close()
+    try:
+        await FastAPILimiter.close()
+    except Exception as e:
+        logger.error(f"Error closing FastAPILimiter: {e}")
