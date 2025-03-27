@@ -60,7 +60,7 @@ async def load_data(
                 status_code=response.status_code,
                 content={
                     "message": "Failed to get token from datalake hub",
-                    "content": response.json()
+                    "content": response.text
                 }
             )
 
@@ -80,6 +80,6 @@ async def load_data(
         status_code=response.status_code,
         content={
             "message": "Response from datalake hub",
-            "content": response.json()
+            "content": response.text
         }
     )
