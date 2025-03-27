@@ -76,7 +76,12 @@ async def login_with_govbr(form_data: LoginFormGovbr) -> Token:
     # LOGIN
     # -----------------------------
     cpf = payload_access_token.get('sub')
-    email = payload_id_token.get('email', f"{cpf}@gov.br")
+    if payload_id_token.get('email_verified', False) == True:
+        email = payload_id_token.get('email')
+        logger.info(f"User has verified email: {email}")
+    else:
+        email = None
+        logger.info(f"User has not verified email. Skipping...")
 
     logger.info(f"User: {cpf} ({email})")
     user_data = await get_user_data_from_access_list(cpf)
