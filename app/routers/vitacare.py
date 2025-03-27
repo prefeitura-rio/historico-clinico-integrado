@@ -78,5 +78,8 @@ async def load_data(
 
     return JSONResponse(
         status_code=response.status_code,
-        content=response.json()
+        content={
+            "message": "Response from datalake hub",
+            "content": response.json()
+        }
     )
