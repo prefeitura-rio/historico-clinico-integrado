@@ -1,5 +1,5 @@
 import httpx
-
+import json
 from fastapi import Depends, APIRouter
 from fastapi.responses import JSONResponse
 from typing import Annotated
@@ -62,7 +62,7 @@ async def load_data(
             headers={
                 "Authorization": f"Bearer {token}"
             },
-            json=raw_data.json()
+            json=json.loads(raw_data.json())
         )
 
     return JSONResponse(
