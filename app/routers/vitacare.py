@@ -77,6 +77,7 @@ async def load_data(
                 timeout=90
             )
     except httpx.TimeoutException as e:
+        logger.error(f"Timeout error: {e}")
         return JSONResponse(
             status_code=504,
             content={
@@ -84,7 +85,15 @@ async def load_data(
                 "content": str(e)
             }
         )
-
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "message": "Error",
+                "content": str(e)
+            }
+        )
     return JSONResponse(
         status_code=response.status_code,
         content={
