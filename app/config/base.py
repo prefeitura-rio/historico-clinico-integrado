@@ -35,7 +35,7 @@ DATARELAY_MAILMAN_TOKEN = getenv_or_action("DATARELAY_MAILMAN_TOKEN", action="ra
 EMAIL_SUBJECT_2FA = getenv_or_action("EMAIL_SUBJECT_2FA", action="raise")
 EMAIL_BODY_2FA = getenv_or_action("EMAIL_BODY_2FA", action="raise")
 
-# Vitacare 
+# Vitacare
 VITACARE_HASHED_PASSWORD = getenv_or_action("VITACARE_HASHED_PASSWORD", action="raise")
 VITACARE_USERNAME = getenv_or_action("VITACARE_USERNAME", action="raise")
 DATALAKE_HUB_URL = getenv_or_action("DATALAKE_HUB_URL", action="raise")

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
@@ -30,7 +31,7 @@ async def token(
                 "message": "Incorrect Username or Password"
             },
         )
-    
+
     is_password_correct = pwd_context.verify(form_data.password, config.VITACARE_HASHED_PASSWORD)
 
     if not is_password_correct:
@@ -50,7 +51,7 @@ async def token(
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM)
         return encoded_jwt
-    
+
     user = await User.get_or_none(username=vitacare_username)
     if not user:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")

@@ -25,7 +25,7 @@ async def get_user_data_from_access_list(cpf: str) -> dict:
     if len(user_infos) == 0:
         logger.info(f"User {cpf} not found in Database")
         return None
-    
+
     logger.info(f"User {cpf} found in Database")
 
     registry = user_infos[0]
@@ -47,7 +47,7 @@ async def decode_token(token: str, jwk_response: dict) -> dict:
     except jwt.DecodeError:
         logger.error(f"Token inválido, cabeçalho não pode ser lido")
         raise HTTPException(status_code=401, detail="Token inválido, cabeçalho não pode ser lido")
-    
+
     logger.debug(f"Finding matching key in JWK...")
     matching_key = next((key for key in jwk_response['keys'] if key["kid"] == key_id), None)
     if not matching_key:
@@ -60,7 +60,7 @@ async def decode_token(token: str, jwk_response: dict) -> dict:
     except Exception as e:
         logger.error(f"Erro ao processar a JWK: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro ao processar a chave pública do JWK")
-    
+
     logger.debug(f"Decoding token...")
     try:
         payload = jwt.decode(
@@ -77,6 +77,6 @@ async def decode_token(token: str, jwk_response: dict) -> dict:
     except jwt.InvalidTokenError as e:
         logger.error(f"Token inválido: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
-    
+
     logger.debug(f"Token decoded successfully")
     return payload
