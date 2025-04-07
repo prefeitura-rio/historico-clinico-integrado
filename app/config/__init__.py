@@ -94,6 +94,7 @@ if environment not in [
     "local-prod",
     "staging-datario",
     "prod-datario",
+    "training",
 ]:
     raise ValueError("Invalid ENVIRONMENT")
 
