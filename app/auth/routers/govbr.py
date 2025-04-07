@@ -61,11 +61,11 @@ async def login_with_govbr(form_data: LoginFormGovbr) -> Token:
 
     if not access_token:
         raise HTTPException(status_code=401, detail="Token de acesso não recebido.")
-    
+
     logger.info(f"Fetching JWK from GovBR...")
     jwk_url = f"{config.GOVBR_PROVIDER_URL}/jwk"
     jwk_response = await fetch_with_retry("GET", jwk_url, timeout=10.0)
-    
+
     logger.info(f"Decoding ID token...")
     payload_id_token = await decode_token(id_token, jwk_response)
 
