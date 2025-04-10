@@ -12,7 +12,7 @@ async def upgrade(db: BaseDBAsyncClient) -> str:
             "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
             "updated_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP
         );
-        COMMENT ON COLUMN "permition"."slug" IS 'PIPELINE_READ: pipeline_read\nPIPELINE_WRITE: pipeline_write\nPIPELINE_READWRITE: pipeline_readwrite\nHCI_SAME_CPF: only_from_same_cpf\nHCI_SAME_HEALTHUNIT: only_from_same_unit\nHCI_SAME_AP: only_from_same_ap\nHCI_FULL_PERMITION: full_permition';
+        COMMENT ON COLUMN "permition"."slug" IS 'PIPELINE_READ: pipeline_read\nPIPELINE_WRITE: pipeline_write\nPIPELINE_READWRITE: pipeline_readwrite\nHCI_SAME_CPF: only_from_same_cpf\nHCI_SAME_HEALTHUNIT: only_from_same_unit\nHCI_SAME_AP: only_from_same_ap\nHCI_full_permission: full_permission';
         CREATE TABLE IF NOT EXISTS "systemrole" (
             "slug" VARCHAR(255) NOT NULL  PRIMARY KEY,
             "job_title" VARCHAR(255),
