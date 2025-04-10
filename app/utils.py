@@ -117,7 +117,7 @@ def get_filter_clause(user: User) -> str:
     Builds a filter clause based on the user's role and permissions.
     """
     filter_clause = {
-        "full_permition": "1 = 1",
+        "full_permission": "1 = 1",
         "only_from_same_cpf": "cpf = '{user_cpf}'",
         "only_from_same_ap": "'{user_cnes}' IN UNNEST(exibicao.unidades_cadastro)",
         "only_from_same_cnes": "'{user_ap}' IN UNNEST(exibicao.ap_cadastro)",

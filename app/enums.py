@@ -6,7 +6,7 @@ class PermitionEnum(str, Enum):
     HCI_SAME_CPF = "only_from_same_cpf"
     HCI_SAME_HEALTHUNIT = "only_from_same_cnes"
     HCI_SAME_AP = "only_from_same_ap"
-    HCI_FULL_PERMITION = "full_permition"
+    HCI_full_permission = "full_permission"
 
 
 class LoginStatusEnum(str, Enum):
